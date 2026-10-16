@@ -143,10 +143,14 @@ footer a:hover{color:var(--text)}
   const $ = (id) => document.getElementById(id);
   const params = new URLSearchParams(location.search);
 
-  // Links from the live page or the homepage can preselect the type and the paper: feedback.html?type=correction&paper=<id>&from=<page>
+  // Links can preselect the form: ?type=correction&paper=<OpenReview id>&title=<paper title>&session=<run id>&page=live
+  // (from= is accepted as an alias of page=). Unknown or missing parameters are ignored.
+  const clip = (k) => (params.get(k) || '').trim().slice(0, 300);
   if (TYPES[params.get('type')]) document.querySelector(`input[name=type][value="${params.get('type')}"]`).checked = true;
-  if (params.get('paper')) $('paper').value = params.get('paper').slice(0, 300);
-  const from = (params.get('from') || document.referrer || '').slice(0, 300);
+  const pid = clip('paper'), ptitle = clip('title');
+  if (pid || ptitle) $('paper').value = ptitle && pid ? `${ptitle} (${pid})` : (ptitle || pid);
+  const session = clip('session');
+  const from = clip('page') || clip('from') || (document.referrer || '').slice(0, 300);
 
   fetch('data/site.json', { cache: 'no-cache' }).then((r) => r.ok ? r.json() : null).then((site) => {
     if (!site) return;
@@ -162,12 +166,13 @@ footer a:hover{color:var(--text)}
     const type = TYPES[document.querySelector('input[name=type]:checked').value];
     const paper = $('paper').value.trim();
     const desc = $('desc').value.trim();
-    const topic = paper || desc.split(/\s+/).slice(0, 8).join(' ');
+    const topic = pid || paper || desc.split(/\s+/).slice(0, 8).join(' ');
     const subject = `[${type.tag}] ${topic}`.slice(0, 120);
     const body = [
       `Type: ${type.label}`,
       `Paper: ${paper || '(none)'}`,
       `Page: ${from || '(not given)'}`,
+      ...(session ? [`Session: ${session}`] : []),
       '',
       'What happened:',
       desc,
