@@ -353,7 +353,8 @@ a{color:inherit}
 .tile-fig span{font-size:var(--s-body);margin-top:10px;color:var(--text-2)}
 .tile-fig em{font-style:normal;font-size:var(--s-sm);margin-top:4px;color:var(--text-2)}
 .tile-fig em span{font-size:inherit;margin:0}
-.t-a{grid-column:1;grid-row:1/3;min-height:300px;background:var(--panel-2)}
+.t-a{grid-column:1;grid-row:1/3;min-height:300px;background:var(--cyan);color:var(--cyan-ink)}
+.t-a span,.t-a em{color:#0b3a3e}
 .t-a b{font-size:var(--s-fig-xl)}
 .t-b{grid-column:2;grid-row:2;min-height:170px;background:var(--panel)}
 .t-c{grid-column:3;grid-row:2;min-height:170px;background:var(--panel)}
@@ -521,6 +522,12 @@ code{font:var(--s-sm)/1.4 var(--code);color:var(--text)}
 /* what is a red flag */
 .define{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .define article{border-radius:var(--r-lg);padding:26px 28px}
+/* the definition trio: two neutral panels, then the one red card for what a flag means (user, 2026-10-16) */
+.define article{background:var(--panel)}
+.define article:nth-child(2){background:var(--panel-2)}
+.define article .k{color:#ff8a7f}
+.define article.is-red-card{background:var(--field-red);color:var(--ink-red);--text:#fff4f2;--text-2:#ffdad5;--muted:#ffc9c2}
+.define article.is-red-card .k{color:#ffc9c2}
 .define .k{display:block;font-size:var(--s-sm);color:var(--acc);font-weight:500;margin:0 0 10px}
 .define h3{font:500 var(--s-h3)/1.15 var(--serif);letter-spacing:-.015em;margin:0 0 8px}
 /* the small label sits under its heading, not above it */
@@ -930,9 +937,9 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
         <p>A red flag asks a person to look at two papers side by side. Here is what we look for, and what a flag does and does not mean.</p>
       </div>
       <div class="define">
-        <article class="tone-wine"><span class="k">What we study</span><h3>Automated-research attacks</h3><p>AI tools can now draft, rewrite and package papers at scale. Some of that output takes credit for other people's work. We call this kind of misuse an automated-research attack.</p></article>
-        <article class="tone-wine"><span class="k">The first kind we screen</span><h3>Paper laundering</h3><p>Earlier work rewritten and repackaged so it reads as new: the same results, tables or contributions in different words, without a clear citation of the source.</p></article>
-        <article class="tone-wine hi"><span class="k">What a flag means</span><h3>Source review recommended</h3><p>When passages, numbers or tables closely match an earlier public paper without clear attribution, the paper gets a red flag. It asks a person to compare the two. It is not a finding of misconduct.</p></article>
+        <article><span class="k">What we study</span><h3>Automated-research attacks</h3><p>AI tools can now draft, rewrite and package papers at scale. Some of that output takes credit for other people's work. We call this kind of misuse an automated-research attack.</p></article>
+        <article><span class="k">The first kind we screen</span><h3>Paper laundering</h3><p>Earlier work rewritten and repackaged so it reads as new: the same results, tables or contributions in different words, without a clear citation of the source.</p></article>
+        <article class="is-red-card"><span class="k">What a flag means</span><h3>Source review recommended</h3><p>When passages, numbers or tables closely match an earlier public paper without clear attribution, the paper gets a red flag. It asks a person to compare the two. It is not a finding of misconduct.</p></article>
       </div>
       <p class="notflag"><b>Not a red flag:</b> the paper's own earlier preprint, shared authors, a cited dataset or baseline, or reuse that is clearly attributed. The system can miss these, which is why every flag goes to a person.</p>
     </div>
