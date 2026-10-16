@@ -305,7 +305,7 @@ body.flaggedmode #stageView,body.flaggedmode #flowView{display:none!important}
 
 /* ---- about / corrections ---- */
 #about .mail{color:var(--cyan);font-weight:600;text-decoration:none} #about .mail:hover{text-decoration:underline}
-.wrong{font-size:var(--fs-sm);color:var(--text-2);text-decoration:underline;text-decoration-color:var(--line-2);text-underline-offset:0.2rem;background:none;border:0;padding:0;cursor:pointer;white-space:nowrap} .wrong:hover{color:var(--text)}
+.wrong{text-decoration:underline;font-size:var(--fs-sm);color:var(--text-2);text-decoration:underline;text-decoration-color:var(--line-2);text-underline-offset:0.2rem;background:none;border:0;padding:0;cursor:pointer;white-space:nowrap} .wrong:hover{color:var(--text)}
 #about{max-width:40rem;width:calc(100% - 2rem);border:0;border-radius:var(--r-lg);background:var(--panel);color:var(--text);padding:1.5rem 1.75rem 1.25rem;box-shadow:0 1.5rem 4rem #000c;font-size:var(--fs-body);line-height:1.55}
 #about::backdrop{background:rgba(5,7,10,.7)}
 #about h2{margin:0 0 0.75rem;font:600 var(--fs-head) var(--sans)} #about h3{margin:1.1rem 0 0.4rem;font:600 var(--fs-lead) var(--sans)} #about p{margin:0 0 0.6rem;color:var(--text-2)} #about b{color:var(--text)}
@@ -365,7 +365,7 @@ body.flaggedmode #stageView,body.flaggedmode #flowView{display:none!important}
   <div class="clock" id="clock">--:--:-- ET</div>
   <div class="headline">Can AI agents find <b>unattributed sources</b> in ICLR 2027 submissions?</div>
   <div class="counters" id="counters"></div>
-  <a class="fbk" id="feedback" href="#" target="_blank" rel="noopener" title="Opens a GitHub issue with the session, paper and replay time filled in"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"/><path d="M8 5.5v2M8 9.2v.1"/></svg>Report a problem</a>
+  <a class="fbk" id="feedback" href="../feedback.html?type=bug&amp;from=live" target="_blank" rel="noopener" title="Opens the feedback form with this session filled in"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"/><path d="M8 5.5v2M8 9.2v.1"/></svg>Report a problem</a>
 </header>
 <div class="replay">
   <span class="badge" id="modeBadge">Replay</span>
@@ -436,7 +436,7 @@ body.flaggedmode #stageView,body.flaggedmode #flowView{display:none!important}
   <p>It is <b>not</b> a finding of plagiarism, misconduct or bad faith. It has not been reviewed by the conference, the authors or any integrity committee. The system uses language models and can be wrong: shared authors, an earlier version of the same work, a cited dataset or a common baseline can all explain matching text, and the system may not see them. A paper without a label has not been cleared either.</p>
   <p>Benchmark cases are anonymized before release.</p>
   <h3>Think a result is wrong?</h3>
-  <p>If you are an author and believe a result about your paper is wrong, email <a class="mail" id="contactMail" href="mailto:red.flag.autoresearch@gmail.com">red.flag.autoresearch@gmail.com</a>. We will correct it right away, and we take the result off the live page and the public data while we check.</p>
+  <p>If you are an author and believe a result about your paper is wrong, use the <a class="mail" href="../feedback.html?type=correction&amp;from=live" target="_blank" rel="noopener">feedback form</a> or email <a class="mail" id="contactMail" href="mailto:red.flag.autoresearch@gmail.com">red.flag.autoresearch@gmail.com</a>. We will correct it right away, and we take the result off the live page and the public data while we check.</p>
   <p class="ab-paper" id="aboutPaper" hidden></p>
   <dl class="ab-labels"><dt>Source review recommended</dt><dd>Closely matching passages without clear attribution; a person should compare the papers.</dd><dt>No source finding</dt><dd>Nothing found in the sources checked. This does not mean the paper is cleared.</dd><dt>Inconclusive</dt><dd>Not enough evidence to reach a result.</dd><dt>Same paper (preprint)</dt><dd>The candidate is this paper's own preprint.</dd></dl>
 </dialog>
@@ -444,8 +444,10 @@ body.flaggedmode #stageView,body.flaggedmode #flowView{display:none!important}
 <script src="data.js"></script>
 <script>
 const D = window.LIVE_DATA;
-// Public repository for feedback issues (decided 2026-10-15; may move to a company org later, so change only this line).
-const REPO_URL = 'https://github.com/OpenLAIR/red-flag-research';
+// Feedback goes through the site's feedback page, which sends a templated e-mail (decided 2026-10-16).
+// Query, as the form reads it: type=correction|bug|benchmark|press|other, paper=<OpenReview id>, title, session, from=live.
+const FEEDBACK_URL = '../feedback.html';
+const feedbackLink = q => FEEDBACK_URL + '?' + new URLSearchParams(Object.fromEntries(Object.entries({...q, from: 'live'}).filter(([, v]) => v))).toString();
 // Corrections and support (decided 2026-10-15).
 const CONTACT_EMAIL = 'red.flag.autoresearch@gmail.com';
 const $ = id => document.getElementById(id);
@@ -636,10 +638,7 @@ function render() {
   const prep = lastP ? Object.values(L).filter(v => v === 'PREPRINT').length : c.preprint_count;
   $('counters').innerHTML = `<span class="chip cyan"><b>${checked}</b> / ${c.total.toLocaleString()} checked</span><span class="chip red"><b>${susp}</b> review recommended</span><span class="chip" title="0.90 title screen applied"><b>${prep}</b> same paper (preprint)</span>`;
 
-  // Feedback goes to the site repo's issue tracker, prefilled with where the viewer was.
-  $('feedback').href = REPO_URL + '/issues/new?' + new URLSearchParams({
-    title: `[Live page] ${s.paper_id}: `,
-    body: `Page: ${location.origin}${location.pathname}\nMode: ${MODE}\nSession: ${s.session} (#${s.rank})\nPaper: ${s.paper_id} — ${s.title}\nReplay clock: ${fmtT(T)} ET\nView: ${view}\n\nWhat looks wrong:\n`});
+  $('feedback').href = feedbackLink({type: 'bug', session: s.session});
   $('tabs').innerHTML = S.map((x, i) => {
     const y = states[i], cls = i === focus && !y.finished ? 'run' : !y.started ? 'wait' : y.finished ? (x.label === 'YES_SUSPECTED' ? 'flag' : x.label === 'PREPRINT' ? 'pre' : 'done') : 'run';
     return `<button class="tab${i === focus ? ' on' : ''}" data-i="${i}"><span class="dot ${cls}"></span><span class="muted">#${x.rank}</span><span class="t">${esc(x.title)}</span></button>`;
@@ -820,16 +819,13 @@ function renderHero(s, st) {
 }
 
 function wrongLink(pid, title) {
-  return `<button class="wrong" data-wrong="${esc(pid)}" data-title="${esc(title || '')}">Think this is wrong?</button>`;
+  const sess = (S.find(x => x.paper_id === pid) || {}).session;
+  return `<a class="wrong" href="${esc(feedbackLink({type: 'correction', paper: pid, title, session: sess}))}" target="_blank" rel="noopener" title="${esc(title || pid)}">Think this is wrong?</a>`;
 }
 function openAbout(pid, title) {
   const el = $('aboutPaper');
   el.hidden = !pid;
-  if (pid) {
-    const mail = 'mailto:' + CONTACT_EMAIL + '?' + new URLSearchParams({subject: `Correction request: ${pid}`,
-      body: `Paper: ${title || pid}\nOpenReview: ${pid}\nPage: ${location.origin}${location.pathname}\n\nWhat is wrong:\n`}).toString().replace(/\+/g, '%20');
-    el.innerHTML = `About: <b>${esc(title || pid)}</b> (OpenReview ${esc(pid)}). <a class="mail" href="${mail}">Email us about this paper ↗</a>`;
-  }
+  if (pid) el.innerHTML = `About: <b>${esc(title || pid)}</b> (OpenReview ${esc(pid)}). <a class="mail" href="${esc(feedbackLink({type: 'correction', paper: pid, title}))}" target="_blank" rel="noopener">Report it with the feedback form ↗</a>`;
   $('about').showModal();
 }
 // ---- votes: one ballot per browser token per paper; the main stage and the flagged list share the count ----
@@ -1204,7 +1200,6 @@ document.addEventListener('click', e => {
   const vb = e.target.closest('[data-view]'); if (vb) { view = vb.dataset.view; render(); return; }
   const fc = e.target.closest('[data-focus]'); if (fc) { watch(+fc.dataset.focus); return; }
   const op = e.target.closest('[data-open]'); if (op) { view = 'stage'; openSession(op.dataset.open); return; }
-  const wr = e.target.closest('[data-wrong]'); if (wr) { openAbout(wr.dataset.wrong, wr.dataset.title); return; }
   if (e.target.closest('[data-about]')) { openAbout(null); return; }
   const vb2 = e.target.closest('[data-vote]'); if (vb2) { castVote(vb2.dataset.pid, vb2.dataset.vote); return; }
   if (e.target.closest('#flaggedBtn')) { view = view === 'flagged' ? 'stage' : 'flagged'; render(); return; }
