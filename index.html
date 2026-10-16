@@ -1280,7 +1280,8 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
     return stages.map((st) => {
       let status = 'upcoming';
       if (st.endActual) status = 'done';
-      else if (prevDone && t >= st.start) status = 'running';
+      // Running only once a verified start is recorded (actualStart in schedule.json); a passed planned start alone is not "live".
+      else if (prevDone && st.startActual && t >= st.start) status = 'running';
       prevDone = st.endActual;
       return { ...st, status };
     });
@@ -1598,6 +1599,10 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
         isLive = true;
         target = running.end;
         label = `until Stage ${running.id} of ${total} ends · est. <b>${fmt.est(running.end)} ${tz}</b>`;
+      } else if (next && t >= next.start) {
+        // Planned start has passed but no verified start yet.
+        target = t;
+        label = `Stage ${next.id} is getting ready · the live page opens soon`;
       } else if (next) {
         target = next.start;
         label = `until Stage ${next.id} starts · <b>${fmt.exact(next.start)} ${tz}</b>`;
@@ -1612,11 +1617,12 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
       $('d-d').textContent = pad(dd); $('d-h').textContent = pad(hh); $('d-m').textContent = pad(mm); $('d-s').textContent = pad(ss);
       $('count-label').innerHTML = label;
       // Header status chip: the same countdown, in two parts so a phone can stack them.
-      const nl = elapsed != null ? `Stage ${running.id} running for` : (running ? `Stage ${running.id} ends in` : (next ? `Stage ${next.id} starts in` : 'All stages complete'));
+      const pending = !running && next && t >= next.start;
+      const nl = elapsed != null ? `Stage ${running.id} running for` : (running ? `Stage ${running.id} ends in` : (pending ? `Stage ${next.id} starting soon` : (next ? `Stage ${next.id} starts in` : 'All stages complete')));
       $('st-l').textContent = nl;
-      $('st-t').textContent = (running || next) ? `${dd}d ${pad(hh)}:${pad(mm)}:${pad(ss)}` : '';
+      $('st-t').textContent = (running || (next && !pending)) ? `${dd}d ${pad(hh)}:${pad(mm)}:${pad(ss)}` : '';
       document.querySelectorAll('[data-live-dot]').forEach((el) => el.classList.toggle('is-live', isLive));
-      $('live-status').textContent = isLive ? `Live now · Stage ${running.id} of ${total}` : (next ? `Live page opens when Stage ${next.id} starts` : 'Screening complete · replays available');
+      $('live-status').textContent = isLive ? `Live now · Stage ${running.id} of ${total}` : (next ? (pending ? 'Live page opens soon' : `Live page opens when Stage ${next.id} starts`) : 'Screening complete · replays available');
       $('win-pill').textContent = isLive ? 'Live' : (next ? 'Soon' : 'Replay');
       return { live, t };
     };
