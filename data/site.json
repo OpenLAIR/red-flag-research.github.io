@@ -1,10 +1,9 @@
 {
   "_comment": "repoUrl is the benchmark repository; links to it appear only when repoPublic is true. The site repo, the pipeline and internal repos are never linked. Feedback goes through feedback.html (templated mailto to contactEmail).",
   "productName": "Red-flag Research",
-  "subtitle": "Live, open-source screening for automated-research attacks on peer review",
-  "question": "Can a language-model pipeline tell when a submission closely matches earlier public work it does not credit?",
-  "mission": "Red-flag Research studies how automated tools can be turned against the research process, for example to rewrite earlier work into a paper that looks new. Reusing work without credit is one such attack, and screening for it is where we start.",
-  "intro": "Our first application screens all 43,013 ICLR 2027 submissions in public, in nine stages, and shows every step as it happens. A flag is a lead for a person to check, not a finding of misconduct.",
+  "subtitle": "Live, public screening for automated-research attacks on peer review",
+  "mission": "Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027. It checks each submission against earlier public papers and flags close matches that lack clear credit, so a person can compare the two side by side. A flag is a lead, not a verdict.",
+  "intro": "Public: benchmark, evaluation tools and baseline outputs. Detection pipeline code: not released yet.",
   "author": "Ziqian Zhang",
   "organization": {
     "name": "OpenLAIR",
@@ -15,5 +14,6 @@
   "contactEmail": "red.flag.autoresearch@gmail.com",
   "showOptionalPlaceholders": false,
   "privacyEffective": "2026-10-16",
-  "repoPublic": false
+  "repoPublic": false,
+  "definition": "Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027."
 }

@@ -4,13 +4,177 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Red-flag Research · Live screening of ICLR 2027</title>
-<meta name="description" content="Live, open-source screening for automated-research attacks on peer review. The first application screens all 43,013 ICLR 2027 submissions for unattributed reuse of earlier work, in nine public stages. Flags are leads for human review, not findings of misconduct.">
+<meta name="description" content="Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027. All 43,013 submissions are screened in nine public stages; flags are leads for human review, not findings of misconduct.">
 <link rel="canonical" href="https://openlair.github.io/red-flag-research.github.io/">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://openlair.github.io/red-flag-research.github.io/">
-<meta property="og:title" content="Red-flag Research">
-<meta property="og:description" content="Live, open-source screening for automated-research attacks on peer review. The first application screens all 43,013 ICLR 2027 submissions for unattributed reuse of earlier work, in nine public stages. Flags are leads for human review, not findings of misconduct.">
-<meta name="twitter:card" content="summary">
+<meta property="og:site_name" content="Red-flag Research">
+<meta property="og:title" content="Red-flag Research · Live, public screening for automated-research attacks on peer review">
+<meta property="og:description" content="Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027. All 43,013 submissions are screened in nine public stages; flags are leads for human review, not findings of misconduct.">
+<meta property="og:image" content="https://openlair.github.io/red-flag-research.github.io/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Red-flag Research: Live, public screening for automated-research attacks on peer review">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Red-flag Research">
+<meta name="twitter:description" content="Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027. All 43,013 submissions are screened in nine public stages; flags are leads for human review, not findings of misconduct.">
+<meta name="twitter:image" content="https://openlair.github.io/red-flag-research.github.io/og-image.png">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "WebSite",
+   "@id": "https://openlair.github.io/red-flag-research.github.io/#website",
+   "url": "https://openlair.github.io/red-flag-research.github.io/",
+   "name": "Red-flag Research",
+   "inLanguage": "en",
+   "publisher": {
+    "@id": "https://openlair.github.io/#org"
+   }
+  },
+  {
+   "@type": "Organization",
+   "@id": "https://openlair.github.io/#org",
+   "name": "OpenLAIR",
+   "alternateName": "Lehigh AI Research Lab",
+   "url": "https://openlair.github.io/",
+   "sameAs": [
+    "https://github.com/OpenLAIR"
+   ]
+  },
+  {
+   "@type": "ResearchProject",
+   "@id": "https://openlair.github.io/red-flag-research.github.io/#project",
+   "name": "Red-flag Research",
+   "description": "Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027.",
+   "slogan": "Live, public screening for automated-research attacks on peer review",
+   "url": "https://openlair.github.io/red-flag-research.github.io/",
+   "parentOrganization": {
+    "@id": "https://openlair.github.io/#org"
+   },
+   "founder": {
+    "@type": "Person",
+    "name": "Ziqian Zhang",
+    "affiliation": {
+     "@id": "https://openlair.github.io/#org"
+    }
+   },
+   "email": "red.flag.autoresearch@gmail.com",
+   "foundingDate": "2026-10",
+   "knowsAbout": [
+    "research integrity",
+    "peer review",
+    "paper laundering",
+    "automated research",
+    "ICLR 2027"
+   ],
+   "sameAs": [
+    "https://github.com/OpenLAIR/red-flag-research"
+   ]
+  },
+  {
+   "@type": "FAQPage",
+   "@id": "https://openlair.github.io/red-flag-research.github.io/#faq",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "What is Red-flag Research?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027. It was started by Ziqian Zhang at OpenLAIR (Lehigh AI Research Lab) in October 2026."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What is paper laundering?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Paper laundering is rewriting earlier public work into a submission that looks new, without credit to the original. Language models make the rewriting cheap, and text-similarity checkers often miss it because the wording changes while claims, numbers and tables stay close to the original."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is Red-flag Research a plagiarism checker?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Not in the usual sense. Similarity checkers such as iThenticate look for copied wording. Red-flag Research compares claims, passages, numbers and tables with earlier public papers even after rewording, and it never decides whether anything is plagiarism. A person does."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What does “Source review recommended” mean?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "It means the system found passages, numbers or tables that closely match an earlier public paper without a clear attribution, so a person should compare the two papers. It is not a finding of misconduct and has not been reviewed by the conference, the authors or any integrity committee."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Which papers does it screen, and when?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "The first application screens all 43,013 ICLR 2027 submissions in nine public stages of up to 5,000 papers. Stage 1 starts on October 16, 2026 at 9 PM US Eastern, and the run aims to finish before ICLR 2027 decisions on December 16, 2026."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What is publicly available?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "The benchmark (20 anonymized ICLR 2027 cases with human labels), the evaluation tools and the saved baseline outputs are open at github.com/OpenLAIR/red-flag-research. The detection pipeline code is not released yet."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is Red-flag Research affiliated with ICLR?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. It is an independent research project from OpenLAIR. It uses submission metadata that is public on OpenReview and does not host papers."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How do I get a result corrected?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Use the feedback form on the site or e-mail red.flag.autoresearch@gmail.com. The result comes off the live page and the public data while we check, and we correct it right away if it is wrong."
+     }
+    }
+   ]
+  },
+  {
+   "@type": "Dataset",
+   "name": "Red-flag Research benchmark (ICLR 2027 diagnostic set)",
+   "description": "An anonymized diagnostic set of 20 ICLR 2027 submissions with candidate sources, evidence locations and a human label for every case, for testing systems that check whether a paper's content matches earlier public work without clear attribution. Evaluation tools need only the Python standard library. Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027.",
+   "url": "https://github.com/OpenLAIR/red-flag-research",
+   "sameAs": "https://github.com/OpenLAIR/red-flag-research",
+   "creator": {
+    "@id": "https://openlair.github.io/#org"
+   },
+   "license": "https://creativecommons.org/licenses/by/4.0/",
+   "isAccessibleForFree": true,
+   "keywords": [
+    "research integrity",
+    "peer review",
+    "source attribution",
+    "ICLR 2027",
+    "benchmark"
+   ],
+   "distribution": [
+    {
+     "@type": "DataDownload",
+     "encodingFormat": "application/zip",
+     "contentUrl": "https://github.com/OpenLAIR/red-flag-research/archive/refs/heads/main.zip"
+    }
+   ],
+   "isPartOf": {
+    "@id": "https://openlair.github.io/red-flag-research.github.io/#project"
+   }
+  }
+ ]
+}
+</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0d10'/%3E%3Cpath d='M10 6v21' stroke='%23c9ced6' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M11 7c3.5-1.8 6.5 1.6 10 0s4.5-.8 4.5-.8v10s-1.4 1-4.5.8-6.5-2.4-10 0z' fill='%23ff5d4f'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -241,6 +405,17 @@ code{font:var(--s-sm)/1.4 var(--code);color:var(--text)}
 .contrib-foot a{color:var(--text);text-decoration:underline;text-decoration-color:var(--line-2);text-underline-offset:3px}
 .contrib-foot a:hover{text-decoration-color:var(--cyan)}
 
+/* faq */
+.faq{display:grid;gap:4px;border-radius:var(--r-lg);overflow:hidden}
+.faq-item{background:var(--panel)}
+.faq-item summary{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 28px;cursor:pointer;list-style:none}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:'+';flex:none;font:400 24px/1 var(--sans);color:var(--text-2);transition:transform .25s var(--ease)}
+.faq-item[open] summary::after{transform:rotate(45deg)}
+.faq-item summary:hover{background:var(--panel-2)}
+.faq-item h3{font:500 var(--s-lead)/1.3 var(--serif);margin:0}
+.faq-item p{margin:0;padding:0 28px 24px;color:var(--text-2);max-width:72ch}
+
 /* optional placeholders (prototype only; hidden when published) */
 .opt{background:var(--inset);border-radius:var(--r-lg);padding:18px 22px;color:var(--muted);font-size:var(--s-sm);display:flex;gap:12px;align-items:baseline;margin-top:16px}
 .opt b{color:var(--text-2);font-weight:500;white-space:nowrap}
@@ -346,7 +521,8 @@ footer{margin-top:160px;background:var(--inset);padding:0 0 48px;overflow:hidden
       <a href="#updates">Updates</a>
       <a href="#live">Live</a>
       <a href="#about">About</a>
-      <a href="#code">Code</a>
+      <a href="#code">Benchmark</a>
+      <a href="#faq">FAQ</a>
       <a href="#contribute">Contribute</a>
     </nav>
     <a class="btn btn-primary btn-sm" data-href="liveUrl" href="./live/"><span class="dot" data-live-dot></span>Watch live</a>
@@ -359,10 +535,9 @@ footer{margin-top:160px;background:var(--inset);padding:0 0 48px;overflow:hidden
       <div class="hero-grid">
         <div>
           <h1 class="wordmark" id="wordmark" aria-label="Red-flag Research"><span class="w1"><span class="r">Red</span><span class="d">-</span>flag<svg class="mark m wave" aria-hidden="true"><use href="#flag"/></svg></span><span class="w2">Research</span></h1>
-          <p class="subtitle" data-bind="subtitle">Live, open-source screening for automated-research attacks on peer review</p>
-          <p class="question" data-bind="question"></p>
-          <p class="mission" data-bind="mission"></p>
-          <p class="intro" data-bind="intro"></p>
+          <p class="subtitle">Live, public screening for automated-research attacks on peer review</p>
+          <p class="mission">Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027. It checks each submission against earlier public papers and flags close matches that lack clear credit, so a person can compare the two side by side. A flag is a lead, not a verdict.</p>
+          <p class="intro">Public: benchmark, evaluation tools and baseline outputs. Detection pipeline code: not released yet.</p>
           <div class="actions">
             <a class="btn btn-primary" data-href="liveUrl" href="./live/">Watch live →</a>
             <a class="btn btn-ghost" href="#schedule">See the schedule</a>
@@ -444,7 +619,6 @@ footer{margin-top:160px;background:var(--inset);padding:0 0 48px;overflow:hidden
         <div class="note" id="sched-scen"></div>
         <div class="note" id="sched-note"></div>
       </div>
-      <div class="opt"><b>Optional · Final report</b><span>A last row for a public report after Stage 9. Waiting for your decision on stage reports and data.</span></div>
     </div>
   </section>
 
@@ -455,7 +629,6 @@ footer{margin-top:160px;background:var(--inset);padding:0 0 48px;overflow:hidden
         <p>Newest first. Numbers come from the run records; individual papers appear only on the live page.</p>
       </div>
       <div class="feed" id="feed"></div>
-      <div class="opt"><b>Optional · Stage reports and data</b><span>Downloads per stage (report, aggregate table, data). What to release, and when, is waiting for your decision.</span></div>
     </div>
   </section>
 
@@ -502,7 +675,6 @@ footer{margin-top:160px;background:var(--inset);padding:0 0 48px;overflow:hidden
           <figcaption>Schematic, not a real case</figcaption>
         </figure>
       </div>
-      <div class="opt"><b>Optional · Funding</b><span>A short request for support (compute and model costs). Placement, channel and wording are waiting for your decision.</span></div>
     </div>
   </section>
 
@@ -534,8 +706,25 @@ footer{margin-top:160px;background:var(--inset);padding:0 0 48px;overflow:hidden
         <p><strong>Think a result is wrong?</strong> <span>If you are an author and believe a result about your paper is wrong, tell us through the feedback form or at <code data-bind="contactEmail">red.flag.autoresearch@gmail.com</code>. We will correct it right away, and we take the result off the live page and the public data while we check.</span></p>
         <div class="actions"><a class="btn btn-ghost" href="feedback.html?type=correction">Report a wrong result</a></div>
       </div>
-      <div class="opt"><b>Optional · How it works</b><span>A plain-language description of the pipeline steps and its limits.</span></div>
-      <div class="opt"><b>Optional · FAQ</b><span>Short answers: is a label an accusation, are authors told, why ICLR 2027, what data is kept.</span></div>
+    </div>
+  </section>
+
+  <section class="block" id="faq" aria-labelledby="faq-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><h2 id="faq-h">Questions</h2></div>
+        <p>Short answers about what the project does, what is public, and how to get a result corrected.</p>
+      </div>
+      <div class="faq">
+        <details class="faq-item"><summary><h3>What is Red-flag Research?</h3></summary><p>Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027. It was started by Ziqian Zhang at OpenLAIR (Lehigh AI Research Lab) in October 2026.</p></details>
+        <details class="faq-item"><summary><h3>What is paper laundering?</h3></summary><p>Paper laundering is rewriting earlier public work into a submission that looks new, without credit to the original. Language models make the rewriting cheap, and text-similarity checkers often miss it because the wording changes while claims, numbers and tables stay close to the original.</p></details>
+        <details class="faq-item"><summary><h3>Is Red-flag Research a plagiarism checker?</h3></summary><p>Not in the usual sense. Similarity checkers such as iThenticate look for copied wording. Red-flag Research compares claims, passages, numbers and tables with earlier public papers even after rewording, and it never decides whether anything is plagiarism. A person does.</p></details>
+        <details class="faq-item"><summary><h3>What does “Source review recommended” mean?</h3></summary><p>It means the system found passages, numbers or tables that closely match an earlier public paper without a clear attribution, so a person should compare the two papers. It is not a finding of misconduct and has not been reviewed by the conference, the authors or any integrity committee.</p></details>
+        <details class="faq-item"><summary><h3>Which papers does it screen, and when?</h3></summary><p>The first application screens all 43,013 ICLR 2027 submissions in nine public stages of up to 5,000 papers. Stage 1 starts on October 16, 2026 at 9 PM US Eastern, and the run aims to finish before ICLR 2027 decisions on December 16, 2026.</p></details>
+        <details class="faq-item"><summary><h3>What is publicly available?</h3></summary><p>The benchmark (20 anonymized ICLR 2027 cases with human labels), the evaluation tools and the saved baseline outputs are open at github.com/OpenLAIR/red-flag-research. The detection pipeline code is not released yet.</p></details>
+        <details class="faq-item"><summary><h3>Is Red-flag Research affiliated with ICLR?</h3></summary><p>No. It is an independent research project from OpenLAIR. It uses submission metadata that is public on OpenReview and does not host papers.</p></details>
+        <details class="faq-item"><summary><h3>How do I get a result corrected?</h3></summary><p>Use the feedback form on the site or e-mail red.flag.autoresearch@gmail.com. The result comes off the live page and the public data while we check, and we correct it right away if it is wrong.</p></details>
+      </div>
     </div>
   </section>
 
@@ -587,7 +776,6 @@ footer{margin-top:160px;background:var(--inset);padding:0 0 48px;overflow:hidden
           <a class="way" href="feedback.html?type=other"><h3>Something else</h3><p>An idea for the screening, a question, or anything that does not fit above.</p><span>Send a note →</span></a>
         </div>
       </div>
-      <div class="opt"><b>Optional · Stay updated</b><span>An RSS feed of the updates above, or an email list.</span></div>
     </div>
   </section>
 </main>
@@ -602,6 +790,7 @@ footer{margin-top:160px;background:var(--inset);padding:0 0 48px;overflow:hidden
       <div class="c-fine">
         <a class="brand" href="#top" style="margin-bottom:14px"><svg class="mark" width="22" height="22" aria-hidden="true"><use href="#flag"/></svg><span data-bind="productName">Red-flag Research</span></a>
         <p class="fine">Labels are leads for human review, not findings of misconduct. Submission metadata is public on OpenReview. This site does not host papers or the benchmark.</p>
+        <p class="fine" id="updated">Updated 2026-10-16</p>
       </div>
       <div>
         <h4>Project</h4>
@@ -624,7 +813,6 @@ footer{margin-top:160px;background:var(--inset);padding:0 0 48px;overflow:hidden
         </ul>
       </div>
     </div>
-    <div class="opt"><b>Optional · In collaboration with</b><span>Partners and compute acknowledgements, only with their permission.</span></div>
   </div>
 </footer>
 
@@ -862,6 +1050,9 @@ footer{margin-top:160px;background:var(--inset);padding:0 0 48px;overflow:hidden
     const first = tick();
     renderSchedule(s, first.live, fmt, s.displayTimeZoneLabel, first.t);
     renderUpdates(up.updates, fmt, site);
+    // "Updated" follows the newest real update card (template cards are layout previews).
+    const latest = up.updates.filter((u) => !u.template).map((u) => u.date).sort().at(-1);
+    if (latest) $('updated').textContent = 'Updated ' + latest;
     armReveals();
     let last = first.live.map((x) => x.status).join();
     let lastMin = Math.floor(first.t / 6e4);
