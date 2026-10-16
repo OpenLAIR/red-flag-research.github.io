@@ -2,13 +2,13 @@
 
 > Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027. Paper laundering means rewriting earlier public work into a submission that looks new, without credit. A "Source review recommended" label is a lead for a person to check, not a finding of misconduct.
 
-Red-flag Research is by Ziqian Zhang at OpenLAIR (Lehigh AI Research Lab). Its first application screens all 43,013 ICLR 2027 submissions in public, in nine stages of up to 5,000 papers, from October 16, 2026, aiming to finish before ICLR 2027 decisions on December 16, 2026. The benchmark, evaluation tools and saved baseline outputs are public on GitHub; the detection pipeline code is not released yet. Corrections: red.flag.autoresearch@gmail.com.
+Red-flag Research is by Ziqian Zhang at OpenLAIR (Lehigh AI Research Lab). Its first application screens all 43,013 ICLR 2027 submissions in public, in nine stages of up to 5,000 papers, from October 16, 2026, aiming to finish before ICLR 2027 decisions on December 16, 2026. The benchmark, evaluation tools and saved baseline outputs are public on GitHub and Hugging Face. Corrections: red.flag.autoresearch@gmail.com.
 
 ## Project
 
 - [Homepage](https://openlair.github.io/red-flag-research.github.io/): what the project is, the nine-stage schedule, label meanings, how to get a result corrected
 - [Feedback form](https://openlair.github.io/red-flag-research.github.io/feedback.html): report a wrong result, a bug or a benchmark problem by e-mail
-- [Live screening](https://openlair.github.io/red-flag-research.github.io/live/): each ICLR 2027 submission as it is screened: extracted claims, candidate earlier papers, side-by-side passages, label
+- [Live screening](https://openlair.github.io/red-flag-research.github.io/live/): each ICLR 2027 submission as it is screened: extracted claims, candidate sources, side-by-side passages, label
 - [Benchmark on GitHub](https://github.com/OpenLAIR/red-flag-research): 20 anonymized ICLR 2027 cases, 34 target–source pairs, human labels, evaluation tools and saved baseline outputs
 - [Benchmark on Hugging Face](https://huggingface.co/datasets/red-flag-research/iclr2027-source-review-benchmark): the same benchmark as a dataset (CC BY 4.0)
 

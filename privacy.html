@@ -6,70 +6,163 @@
 <title>Privacy policy · Red-flag Research</title>
 <link rel="canonical" href="https://openlair.github.io/red-flag-research.github.io/privacy.html">
 <meta name="description" content="Privacy policy of the Red-flag Research website and of the project's Google OAuth app.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0d10'/%3E%3Cpath d='M10 6v21' stroke='%23c9ced6' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M11 7c3.5-1.8 6.5 1.6 10 0s4.5-.8 4.5-.8v10s-1.4 1-4.5.8-6.5-2.4-10 0z' fill='%23ff5d4f'/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
 <style>
+/* Final design (variant D): one ground, panel greys for neutral cards, teal for actions, wine only for flags, paper for reading moments. */
 :root{
-  --bg:#0b0d10; --panel:#13161b; --panel-2:#1a1e24; --inset:#0f1216; --line:#20252d; --line-2:#2b313a;
-  --text:#e8eaed; --text-2:#a2a9b4; --muted:#6f7783; --flag:#ff5d4f; --cyan:#57c7cf;
-  --sans:'IBM Plex Sans',system-ui,sans-serif; --code:ui-monospace,SFMono-Regular,Menlo,monospace; /* taste-skill-ignore: only for <code> */ --serif:'Newsreader',Georgia,serif;
-  --gutter:32px;
+  --bg:#0b0d10; --panel:#13161b; --panel-2:#1a1e24; --step:#20252c; --line-2:#2b313a;
+  --text:#e8eaed; --text-2:#b3b9c2; --muted:#8a919c;
+  --cyan:#57c7cf; --cyan-ink:#062528; --cyan-hover:#7bd6dc;
+  --teal:#0e2a2d; --teal-2:#133a3e; --teal-3:#19474c; --teal-t:#eef4f4; --teal-t2:#c9d9db;
+  --wine-hot:#ff8a7f;
+  --paper:#ece8df; --paper-2:#e2ddd0; --paper-ink:#14171c; --paper-ink-2:#2c3138; --paper-acc:#0b5f65;
+  --field-red:#b3261e; --ink-red:#fff4f2; --btn-ink:#7a130d; --white:#fff;
+  --r-lg:18px; --r-md:12px; --r-sm:8px; --r-chip:10px;
+  --sans:'IBM Plex Sans',system-ui,sans-serif; --serif:'Newsreader',Georgia,serif; --code:ui-monospace,SFMono-Regular,Menlo,monospace; /* taste-skill-ignore: only for <code> */
+  --s-sm:14px; --s-body:16px; --s-lead:20px; --s-h3:28px; --s-h1:clamp(44px,5vw,76px);
+  --wrap:1160px; --gutter:32px;
+  --ease:cubic-bezier(.22,1,.36,1); --t-press:140ms; --t-hover:180ms;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:400 16px/1.7 var(--sans);-webkit-font-smoothing:antialiased}
-a{color:var(--cyan);text-underline-offset:3px}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{margin:0;background:var(--bg);color:var(--text);font:400 var(--s-body)/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+.wrap{max-width:calc(var(--wrap) + 2*var(--gutter));margin:0 auto;padding:0 var(--gutter)}
+.skip{position:absolute;left:-999px;top:8px;background:var(--ink-red);color:var(--btn-ink);padding:8px 12px;border-radius:var(--r-sm);z-index:20}
+.skip:focus{left:8px}
 :focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:4px}
-.wrap{max-width:calc(1160px + 2*var(--gutter));margin:0 auto;padding:0 var(--gutter)}
+h1{font:500 var(--s-h1)/1.02 var(--serif);letter-spacing:-.025em;margin:0 0 18px;text-wrap:balance}
+
+/* flag mark: the whole mark sways from the foot of the pole */
+.mark{flex:none;display:block}
+.wave{transform-origin:31% 88%;transform-box:fill-box;animation:sway 4.2s ease-in-out infinite}
+@keyframes sway{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-5deg)}}
+
+/* buttons: primary is teal */
+.btn{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 22px;border:0;border-radius:var(--r-chip);font:600 var(--s-body)/1 var(--sans);text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color var(--t-hover) ease,transform var(--t-press) var(--ease)}
+@media (hover:hover) and (pointer:fine){.btn:hover{transform:translateY(-2px)}}
+.btn:active{transform:translateY(1px) scale(.97)}
+.btn-primary{background:var(--cyan);color:var(--cyan-ink)}
+.btn-primary:hover{background:var(--cyan-hover)}
+.btn-ghost{background:var(--step);color:var(--text)}
+.btn-ghost:hover{background:var(--line-2)}
+
+/* header: the same lockup as the homepage */
 .top{position:sticky;top:0;z-index:10;background:var(--bg)}
-.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:20px;height:64px}
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);font:500 20px/1 var(--serif);letter-spacing:-.01em}
-.back{color:var(--text-2);text-decoration:none;font-size:14px}
-.back:hover{color:var(--text)}
-.doc{display:grid;grid-template-columns:220px minmax(0,1fr);gap:64px;padding-top:72px;padding-bottom:40px}
+.topbar{display:flex;align-items:center;gap:20px;min-height:68px}
+.lockup{display:flex;align-items:center;gap:16px;min-width:0}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font:500 var(--s-lead)/1 var(--serif);letter-spacing:-.01em;white-space:nowrap}
+.tile{flex:none;width:36px;height:36px;border-radius:8px;background:var(--field-red);display:grid;place-items:center}
+.tile.sm{width:30px;height:30px}
+.tile.sm .mark{width:20px;height:20px}
+.sep{flex:none;width:1px;height:28px;background:var(--line-2)} /* taste-skill-ignore: the single divider in the lockup */
+.by{display:flex;align-items:center;gap:6px;margin:0;font-size:var(--s-sm);line-height:1.3;color:var(--muted)}
+.org{display:inline-flex;align-items:center;gap:7px;color:var(--text-2);text-decoration:none}
+.org > span:last-child{text-decoration:underline;text-underline-offset:3px}
+.org:hover{color:var(--text)}
+.otile{flex:none;width:24px;height:24px;border-radius:6px;background:var(--white);overflow:hidden;display:block}
+.otile img{display:block;width:100%;height:100%;object-fit:contain}
+.otile.lg{width:40px;height:40px;border-radius:9px}
+.nav{margin-left:auto}
+.nv{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 14px;border-radius:var(--r-chip);background:var(--panel-2);color:var(--text);font:500 var(--s-sm)/1 var(--sans);text-decoration:none;white-space:nowrap;transition:background-color var(--t-hover) ease,transform var(--t-press) var(--ease)}
+.nv:hover{background:var(--step)}
+.nv:active{transform:scale(.97)}
+.nv .short{display:none}
+
+/* footer: simple, on the same ground */
+footer{margin-top:88px;padding:0 0 48px}
+.foot{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr);gap:40px;padding-top:40px}
+.fh{margin:0 0 12px;font-size:var(--s-sm);color:var(--muted);font-weight:500}
+.foot ul{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.foot a{color:var(--text-2);text-decoration:none;transition:color .2s}
+.foot a:hover{color:var(--text)}
+.foot [aria-current]{color:var(--text)}
+.fine{margin:14px 0 0;font-size:var(--s-body);color:var(--text-2);max-width:48ch}
+.credit{display:flex;align-items:center;gap:12px;text-decoration:none}
+.credit b{display:block;font-weight:500;color:var(--text)}
+.credit small{display:block;font-size:var(--s-body);color:var(--muted)}
+
+@media (max-width:1040px){
+  .foot{grid-template-columns:1fr 1fr}
+  .foot .c-fine{grid-column:1/-1}
+}
+@media (max-width:720px){
+  :root{--gutter:16px;--s-h1:40px;--s-lead:18px}
+  .brand{font-size:18px}
+  .top{position:relative}
+  .topbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding-top:12px;padding-bottom:12px}
+  .lockup{display:contents}
+  .brand{grid-column:1;grid-row:1}
+  .sep{display:none}
+  .by{grid-column:1/-1;grid-row:2}
+  .nav{grid-column:2;grid-row:1;margin:0}
+  .nv{height:44px}
+  .nv .long{display:none}
+  .nv .short{display:inline}
+  footer{margin-top:56px}
+  .foot{grid-template-columns:1fr;gap:28px}
+}
+/* entrance: CSS only, so nothing waits for a script; transform and opacity */
+@media (prefers-reduced-motion:no-preference){
+  .rise{animation:rise 700ms var(--ease) backwards;animation-delay:var(--d,0ms)}
+  @keyframes rise{from{opacity:0;transform:translateY(18px)}}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+
+/* privacy: a long reading page at about 68ch */
+.doc{display:grid;grid-template-columns:220px minmax(0,1fr);gap:64px;padding-top:56px}
 .toc{position:sticky;top:96px;align-self:start;font-size:14px}
-.toc b{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:12px}
-.toc a{display:block;color:var(--text-2);text-decoration:none;padding:5px 0;transition:color .2s}
+.toc b{display:block;font-size:var(--s-sm);font-weight:500;color:var(--muted);margin-bottom:10px}
+.toc a{display:block;color:var(--text-2);text-decoration:none;padding:6px 0;transition:color .2s}
 .toc a:hover{color:var(--text)}
-main{max-width:720px}
-h1{font:500 56px/1.02 var(--serif);letter-spacing:-.03em;margin:0 0 14px}
+main{max-width:68ch;min-width:0}
 .meta{color:var(--text-2);margin:0 0 36px;font-size:15px}
-.summary{position:relative;overflow:hidden;background:var(--panel);border-radius:18px;padding:26px 28px 26px 32px;margin:0 0 44px}
-.summary::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--flag)}
-.summary h2{margin-top:0}
-h2{font:500 30px/1.15 var(--serif);letter-spacing:-.015em;margin:44px 0 14px;scroll-margin-top:90px}
-p{margin:0 0 14px;color:var(--text-2)}
+.meta a,main p a,main li a{color:var(--cyan);text-underline-offset:3px}
+.meta a:hover,main p a:hover,main li a:hover{color:var(--cyan-hover)}
+h2{font:500 30px/1.15 var(--serif);letter-spacing:-.015em;margin:48px 0 14px;scroll-margin-top:90px;text-wrap:balance}
+main p{margin:0 0 14px;color:var(--text-2);line-height:1.7}
 strong{color:var(--text);font-weight:600}
-ul{margin:0 0 16px;padding:0;list-style:none;display:grid;gap:12px}
-li{position:relative;padding-left:22px;color:var(--text-2)}
-li::before{content:'';position:absolute;left:2px;top:.72em;width:7px;height:7px;border-radius:2px;background:var(--line-2)}
-code{font:14px var(--code);color:var(--text);background:var(--inset);padding:1px 6px;border-radius:5px}
-footer{margin-top:80px;background:var(--inset);padding:32px 0 44px;font-size:14px;color:var(--muted)}
-footer .wrap{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
-footer a{color:var(--text-2);text-decoration:none}
-footer a:hover{color:var(--text)}
+main ul{margin:0 0 16px;padding:0;list-style:none;display:grid;gap:12px}
+main li{position:relative;padding-left:22px;color:var(--text-2);line-height:1.7}
+main li::before{content:'';position:absolute;left:2px;top:.78em;width:7px;height:7px;border-radius:2px;background:var(--muted)}
+code{font:var(--s-sm)/1.4 var(--code);color:var(--text);background:var(--panel-2);padding:2px 7px;border-radius:6px}
+.summary{background:var(--paper);color:var(--paper-ink);border-radius:var(--r-lg);padding:28px 32px;margin:0 0 8px}
+.summary h2{margin-top:0;color:var(--paper-ink)}
+.summary p{color:var(--paper-ink-2);margin:0}
 @media (max-width:860px){
-  .doc{grid-template-columns:1fr;gap:28px;padding-top:44px}
+  .doc{grid-template-columns:1fr;gap:28px;padding-top:32px}
   .toc{position:static}
 }
 @media (max-width:720px){
-  :root{--gutter:16px}
-  h1{font-size:42px}
-  h2{font-size:25px}
-  .summary{padding:20px}
+  h2{font-size:25px;margin-top:40px}
+  .summary{padding:22px 20px}
 }
+
+/* OpenLAIR: show only the round chip mark of the logo (source 200px; mark at x0–98, y51–149), since the lettering is unreadable at tile size */
+.otile{position:relative;overflow:hidden}
+.otile img{position:absolute;left:0;top:-52%;width:204%;height:auto;max-width:none;object-fit:fill}
 </style>
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <symbol id="flag" viewBox="0 0 32 32"><path d="M10 5v23" stroke="#c9ced6" stroke-width="2.4" stroke-linecap="round" fill="none"/><path fill="#ff5d4f" d="M11 6.5c3.5-1.8 6.5 1.6 10 0s4.5-.8 4.5-.8v10.3s-1.4 1-4.5.8-6.5-2.4-10 0z"/></symbol>
+  <symbol id="flagw" viewBox="0 0 32 32"><path d="M10 5v23" stroke="#fff4f2" stroke-width="2.6" stroke-linecap="round" fill="none"/><path fill="#fff4f2" d="M11 6.5c3.5-1.8 6.5 1.6 10 0s4.5-.8 4.5-.8v10.3s-1.4 1-4.5.8-6.5-2.4-10 0z"/></symbol>
 </svg>
 
 <header class="top">
-  <div class="wrap">
-    <a class="brand" href="./"><svg width="26" height="26" aria-hidden="true"><use href="#flag"/></svg><span data-bind="productName">Red-flag Research</span></a>
-    <a class="back" href="./">← Back to the project page</a>
+  <div class="wrap topbar">
+    <div class="lockup">
+      <a class="brand" href="./" aria-label="Red-flag Research home"><span class="tile"><svg class="mark wave" width="26" height="26" aria-hidden="true"><use href="#flagw"/></svg></span><span data-bind="productName">Red-flag Research</span></a>
+      <span class="sep" aria-hidden="true"></span>
+      <p class="by"><span>by</span> <a class="org" data-href="orgUrl" href="https://openlair.github.io/"><span class="otile"><img src="icons/openlair-logo.png" width="24" height="24" alt=""></span><span>OpenLAIR</span></a><span aria-hidden="true">·</span><span data-bind="author">Ziqian Zhang</span></p>
+    </div>
+    <nav class="nav" aria-label="Site"><a class="nv" href="./"><span aria-hidden="true">←</span><span class="long">Back to the project page</span><span class="short">Home</span></a></nav>
   </div>
 </header>
 
@@ -83,17 +176,17 @@ footer a:hover{color:var(--text)}
     <a href="#contact">Changes and contact</a>
   </nav>
 
-  <main>
-    <h1>Privacy policy</h1>
-    <p class="meta">Effective <span data-bind="privacyEffective">2026-10-16</span> · <span data-bind="productName">Red-flag Research</span>, a research project of <a data-href="orgUrl" href="https://openlair.github.io/">OpenLAIR</a></p>
+  <main id="main">
+    <h1 class="rise">Privacy policy</h1>
+    <p class="meta rise" style="--d:80ms">Effective <span data-bind="privacyEffective">2026-10-16</span> · <span data-bind="productName">Red-flag Research</span>, a research project of <a data-href="orgUrl" href="https://openlair.github.io/">OpenLAIR</a></p>
 
-    <section class="summary" aria-labelledby="summary">
+    <section class="summary rise" style="--d:160ms" aria-labelledby="summary">
       <h2 id="summary">Summary</h2>
       <p>This website shows a public, automated screening of ICLR 2027 submissions. You do not sign in, and we do not use cookies, advertising or analytics. The only data the site keeps about visitors is what anonymous voting on the live page needs, described below. Our Google OAuth app is used only by the project team to store the project's own files in the team's Google Drive; visitors never sign in with Google.</p>
     </section>
 
     <h2 id="google">Google OAuth app and Google user data</h2>
-    <p>The Google Cloud project <code>iclr-ocr-rclone</code> holds an OAuth client that the project maintainers use with the open-source tool rclone. It signs in only to the maintainers' own Google account and is not offered to anyone else.</p>
+    <p>The Google Cloud project <code>iclr-ocr-rclone</code> holds an OAuth client that the project maintainers use with the tool rclone. It signs in only to the maintainers' own Google account and is not offered to anyone else.</p>
     <ul>
       <li><strong>What it accesses:</strong> files in the maintainers' Google Drive that belong to this project: OCR text of public ICLR 2027 submission PDFs and compressed archives of the screening runs shown on this site.</li>
       <li><strong>What it does with them:</strong> uploads, lists, checks (size and checksums) and downloads these files to back up and restore the project's own results. Nothing else.</li>
@@ -105,7 +198,7 @@ footer a:hover{color:var(--text)}
     <ul>
       <li><strong>No accounts, cookies or analytics.</strong> The site does not ask who you are.</li>
       <li><strong>A random identifier on the live page.</strong> When the live page loads, your browser stores a random identifier in its local storage. It is sent to our server only with voting requests, so that you can change or retract your vote. Clearing your browser's site data removes it.</li>
-      <li><strong>Anonymous votes.</strong> If voting is open and you vote on a paper, our server stores the vote, that random identifier, the time, and a keyed one-way hash of your IP address (for IPv6, of its /64 prefix). The raw IP address is never stored. The hash is used only to limit abuse: how many voters per network per paper, and how many votes per minute. You can retract your vote on the page at any time.</li>
+      <li><strong>Anonymous votes.</strong> If voting is open and you vote on a paper, our server stores the vote, that random identifier, the time, and a keyed one-way hash of your IP address (for IPv6, of its /64 prefix). The raw IP address is never stored. The hash is used only to limit abuse: how many voters per network per paper, and how many votes per minute. You can retract your vote on the page at any time. The same applies to the prediction poll on the homepage: one pick per browser, which you can change or take back until the poll closes.</li>
       <li><strong>Feedback form.</strong> The feedback page has no server behind it. It writes a message in your own email app; we only receive what you choose to send.</li>
       <li><strong>Services that see your request.</strong> Pages are hosted on GitHub Pages, fonts come from Google Fonts, and live data is served through Cloudflare. These providers receive standard request information such as your IP address under their own privacy policies.</li>
     </ul>
@@ -120,8 +213,24 @@ footer a:hover{color:var(--text)}
 
 <footer>
   <div class="wrap">
-    <span><span data-bind="productName">Red-flag Research</span> · by <span data-bind="author">Ziqian Zhang</span> · a research project of <a data-href="orgUrl" href="https://openlair.github.io/">OpenLAIR</a></span>
-    <span><a href="./">Project page</a> · <a data-href="liveUrl" href="./live/">Live page</a> · <a href="privacy.html">Privacy policy</a></span>
+    <div class="foot">
+      <div class="c-fine">
+        <a class="brand" href="./"><span class="tile sm"><svg class="mark" width="20" height="20" aria-hidden="true"><use href="#flagw"/></svg></span><span data-bind="productName">Red-flag Research</span></a>
+        <p class="fine">Labels are leads for human review, not findings of misconduct. Submission metadata is public on OpenReview. This site does not host papers or the benchmark.</p>
+      </div>
+      <div>
+        <p class="fh">Project</p>
+        <ul>
+          <li><a href="./">Project page</a></li>
+          <li><a data-href="liveUrl" href="./live/">Live page</a></li>
+          <li><a href="privacy.html" aria-current="page">Privacy policy</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="fh">A research project of</p>
+        <a class="credit" data-href="orgUrl" href="https://openlair.github.io/"><span class="otile lg"><img src="icons/openlair-logo.png" width="40" height="40" alt=""></span><span><b>OpenLAIR</b><small>By <span data-bind="author">Ziqian Zhang</span></small></span></a>
+      </div>
+    </div>
   </div>
 </footer>
 

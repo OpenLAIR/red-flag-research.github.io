@@ -3,7 +3,7 @@
   "productName": "Red-flag Research",
   "subtitle": "Live, public screening for automated-research attacks on peer review",
   "mission": "Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027. It checks each submission against earlier public papers and flags close matches that lack clear credit, so a person can compare the two side by side. A flag is a lead, not a verdict.",
-  "intro": "Public: benchmark, evaluation tools and baseline outputs. Detection pipeline code: not released yet.",
+  "intro": "Public: benchmark, evaluation tools and saved baseline outputs.",
   "author": "Ziqian Zhang",
   "organization": {
     "name": "OpenLAIR",
@@ -15,5 +15,7 @@
   "showOptionalPlaceholders": false,
   "privacyEffective": "2026-10-16",
   "repoPublic": false,
-  "definition": "Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027."
+  "apiBase": "https://spec-integrity-unified-valium.trycloudflare.com",
+  "definition": "Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027.",
+  "datasetUrl": "https://huggingface.co/datasets/red-flag-research/iclr2027-source-review-benchmark"
 }

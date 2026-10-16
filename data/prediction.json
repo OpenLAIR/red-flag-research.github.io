@@ -1,0 +1,41 @@
+{
+  "_comment": "Prediction module. Fill rehearsal.papers and rehearsal.flagged from the 100-paper rehearsal once it is final (D queue session reports it). Never enter a number that is not from a run record. The running count is read from the public API, counting only points after the schedule start. poll: the visitor prediction poll served by the D backend vote service (GET/POST {apiBase}{path}); keep enabled false until that service is approved and deployed. Choice ids must match the backend's polls.json.",
+  "label": "Source review recommended",
+  "rehearsal": {
+    "name": "100-paper rehearsal",
+    "papers": null,
+    "flagged": null,
+    "date": null
+  },
+  "minLiveSample": 300,
+  "confidence": 0.95,
+  "poll": {
+    "id": "red-flags-final",
+    "path": "/api/poll",
+    "enabled": false,
+    "question": "How many submissions will end with a red flag?",
+    "choices": [
+      {
+        "id": "0-500",
+        "label": "0–500"
+      },
+      {
+        "id": "500-1000",
+        "label": "500–1,000"
+      },
+      {
+        "id": "1000-2000",
+        "label": "1,000–2,000"
+      },
+      {
+        "id": "2000-5000",
+        "label": "2,000–5,000"
+      },
+      {
+        "id": "5000+",
+        "label": "5,000+"
+      }
+    ],
+    "closesAt": "2026-10-31T23:59:00-04:00"
+  }
+}
