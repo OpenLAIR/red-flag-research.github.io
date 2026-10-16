@@ -367,6 +367,11 @@ body.reportmode #stageView,body.reportmode #flowView,body.reportmode #flaggedVie
 .rp-quotes blockquote::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:var(--r-md) 0 0 var(--r-md);background:var(--paper-wine)} .rp-quotes blockquote.b::before{background:var(--paper-acc)}
 .rp-quotes cite{display:block;margin-top:0.5rem;font:600 var(--fs-sm) var(--sans);font-style:normal;color:var(--paper-ink-3)} .rp-quotes blockquote.a cite{color:var(--paper-wine)} .rp-quotes blockquote.b cite,.rp-quotes cite a{color:var(--paper-acc);text-decoration:none}
 .rp-claims{margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:0.55rem;font-size:var(--fs-body);line-height:1.6;color:var(--paper-ink-2)} .rp-claims b{color:var(--paper-ink);margin-right:0.3rem}
+.rp-srcs{display:flex;flex-direction:column;gap:0.5rem}
+.rp-src{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0.125rem 0.75rem;align-items:baseline;background:var(--paper-2);border-radius:var(--r-md);padding:0.75rem 1rem;font-size:var(--fs-sm);color:var(--paper-ink-3)}
+.rp-src .t{font-size:var(--fs-body);font-weight:500;color:var(--paper-ink);overflow-wrap:anywhere} .rp-src .t a{color:inherit;text-decoration:none} .rp-src .t a:hover{text-decoration:underline;text-underline-offset:0.2rem;text-decoration-thickness:1px}
+.rp-src b{font:600 var(--fs-body) var(--sans);text-align:right} .rp-src small{font-size:var(--fs-sm);text-align:right}
+.rp-2r{margin:0 0 1rem;font-size:var(--fs-body);line-height:1.6} .rp-2r p{margin:0 0 0.4rem;color:var(--paper-ink-2)} .rp-2r p.rp-note{color:var(--paper-ink-3)} .rp-2r b{color:var(--paper-ink)}
 .rp-unk{margin:0;padding-left:1.1rem;color:var(--paper-ink-2);line-height:1.7;font-size:var(--fs-body)}
 .rp-foot{padding-top:1.75rem;font-size:var(--fs-body);color:var(--paper-ink-2);display:flex;flex-direction:column;gap:0.8rem} .rp-foot p{margin:0} .rp-foot b{color:var(--paper-ink)}
 .rp .rvote > span,.rp .rvote-note{color:var(--paper-ink-3)} .rp .vbtn{background:var(--paper-2);color:var(--paper-ink-2)} .rp .vbtn:hover:not(:disabled){background:var(--paper-3);color:var(--paper-ink)} .rp .rvote .vbtn.mine{background:var(--paper-acc);color:var(--paper)}
@@ -1039,12 +1044,28 @@ async function castVote(pid, vote) {
 }
 // ---- final report: the XHIGH write-up rendered as a readable report (headings, paragraphs, quotes), never raw fields ----
 const cleanText = t => String(t || '')
+  .replace(/<\/tr>/gi, ' · ').replace(/<\/?[a-z][a-z0-9]*(?:\s[^<>]*)?>/gi, ' ')   // table markup in saved quotes becomes plain text
   .replace(/\$\$[^$]*(\$\$|$)|\$[^$]{1,80}\$/g, '[formula]')   // LaTeX blocks (also ones cut off by the excerpt) become a marker
   .replace(/\\[a-zA-Z]+/g, '').replace(/[{}]/g, '')
   .replace(/\\(textbf|textit|emph|mathrm|text|mathcal)\{([^{}]*)\}/g, '$2')
   .replace(/#{1,6}\s*/g, '').replace(/\*\*|__/g, '').replace(/`/g, '')
   .replace(/\b(YES_SUSPECTED|NO_SUPPORTED|UNRESOLVED)\b/g, k => PUBLIC_LABEL[k])
   .replace(/\bUNKNOWN\b/g, 'unknown').replace(/\s+/g, ' ').trim();
+// et-v1 write-ups are model-written for reviewers: strip loop jargon, enum names and A/B/E0 labels before cleanText maps the result labels.
+const ET_TERM = {TEXT_REUSE: 'reused text', DATA_RESULT_CONFIG_REUSE: 'reused results or settings', MECHANISM_SIMILARITY: 'similar method design'};
+const ET_NUM = '\\d+(?:\\.\\d+)?(?:\\/\\d+(?:\\.\\d+)?)+', ET_NUMS = new RegExp(`(?:${ET_NUM}(?:, and |, | and )){4,}${ET_NUM}`, 'g');
+const cleanET = t => String(t || '').trim()
+  .replace(/The LOW loop[^.]*\.\s*/g, '').replace(/\s*This is not proof of misconduct\.?/g, '')
+  .replace(/^At least one pair is SUSPECTED; source review is recommended\.?$/, 'At least one source pair was flagged, so a person should review the source.')
+  .replace(/^Searched scope: (\d+) candidate\(s\) with usable full text; this is not a clearance of the paper\.?$/, (_, n) => `We compared the paper with ${n} candidate source${n === '1' ? '' : 's'} that had usable full text and found nothing to flag. This is not a clearance of the paper.`)
+  .replace(/Therefore,? the final screening label is (YES_SUSPECTED|NO_SUPPORTED|UNRESOLVED)(, recommending human source review)?\./g, (_, k) => `So the result is ${PUBLIC_LABEL[k]}.`)
+  .replace(/verified ([A-Z][A-Z_]+) correspondence/g, (_, k) => 'verified case of ' + (ET_TERM[k] || k))
+  .replace(/\b[A-Z]{2,}(?:_[A-Z]+)+\b/g, k => PUBLIC_LABEL[k] ? k : ET_TERM[k] || k.toLowerCase().replace(/_/g, ' '))
+  .replace(/Target A/g, 'The target paper').replace(/target A/g, 'the target paper').replace(/Candidate B/g, 'The source').replace(/candidate B/g, 'the source')
+  .replace(/\bA and B spans\b/g, 'target and source passages').replace(/candidate author marker/g, "source's author name").replace(/attribution locus/g, 'citation text').replace(/\b([Tt]he) inspected candidate /g, '$1 inspected source ')
+  .replace(/the ours row/g, 'the proposed-method row').replace(/\s*under E\d\b/g, '').replace(/\bE\d\s+/g, '')
+  .replace(/\bSUPPORTED (normal )?explanation/g, 'ordinary explanation').replace(/preserved as UNKNOWN/g, 'left unknown')
+  .replace(ET_NUMS, m => m.match(new RegExp(ET_NUM, 'g')).slice(0, 3).join(', ') + ' and more');
 const sentenceCase = t => { t = cleanText(t); return t ? t[0].toUpperCase() + t.slice(1) : t; };
 const NORMAL = {SUPPORTED: 'An ordinary explanation is supported by the evidence.', CONTRADICTED: 'The evidence contradicts an ordinary explanation.',
   POSSIBLE: 'An ordinary explanation is possible but not shown by the inspected text.', UNKNOWN: 'Whether an ordinary explanation applies could not be checked.'};
@@ -1068,8 +1089,46 @@ function renderReport() {
   const claimText = id => cleanText((s.claims.find(c => c.id === id) || {}).text);
   const dt = s.finished ? new Date(s.finished * 1000).toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/New_York'}) : '';
   const sub = s.submission || {};
-  const numbers = [['Result', `<span class="res ${esc(label)}">${esc(labelText(label))}</span>`], ['Jev, whole paper', jev ? pct(jev.YES_SUSPECTED) + ' review' : '—'],
+  const et = isET(s), pw = et ? s.io.pair_writeups || [] : [], gr = et ? s.io.gated_reviews || [] : [], ep = et ? etPairs(s, st) : [];
+  // et-v1: one row per compared source (pair write-ups joined with Jev's per-pair scores), strongest first.
+  const srcRows = (() => {
+    const m = {};
+    for (const e of ep) m[e.cid] = {cid: e.cid, y: e.p.YES_SUSPECTED ?? null, title: e.title, url: e.url, flagged: false, written: false};
+    for (const w of pw) {
+      const c = srcOf(w.candidate_id), r = m[w.candidate_id] || (m[w.candidate_id] = {cid: w.candidate_id, y: null, written: false});
+      r.title = w.candidate_title || c.title || r.title || w.candidate_id; r.url = w.candidate_url || c.url || r.url || null;
+      r.flagged = w.pair_status === 'SUSPECTED'; r.written = w.writeup_status === 'WRITTEN';
+    }
+    return Object.values(m).sort((a, b) => (b.y ?? -1) - (a.y ?? -1));
+  })();
+  const written = pw.find(w => w.writeup_status === 'WRITTEN' && w.summary);
+  const stand = !et ? sentenceCase(String(f.conclusion || '').replace(/^\s*\w+ is a review signal, not a fact\.\s*/i, ''))
+    : (written ? sentenceCase(cleanET(written.summary)) : sentenceCase(cleanET(f.conclusion))) + (label === 'YES_SUSPECTED' && !written ? ' The written review for this paper was not produced in this run; the flagged sources are listed below.' : '');
+  const numbers = et ? [['Result', `<span class="res ${esc(label)}">${esc(labelText(label))}</span>`], ['Jev, strongest pair', ep[0] ? pct(ep[0].p.YES_SUSPECTED) : '—'],
+    ['Sources compared', Math.max(ep.length, pw.length)], ['Flagged pairs', pw.filter(w => w.pair_status === 'SUSPECTED').length], ['Findings', f.findings.length], ['Time', s.finished ? fmtDur(s.finished - s.started) : '—']]
+    : [['Result', `<span class="res ${esc(label)}">${esc(labelText(label))}</span>`], ['Jev, whole paper', jev ? pct(jev.YES_SUSPECTED) + ' review' : '—'],
     ['Findings', f.findings.length], ['Matched checks', checked ? `${matched} of ${checked}` : '—'], ['Candidates screened', s.retained.length], ['Time', s.finished ? fmtDur(s.finished - s.started) : '—']];
+  const sourceSec = () => `<section class="rp-sec"><h3>Sources compared</h3><div class="rp-srcs">${srcRows.map(r => `<div class="rp-src"><span class="t">${r.url ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a>` : esc(r.title)}</span>
+      <b style="color:var(${r.flagged ? '--paper-wine' : '--paper-ink-3'})">${pct(r.y)}</b>
+      <span class="s">${r.flagged ? (r.written ? 'Flagged · written review' : 'Flagged · needs a person to review') : 'Not flagged'}</span><small>Jev${/^arxiv-/.test(r.cid) ? ' · arXiv' : /^openreview-/.test(r.cid) ? ' · OpenReview' : ''}</small></div>`).join('')}</div></section>`;
+  const KIND = [[/verbatim|TEXT_REUSE|identical (wording|text|prose)/i, 'Matching text'], [/result numbers|DATA_RESULT|identical .*numbers/i, 'Matching results'],
+    [/MECHANISM|design ideas|module names/i, 'Similar method design'], [/figure/i, 'Matching figure']];
+  const findingET = (x, i) => {
+    const c = srcOf(x.B_source), reason = sentenceCase(cleanET(x.reason)), kind = (KIND.find(([re]) => re.test(x.reason || '')) || [])[1];
+    return `<section class="rp-sec">
+      <div class="rp-sub">Finding ${i + 1} of ${f.findings.length} · vs ${esc(trunc(c.title || 'source', 60))}</div>
+      <h3>${esc(kind || trunc(reason.split(/[.;:(,]/)[0] || reason, 80))}</h3>
+      <div class="rp-cols"><div class="rp-body"><p class="rp-lead">${esc(reason)}</p>
+        ${x.normal ? `<p class="rp-note">${esc(NORMAL[x.normal] || NORMAL.UNKNOWN)}</p>` : ''}</div>
+        <div class="rp-quotes"><blockquote class="a">“${esc(lead(cleanText(x.A)))}”<cite>Target paper · page ${esc(x.A_page ?? '?')}</cite></blockquote>
+        <blockquote class="b">“${esc(lead(cleanText(x.B)))}”<cite>${c.url ? `<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(trunc(c.title || 'Source', 60))}</a>` : esc(trunc(c.title || 'Source', 60))} · page ${esc(x.B_page ?? '?')}</cite></blockquote></div></div></section>`;
+  };
+  const second = gr.filter(g => g.status === 'AGREES' || g.status === 'DISAGREES');
+  const secondSec = () => `<section class="rp-sec"><h3>Second review</h3>${second.map(g => {
+    const w = pw.find(x => x.candidate_id === g.candidate_id) || {}, title = srcOf(g.candidate_id).title || w.candidate_title || g.candidate_id;
+    return `<div class="rp-2r"><p><b>vs ${esc(trunc(title, 70))}</b> A second model re-read the evidence and ${g.status === 'AGREES' ? 'agrees' : 'does not agree'} with the flag.</p>${g.normal_explanation ? `<p class="rp-note">${esc(sentenceCase(cleanET(g.normal_explanation)))}</p>` : ''}</div>`;
+  }).join('')}</section>`;
+  const unknowns = (f.unknowns || []).filter(u => !et || !/^pair \S+:/.test(u));
   const finding = (x, i) => {
     const c = srcOf(x.B_source);
     return `<section class="rp-sec">
@@ -1084,13 +1143,15 @@ function renderReport() {
     <div class="rp-top"><button class="btn" data-close-report="1">← Back to the stage</button><span class="note">Session #${s.rank} · ${esc(s.session)}</span></div>
     <header class="rp-head"><div class="rp-title"><h2>${s.openreview ? `<a href="${esc(s.openreview)}" target="_blank" rel="noopener">${esc(s.title)}</a>` : esc(s.title)}</h2>
       <p class="rp-date">Screening report${dt ? ' · ' + dt : ''}</p>
-      <p class="rp-stand">${esc(sentenceCase(String(f.conclusion || '').replace(/^\s*\w+ is a review signal, not a fact\.\s*/i, '')) || 'The final review did not write a summary.')}</p>
-      <p class="rp-meta">${sub.number ? `ICLR 2027 submission #${sub.number} · ` : ''}compared with ${sources.length ? sources.map(c => `<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(trunc(c.title, 70))}</a>`).join(' and ') : top ? esc(top.title) : 'no source'}</p></div>
+      <p class="rp-stand">${esc(stand || 'The final review did not write a summary.')}</p>
+      <p class="rp-meta">${sub.number ? `ICLR 2027 submission #${sub.number} · ` : ''}compared with ${sources.length ? sources.map(c => `<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(trunc(c.title, 70))}</a>`).join(' and ') : et ? (srcRows.length ? `${srcRows.length} candidate source${srcRows.length === 1 ? '' : 's'}` : 'no source') : top ? esc(top.title) : 'no source'}</p></div>
       <aside class="rp-card"><div class="rp-card-h">In numbers</div>${numbers.map(([k, v]) => `<div class="rp-row"><span>${k}</span><b>${v}</b></div>`).join('')}</aside></header>
     <section class="rp-sec"><h3>What the paper claims</h3>
       <ol class="rp-claims">${s.claims.map(c => `<li><b>${esc(c.id)}</b> ${esc(cleanText(c.text))}</li>`).join('')}</ol></section>
-    ${f.findings.map(finding).join('')}
-    ${f.unknowns?.length ? `<section class="rp-sec"><h3>What we could not check</h3><ul class="rp-unk">${f.unknowns.map(u => `<li>${esc(sentenceCase(u))}</li>`).join('')}</ul></section>` : ''}
+    ${et && srcRows.length ? sourceSec() : ''}
+    ${f.findings.map(et ? findingET : finding).join('')}
+    ${et && second.length ? secondSec() : ''}
+    ${unknowns.length ? `<section class="rp-sec"><h3>What we could not check</h3><ul class="rp-unk">${unknowns.map(u => `<li>${esc(sentenceCase(et ? cleanET(u) : u))}</li>`).join('')}</ul></section>` : ''}
     <footer class="rp-foot"><p><b>${esc(labelText(label))}</b> is a lead for a person to check, not a finding of plagiarism or misconduct. The system uses language models and can be wrong.</p>
       ${resultVote(s.paper_id)}
       <p>${wrongLink(s.paper_id, s.title)} · <button class="linkbtn" data-about="1">About these results</button></p></footer></div>`);
