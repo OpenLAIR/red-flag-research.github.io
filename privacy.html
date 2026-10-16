@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy policy · Red-flag Research</title>
+<link rel="canonical" href="https://openlair.github.io/red-flag-research.github.io/privacy.html">
+<meta name="description" content="Privacy policy of the Red-flag Research website and of the project's Google OAuth app.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0d10'/%3E%3Cpath d='M10 6v21' stroke='%23c9ced6' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M11 7c3.5-1.8 6.5 1.6 10 0s4.5-.8 4.5-.8v10s-1.4 1-4.5.8-6.5-2.4-10 0z' fill='%23ff5d4f'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --panel:#13161b; --panel-2:#1a1e24; --inset:#0f1216; --line:#20252d; --line-2:#2b313a;
+  --text:#e8eaed; --text-2:#a2a9b4; --muted:#6f7783; --flag:#ff5d4f; --cyan:#57c7cf;
+  --sans:'IBM Plex Sans',system-ui,sans-serif; --code:ui-monospace,SFMono-Regular,Menlo,monospace; /* taste-skill-ignore: only for <code> */ --serif:'Newsreader',Georgia,serif;
+  --gutter:32px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:400 16px/1.7 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--cyan);text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:4px}
+.wrap{max-width:calc(1160px + 2*var(--gutter));margin:0 auto;padding:0 var(--gutter)}
+.top{position:sticky;top:0;z-index:10;background:var(--bg)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:20px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);font:500 20px/1 var(--serif);letter-spacing:-.01em}
+.back{color:var(--text-2);text-decoration:none;font-size:14px}
+.back:hover{color:var(--text)}
+.doc{display:grid;grid-template-columns:220px minmax(0,1fr);gap:64px;padding-top:72px;padding-bottom:40px}
+.toc{position:sticky;top:96px;align-self:start;font-size:14px}
+.toc b{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:12px}
+.toc a{display:block;color:var(--text-2);text-decoration:none;padding:5px 0;transition:color .2s}
+.toc a:hover{color:var(--text)}
+main{max-width:720px}
+h1{font:500 56px/1.02 var(--serif);letter-spacing:-.03em;margin:0 0 14px}
+.meta{color:var(--text-2);margin:0 0 36px;font-size:15px}
+.summary{position:relative;overflow:hidden;background:var(--panel);border-radius:18px;padding:26px 28px 26px 32px;margin:0 0 44px}
+.summary::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--flag)}
+.summary h2{margin-top:0}
+h2{font:500 30px/1.15 var(--serif);letter-spacing:-.015em;margin:44px 0 14px;scroll-margin-top:90px}
+p{margin:0 0 14px;color:var(--text-2)}
+strong{color:var(--text);font-weight:600}
+ul{margin:0 0 16px;padding:0;list-style:none;display:grid;gap:12px}
+li{position:relative;padding-left:22px;color:var(--text-2)}
+li::before{content:'';position:absolute;left:2px;top:.72em;width:7px;height:7px;border-radius:2px;background:var(--line-2)}
+code{font:14px var(--code);color:var(--text);background:var(--inset);padding:1px 6px;border-radius:5px}
+footer{margin-top:80px;background:var(--inset);padding:32px 0 44px;font-size:14px;color:var(--muted)}
+footer .wrap{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
+footer a{color:var(--text-2);text-decoration:none}
+footer a:hover{color:var(--text)}
+@media (max-width:860px){
+  .doc{grid-template-columns:1fr;gap:28px;padding-top:44px}
+  .toc{position:static}
+}
+@media (max-width:720px){
+  :root{--gutter:16px}
+  h1{font-size:42px}
+  h2{font-size:25px}
+  .summary{padding:20px}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="flag" viewBox="0 0 32 32"><path d="M10 5v23" stroke="#c9ced6" stroke-width="2.4" stroke-linecap="round" fill="none"/><path fill="#ff5d4f" d="M11 6.5c3.5-1.8 6.5 1.6 10 0s4.5-.8 4.5-.8v10.3s-1.4 1-4.5.8-6.5-2.4-10 0z"/></symbol>
+</svg>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./"><svg width="26" height="26" aria-hidden="true"><use href="#flag"/></svg><span data-bind="productName">Red-flag Research</span></a>
+    <a class="back" href="./">← Back to the project page</a>
+  </div>
+</header>
+
+<div class="wrap doc">
+  <nav class="toc" aria-label="On this page">
+    <b>On this page</b>
+    <a href="#summary">Summary</a>
+    <a href="#google">Google OAuth app</a>
+    <a href="#visitors">Visitors of this website</a>
+    <a href="#papers">Papers and results</a>
+    <a href="#contact">Changes and contact</a>
+  </nav>
+
+  <main>
+    <h1>Privacy policy</h1>
+    <p class="meta">Effective <span data-bind="privacyEffective">2026-10-16</span> · <span data-bind="productName">Red-flag Research</span>, a research project of <a data-href="orgUrl" href="https://openlair.github.io/">OpenLAIR</a></p>
+
+    <section class="summary" aria-labelledby="summary">
+      <h2 id="summary">Summary</h2>
+      <p>This website shows a public, automated screening of ICLR 2027 submissions. You do not sign in, and we do not use cookies, advertising or analytics. The only data the site keeps about visitors is what anonymous voting on the live page needs, described below. Our Google OAuth app is used only by the project team to store the project's own files in the team's Google Drive; visitors never sign in with Google.</p>
+    </section>
+
+    <h2 id="google">Google OAuth app and Google user data</h2>
+    <p>The Google Cloud project <code>iclr-ocr-rclone</code> holds an OAuth client that the project maintainers use with the open-source tool rclone. It signs in only to the maintainers' own Google account and is not offered to anyone else.</p>
+    <ul>
+      <li><strong>What it accesses:</strong> files in the maintainers' Google Drive that belong to this project: OCR text of public ICLR 2027 submission PDFs and compressed archives of the screening runs shown on this site.</li>
+      <li><strong>What it does with them:</strong> uploads, lists, checks (size and checksums) and downloads these files to back up and restore the project's own results. Nothing else.</li>
+      <li><strong>What it does not do:</strong> it does not read, collect or use any other person's Google data. Data from Google APIs is not sold, not shared with third parties, not used for advertising, and not used to train AI or machine-learning models.</li>
+    </ul>
+    <p>Our use of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
+
+    <h2 id="visitors">Visitors of this website</h2>
+    <ul>
+      <li><strong>No accounts, cookies or analytics.</strong> The site does not ask who you are.</li>
+      <li><strong>A random identifier on the live page.</strong> When the live page loads, your browser stores a random identifier in its local storage. It is sent to our server only with voting requests, so that you can change or retract your vote. Clearing your browser's site data removes it.</li>
+      <li><strong>Anonymous votes.</strong> If voting is open and you vote on a paper, our server stores the vote, that random identifier, the time, and a keyed one-way hash of your IP address (for IPv6, of its /64 prefix). The raw IP address is never stored. The hash is used only to limit abuse: how many voters per network per paper, and how many votes per minute. You can retract your vote on the page at any time.</li>
+      <li><strong>Services that see your request.</strong> Pages are hosted on GitHub Pages, fonts come from Google Fonts, and live data is served through Cloudflare. These providers receive standard request information such as your IP address under their own privacy policies.</li>
+    </ul>
+
+    <h2 id="papers">Papers and results</h2>
+    <p>The screened papers are public ICLR 2027 submissions on OpenReview. Results are produced automatically and are not findings of misconduct; they flag papers whose sources a person should review.</p>
+
+    <h2 id="contact">Changes and contact</h2>
+    <p>If this policy changes, the new version and its date are posted on this page. Questions or requests: email <a data-mail href="mailto:red.flag.autoresearch@gmail.com"><span data-bind="contactEmail">red.flag.autoresearch@gmail.com</span></a>, or <a data-href="privacyContactUrl" href="https://github.com/OpenLAIR/red-flag-research.github.io/issues">open an issue on the project's GitHub repository</a>.</p>
+  </main>
+</div>
+
+<footer>
+  <div class="wrap">
+    <span><span data-bind="productName">Red-flag Research</span> · by <span data-bind="author">Ziqian Zhang</span> · a research project of <a data-href="orgUrl" href="https://openlair.github.io/">OpenLAIR</a></span>
+    <span><a href="./">Project page</a> · <a data-href="liveUrl" href="./live/">Live page</a> · <a href="privacy.html">Privacy policy</a></span>
+  </div>
+</footer>
+
+<script>
+// Product name, dates and links come from the same data/site.json as the homepage.
+fetch('data/site.json', { cache: 'no-cache' }).then((r) => r.ok ? r.json() : null).then((site) => {
+  if (!site) return;
+  document.querySelectorAll('[data-bind]').forEach((el) => { const v = site[el.dataset.bind]; if (v != null) el.textContent = v; });
+  const hrefs = { orgUrl: site.organization.url, liveUrl: site.liveUrl, privacyContactUrl: site.privacyContactUrl };
+  document.querySelectorAll('[data-href]').forEach((el) => { if (hrefs[el.dataset.href]) el.href = hrefs[el.dataset.href]; });
+  if (/@/.test(site.contactEmail || '')) document.querySelectorAll('[data-mail]').forEach((el) => { el.href = 'mailto:' + site.contactEmail; });
+  document.title = 'Privacy policy · ' + site.productName;
+}).catch(() => {});
+</script>
+</body>
+</html>

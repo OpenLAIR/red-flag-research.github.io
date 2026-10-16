@@ -1,0 +1,1351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live · Red-flag Research</title>
+<meta name="description" content="Live, open-source screening for automated-research attacks on peer review. Watch AI agents screen ICLR 2027 submissions, one target–source pair at a time, with every Jev score and quoted evidence.">
+<meta property="og:site_name" content="Red-flag Research">
+<meta property="og:title" content="Live · Red-flag Research">
+<meta property="og:description" content="Live, open-source screening for automated-research attacks on peer review.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0d10'/%3E%3Cpath d='M10 6v21' stroke='%23c9ced6' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M11 7c3.5-1.8 6.5 1.6 10 0s4.5-.8 4.5-.8v10s-1.4 1-4.5.8-6.5-2.4-10 0z' fill='%23ff5d4f'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --orlabel:#e3897e;
+  --bg:#0b0d10; --panel:#13161b; --panel-2:#1a1e24; --inset:#0f1216; --stage:#171a20; --line:#20252d; --line-2:#2b313a;
+  --text:#e8eaed; --text-2:#a2a9b4; --muted:#6f7783;
+  --cyan:#57c7cf; --blue:#6ba3e8; --green:#5fcf8a; --purple:#a493ec; --amber:#e8b44c; --red:#ef7a7a; --coral:#ee8193; --gray:#69717d;
+  --qwen:#6ba3e8; --jev:#a493ec; --python:#8f97a3; --arxiv:#57c7cf; --ocr:#e8b44c;
+  --r-lg:1.125rem; --r-md:0.75rem; --r-sm:0.5rem; --gap:0.75rem;
+  --fs-sm:0.78125rem; --fs-body:0.875rem; --fs-lead:1rem; --fs-head:1.4375rem; --fs-display:2rem;
+  --mono:'IBM Plex Sans',system-ui,sans-serif; --serif:'Newsreader',Georgia,serif; --sans:'IBM Plex Sans',system-ui,sans-serif; --display:'IBM Plex Sans',system-ui,sans-serif;
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+*{box-sizing:border-box} html,body{margin:0;background:var(--bg);color:var(--text);font:var(--fs-body)/1.45 var(--sans);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+a{color:inherit} button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:0.125rem solid var(--cyan);outline-offset:0.125rem;border-radius:0.375rem}
+.mono{font-family:var(--mono)} .muted{color:var(--muted)} .dim{color:var(--text-2)}
+.skip{position:absolute;left:-999px;top:0.5rem;background:var(--panel-2);padding:0.375rem 0.625rem;border-radius:var(--r-sm);z-index:10} .skip:focus{left:0.75rem}
+
+/* ---- top bar ---- */
+.top{display:grid;grid-template-columns:auto auto 1fr auto auto;align-items:center;gap:1rem;padding:0.75rem 1rem 0.375rem}
+.brand{text-decoration:none;color:inherit;display:flex;align-items:center;font-family:var(--serif)!important;font-weight:500!important;font-size:1.25rem!important;gap:0.625rem;font:600 1.0625rem var(--display);letter-spacing:-.01em}
+.brand .wm .r{color:#ff5d4f;font-style:italic} .brand .mark{flex:none;display:block}
+.brand .home{font-family:var(--sans);font:500 var(--fs-sm) var(--sans);color:var(--muted);opacity:0;transition:opacity .16s} .brand:hover .home,.brand:focus-visible .home{opacity:1} .brand:hover .logo{filter:brightness(1.12)}
+.logo{width:1.75rem;height:1.75rem;border-radius:0.5rem;background:var(--cyan);display:grid;place-items:center;color:#062528;font:700 0.75rem var(--sans)}
+.clock{font:500 var(--fs-body) var(--mono);color:var(--text-2)}
+.headline{text-align:center;font:500 var(--fs-lead) var(--display);color:var(--text-2);letter-spacing:-.005em} .headline b{color:var(--text);font-weight:600}
+.counters{display:flex;gap:0.375rem}
+.fbk{display:inline-flex;align-items:center;gap:0.375rem;padding:0.3125rem 0.75rem;border-radius:999px;background:#173436;color:var(--cyan);font-size:var(--fs-sm);font-weight:600;text-decoration:none;white-space:nowrap;transition:background .16s var(--ease)} .fbk:hover{background:#1d4447}
+.fbk svg{width:0.875rem;height:0.875rem;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.chip{display:inline-flex;align-items:baseline;gap:0.3125rem;padding:0.3125rem 0.6875rem;border-radius:999px;background:var(--panel);font-size:var(--fs-sm);color:var(--text-2);white-space:nowrap}
+.chip b{font-weight:600;font-size:var(--fs-body);color:var(--text)} .chip.red b{color:var(--red)} .chip.cyan b{color:var(--cyan)}
+.replay{display:flex;align-items:center;gap:0.5rem;padding:0.375rem 1rem 0;font-size:var(--fs-sm);color:var(--text-2)}
+.replay .badge{font-weight:600;color:var(--amber);background:#2a2214;padding:0.1875rem 0.5625rem;border-radius:999px}
+body.live .replay .badge{color:#ffd9d9;background:#4a1d22} body.live .replay .badge::before{content:'';display:inline-block;width:0.4375rem;height:0.4375rem;border-radius:50%;background:var(--red);margin-right:0.375rem;animation:breathe 1.6s ease-in-out infinite}
+body.live #play,body.live #next,body.live [data-speed],body.live #scrub{display:none} body.live .replay{padding-bottom:0.125rem}
+.replay input[type=range]{flex:1;accent-color:var(--cyan);min-width:7.5rem}
+.btn{border:0;background:var(--panel);border-radius:999px;padding:0.3125rem 0.75rem;font-size:var(--fs-sm);color:var(--text);transition:background .16s var(--ease),transform .12s var(--ease)}
+.btn:hover{background:var(--panel-2)} .btn:active{transform:scale(.97)}
+.btn.on{background:#173436;color:var(--cyan)}
+
+/* ---- page grid ---- */
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 28.75rem;gap:var(--gap);padding:var(--gap) 1rem 0.375rem;align-items:start}
+.maincol{display:flex;flex-direction:column;gap:var(--gap);min-width:0}
+.bottom{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap)}
+.card{background:var(--panel);border-radius:var(--r-lg);padding:0.875rem 1rem 1rem;min-width:0;display:flex;flex-direction:column}
+.card h3{margin:0 0 0.625rem;font:600 var(--fs-body) var(--sans);display:flex;align-items:center;gap:0.5rem;min-height:1.375rem}
+.card h3 .tag{font-weight:500;font-size:var(--fs-sm);color:var(--text-2);background:var(--panel-2);padding:0.125rem 0.5rem;border-radius:999px}
+.card h3 .tag:last-child{margin-left:auto}
+.stage{background:var(--stage);padding:0.75rem 1rem 1rem}
+.rail{display:flex;flex-direction:column;gap:var(--gap);min-width:0}
+.note{font-size:var(--fs-sm);color:var(--muted);font-weight:400}
+.note.dim{color:var(--text-2)}
+.warnchip{display:inline-block;margin-top:0.375rem;font-size:var(--fs-sm);font-weight:600;color:var(--amber);background:#2a2214;border-radius:999px;padding:1px 0.5rem}
+.foot{margin:0;padding:0 1rem 0.25rem;font-size:0.75rem;line-height:1.3;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.empty{color:var(--muted);font-size:var(--fs-sm)}
+
+/* ---- stage header ---- */
+.tabs{display:flex;gap:0.25rem;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;align-items:center;padding:0.25rem;border-radius:999px;background:var(--inset);margin-bottom:0.625rem}
+.tab{display:flex;align-items:center;gap:0.4375rem;padding:0.375rem 0.75rem 0.375rem 0.5625rem;border-radius:999px;border:0;background:none;font-size:var(--fs-body);color:var(--text-2);max-width:12.5rem;flex:0 1 auto;min-width:0;transition:background .16s var(--ease),color .16s}
+.tab:hover{background:var(--panel);color:var(--text)} .tab .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tab.on{background:var(--panel-2);color:var(--text);box-shadow:inset 0 0 0 1px #2d5b5f}
+.seg{display:inline-flex;flex:none;border-radius:999px;background:var(--panel);overflow:hidden;margin-left:auto;padding:0.125rem}
+.seg button{background:none;border:0;padding:0.3125rem 0.75rem;border-radius:999px;font-size:var(--fs-sm);color:var(--text-2);transition:background .16s}
+.seg button:hover{color:var(--text)} .seg button.on{background:var(--panel-2);color:var(--cyan)}
+.dot{width:0.5rem;height:0.5rem;border-radius:50%;flex:none;background:var(--gray)}
+.dot.run{background:var(--cyan);animation:breathe 1.6s ease-in-out infinite} .dot.done{background:var(--green)} .dot.pre{background:var(--blue)} .dot.flag{background:var(--red)} .dot.wait{background:transparent;box-shadow:inset 0 0 0 1.5px var(--gray)}
+@keyframes breathe{50%{opacity:.45}}
+
+/* ---- stage body ---- */
+.stagebody{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:1rem}
+.eyebrow{font-size:var(--fs-sm);color:var(--muted);margin:0 0 0.25rem}
+.vs{display:grid;place-items:center;align-self:center;width:2.25rem;height:2.25rem;border-radius:50%;background:#2a1719;color:var(--red);font:700 0.75rem var(--display)}
+.traj{display:flex;flex-direction:column;min-width:0}
+.traj .head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.5rem}
+.traj .head span:first-child{font-weight:600}
+.steps{display:flex;flex-direction:column;gap:0.375rem;max-height:20.625rem;overflow:auto;padding-right:0.125rem;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
+.step{border-radius:var(--r-md);padding:0.5rem 0.75rem 0.5625rem;background:var(--panel);position:relative}
+.step::before{content:'';position:absolute;left:0;top:0.625rem;bottom:0.625rem;width:0.1875rem;border-radius:0 0.1875rem 0.1875rem 0;background:var(--line-2)}
+.step .meta{display:flex;gap:0.5rem;font-size:var(--fs-sm);color:var(--muted)} .step .meta .who{font-weight:600;color:var(--text-2)}
+.step .tt{font-weight:600;margin:1px 0}
+.step .q{font-size:var(--fs-sm);line-height:1.45;color:var(--text-2);word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.step.qwen::before{background:var(--qwen)} .step.jev::before{background:var(--jev)} .step.python::before{background:var(--python)} .step.arxiv::before{background:var(--arxiv)} .step.ocr::before{background:var(--ocr)}
+.step.bad{background:#251517} .step.bad::before{background:var(--red)} .step.preprint{background:#141b25} .step.preprint::before{background:var(--blue)}
+.step.partial{background:#221d12} .step.partial::before{background:var(--amber)}
+.step.new{animation:fadein .5s var(--ease)}
+@keyframes fadein{from{opacity:0;transform:translateY(-3px)}}
+
+/* ---- five sections ---- */
+.sections{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0.5rem;margin-top:0.875rem}
+.sec{position:relative;border:0;border-radius:var(--r-md);padding:0.625rem 0.6875rem;background:var(--panel);text-align:left;min-width:0;display:flex;flex-direction:column;transition:background .16s var(--ease),transform .12s var(--ease)}
+.sec:hover{background:var(--panel-2)} .sec:active{transform:scale(.985)}
+.sec.cur{box-shadow:inset 0 0 0 1px #2d5b5f}
+.sec .n{font-size:var(--fs-sm);color:var(--muted)} .sec .nm{font-weight:600;margin:1px 0 0.4375rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ticks{display:flex;gap:0.125rem;margin-bottom:0.5rem} .ticks i{flex:1;height:0.3125rem;border-radius:0.1875rem;background:var(--line-2)}
+.ticks i.done{background:var(--green)} .ticks i.run{background:var(--cyan)} .ticks i.gap{background:var(--amber)}
+.sec .open-hint{position:absolute;right:0.625rem;top:0.5625rem;font-size:var(--fs-sm);color:var(--cyan);opacity:0;transition:opacity .16s} .sec:hover .open-hint,.sec:focus-visible .open-hint{opacity:1}
+.bar{display:flex;height:0.5rem;border-radius:0.25rem;overflow:hidden;background:var(--line);gap:1px} .bar i{display:block;height:100%}
+.bar.big{height:0.6875rem}
+.lg{display:flex;flex-wrap:wrap;gap:0.1875rem 0.625rem;font-size:var(--fs-sm);color:var(--text-2);margin-top:0.3125rem} .lg span::before{content:'';display:inline-block;width:0.4375rem;height:0.4375rem;border-radius:0.125rem;margin-right:0.3125rem;background:var(--c)}
+
+/* ---- stage detail (flow panel) ---- */
+.secdetail{border-radius:var(--r-md);background:var(--panel);padding:0.75rem 0.875rem}
+.srow{display:grid;grid-template-columns:1rem 14.375rem minmax(0,1fr);gap:0.625rem;padding:0.375rem 0}
+.srow .sl{font-weight:600;font-size:var(--fs-lead)} .srow .sp{font-size:var(--fs-sm);color:var(--text-2)}
+.srow .role{font-size:var(--fs-sm);color:var(--muted)}
+.dl{display:flex;flex-direction:column;gap:0.375rem}
+.iol{font-size:var(--fs-body);color:var(--text-2);margin:1px 0} .iol b{font-size:var(--fs-sm);font-weight:600;color:var(--muted);margin-right:0.375rem}
+.ex{border-radius:var(--r-sm);padding:0.5rem 0.625rem;background:var(--inset);margin-top:0.25rem}
+.ex .h{color:var(--text)} .ex .h a{text-decoration:none} .ex .h a:hover{text-decoration:underline}
+.snip{font-size:var(--fs-sm);line-height:1.5;color:var(--text-2);margin-top:0.1875rem}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0.375rem;margin-top:0.3125rem} .two .snip{margin:0;background:var(--panel);border-radius:0.375rem;padding:0.375rem 0.5rem}
+.two .snip b{display:block;font-size:var(--fs-sm);color:var(--muted);font-weight:600;margin-bottom:1px}
+.st-chip{font-size:var(--fs-sm);font-weight:600;padding:1px 0.4375rem;border-radius:999px;background:var(--panel-2);margin-left:0.375rem;white-space:nowrap}
+.st-chip.SUPPORTED{color:var(--green);background:#14261b} .st-chip.CONTRADICTED{color:var(--red);background:#2a1719} .st-chip.UNKNOWN{color:var(--text-2)}
+.ptab{width:100%;border-collapse:separate;border-spacing:0 0.125rem;font-size:var(--fs-sm);margin-top:0.375rem} .ptab td,.ptab th{padding:0.1875rem 0.5rem;text-align:left;color:var(--text-2);background:var(--panel)} .ptab th{color:var(--muted);font-weight:500;background:none}
+.drow2{margin-top:0.25rem} .drow2 .lbl{font-size:var(--fs-body);color:var(--text);margin-bottom:0.25rem} .drow2 .bl{display:grid;grid-template-columns:minmax(0,1fr) 6.875rem;gap:0.5rem;align-items:center} .drow2 .top1{font-size:var(--fs-sm);text-align:right}
+.flowwrap{overflow:auto;border-radius:var(--r-md);background:var(--inset);padding:0.5rem}
+.flowwrap svg{display:block;min-width:56.25rem;width:100%;height:auto}
+.fn{cursor:pointer} .fn .box{fill:#171b21;stroke:transparent;transition:stroke .16s} .fn:hover .box{stroke:#3a424d}
+.fn.done .box{fill:#15201a} .fn.done .bar{fill:var(--green)} .fn.run .box{stroke:var(--cyan);stroke-width:1.5;animation:nodepulse 1.6s ease-in-out infinite} .fn.run .bar{fill:var(--cyan)}
+.fn.gap .bar{fill:var(--amber)} .fn .bar{fill:#3a414c} .fn.sel .box{stroke:#e8eaed;stroke-width:1.5}
+.fn .fl{fill:var(--text);font:600 0.7188rem 'IBM Plex Sans',sans-serif} .fn .fr{fill:var(--muted);font:0.6562rem 'IBM Plex Sans',sans-serif}
+.fe{fill:none;stroke:#252b33;stroke-width:1.5} .fe.done{stroke:#3a4452} .fe.flowing{stroke:var(--cyan);stroke-dasharray:6 6;animation:dash 0.9s linear infinite}
+.fe.loop{stroke:var(--purple);stroke-dasharray:4 4;opacity:.75} .floop{fill:var(--purple);font:0.6562rem 'IBM Plex Sans',sans-serif}
+.fcol{fill:#13161b;stroke:transparent} .fcol.sel{stroke:#2d5b5f} .fhead{fill:var(--text);font:600 0.75rem 'IBM Plex Sans',sans-serif} .fsub{fill:var(--muted);font:0.6562rem 'IBM Plex Sans',sans-serif}
+@keyframes dash{to{stroke-dashoffset:-12}} @keyframes nodepulse{50%{stroke-opacity:.35}}
+#flowView:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) 25rem;gap:var(--gap);align-items:start}
+#flowdetail{position:sticky;top:0.75rem;max-height:calc(100vh - 1.5rem);overflow:auto}
+#flowdetail .srow{grid-template-columns:1rem minmax(0,1fr)} #flowdetail .srow .dl{grid-column:1/3}
+.fd-empty{border-radius:var(--r-md);background:var(--panel);padding:0.875rem 1rem;line-height:1.55;color:var(--text-2)}
+body.pipeline .seg{display:none}
+body.flowmode .bottom,body.flowmode .rail{display:none} body.flowmode .grid{grid-template-columns:minmax(0,1fr)}
+
+/* ---- bottom row ---- */
+.budgetbody{flex:1;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:0.75rem;align-items:center;min-height:0}
+.gaugewrap{min-height:0;height:100%;display:flex;align-items:center} .gaugewrap svg{display:block;width:100%;max-width:12.5rem;max-height:5.25rem;margin:0 auto}
+.kpi{font:600 var(--fs-display)/1 var(--display);letter-spacing:-.02em} .kpis{display:grid;grid-template-columns:1fr;gap:0.75rem}
+.bk small{display:flex;align-items:center;gap:0.375rem;font-size:var(--fs-sm);color:var(--text-2);margin-top:0.3125rem} .bk .sw{width:0.5rem;height:0.5rem;border-radius:0.125rem;display:inline-block}
+.chart svg{display:block;width:100%;height:8.75rem}
+#chart{flex:1;min-height:0;display:flex;flex-direction:column}
+#chart .lg{flex-wrap:nowrap;overflow:hidden;white-space:nowrap}
+.act{flex:1;min-height:0;overflow:hidden}
+.bk .kmeta{display:block;font-size:var(--fs-sm);color:var(--muted);margin-top:0.1875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.act{display:flex;flex-direction:column;gap:0.3125rem;font-size:var(--fs-lead)}
+.arow{display:grid;grid-template-columns:0.625rem minmax(0,1fr) 5rem 4rem;gap:0.5rem;align-items:center;color:var(--text-2)}
+.arow .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.arow .db{height:0.375rem;border-radius:0.1875rem;background:var(--line)} .arow .db i{display:block;height:100%;border-radius:0.1875rem}
+.strip{position:relative;height:1.375rem;margin-top:auto;padding-top:0.25rem} .strip i{position:absolute;top:0.25rem;width:0.125rem;height:0.75rem;border-radius:1px}
+.prov{display:inline-block;width:0.5rem;height:0.5rem;border-radius:0.125rem}
+
+/* ---- rail ---- */
+.pair{background:#1b1416}
+.pair .pt{font:600 var(--fs-body)/1.35 var(--sans);margin:0}
+.pair .tp{display:flex;align-items:baseline;gap:0.625rem;margin:0 0 0.5rem} .pair .tp .big{font:700 3rem/0.9 var(--display);letter-spacing:-.04em;color:var(--red)} .pair .tp .cap{font-size:var(--fs-sm);color:var(--text-2)}
+.brow{cursor:pointer;border:0;width:100%;text-align:left;color:inherit;font:inherit;transition:background .16s var(--ease)} .brow:hover{background:var(--panel-2)} .brow.on{box-shadow:inset 0 0 0 1px #2d5b5f}
+.brow .go{white-space:nowrap;font-size:var(--fs-sm);color:var(--cyan);opacity:0;transition:opacity .16s} .brow:hover .go,.brow:focus-visible .go{opacity:1}
+body.extra .replay #play,body.extra .replay #scrub,body.extra .replay [data-speed]{display:inline-flex} .pair .pt a{text-decoration:none} .pair .pt a:hover{text-decoration:underline}
+.clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pairfoot{display:flex;justify-content:space-between;align-items:center;gap:0.5rem;margin-top:0.625rem;min-height:1.625rem}
+.pair .arrow{font-size:var(--fs-sm);color:var(--muted);margin:0.3125rem 0}
+.board{display:flex;flex-direction:column;gap:0.25rem}
+.brow{display:grid;grid-template-columns:1.125rem minmax(0,1fr) 5.5rem;gap:0.5rem;padding:0.4375rem 0.625rem;border-radius:var(--r-sm);align-items:center;background:var(--inset)}
+.brow .rk{font-size:var(--fs-sm);color:var(--muted)} .brow .tt{font-size:var(--fs-body);line-height:1.3}
+.brow .tt > a{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;text-decoration:none} .brow .tt a:hover{text-decoration:underline}
+.brow .tt .src{color:var(--text-2);font-size:var(--fs-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brow .pv{font-weight:600;text-align:right;display:flex;flex-direction:column;align-items:flex-end} .clamp1{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lab{font-size:var(--fs-sm);padding:0 0.375rem;border-radius:999px;background:var(--panel-2);color:var(--text-2);margin-left:0.25rem;white-space:nowrap}
+.lab.pl{color:var(--red);background:#2a1719}
+.box{display:flex;flex-direction:column;gap:0.5rem}
+.brow2{display:flex;flex-direction:column;gap:0.1875rem}
+.brow2 .who{font-size:var(--fs-sm);font-weight:600;display:flex;gap:0.375rem} .brow2 .who small{color:var(--muted);font-weight:400;font-size:var(--fs-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cells{display:grid;grid-template-columns:repeat(75,1fr);gap:1.5px}
+.cells i{aspect-ratio:1;border-radius:1.5px;background:#1d2128}
+.cells i.run{outline:1px solid var(--cyan);animation:breathe 1.6s ease-in-out infinite}
+.cells i.fail{background:var(--red)!important}
+
+/* ---- hierarchy: one pair, one verdict, the evidence ---- */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) 15.5rem;gap:1.75rem;align-items:stretch;margin:0.375rem 0 1rem}
+.pairhead{min-width:0;display:flex;flex-direction:column;justify-content:center;gap:0.375rem}
+.tl{position:relative;height:2.2rem;margin:0}
+.tl .axis{position:absolute;left:0;right:0;top:0.55rem;height:2px;border-radius:1px;background:var(--line-2)}
+.tl .mk{position:absolute;top:0.2rem;width:3px;height:0.75rem;border-radius:2px;transform:translateX(-1px)}
+.tl .ml{position:absolute;top:1.05rem;transform:translateX(-50%);font-size:var(--fs-sm);white-space:nowrap} .tl .ml.first{transform:none} .tl .ml.last{transform:translateX(-100%)}
+.verdict{border-radius:var(--r-lg);background:var(--inset);padding:0.75rem 1rem 0.625rem;display:flex;flex-direction:column;justify-content:center;gap:0.375rem;min-width:0}
+.verdict .vtop{display:flex;align-items:baseline;gap:0.625rem}
+.verdict .big{font:700 4.25rem/0.86 var(--display);letter-spacing:-.05em}
+.verdict .cap{font-size:var(--fs-sm);color:var(--text-2);line-height:1.3} .verdict .cap b{display:block;color:var(--text);font-weight:600;font-size:var(--fs-lead)}
+.verdict svg{display:block;width:100%;height:3.25rem;margin:0.375rem 0 0.125rem}
+.verdict .vfoot{display:flex;justify-content:space-between;gap:0.5rem;font-size:var(--fs-sm);color:var(--muted)}
+.verdict .res{font-weight:600;padding:0.125rem 0.5625rem;border-radius:999px;background:var(--panel-2);color:var(--text-2);white-space:nowrap}
+.verdict .res.YES_SUSPECTED{background:#3a1a1e;color:#ffb4b4} .verdict .res.UNRESOLVED{background:#2a2214;color:var(--amber)} .verdict .res.PREPRINT{background:#14202e;color:var(--blue)} .verdict .res.run{background:#173436;color:var(--cyan)}
+.sections{grid-template-columns:repeat(5,minmax(0,1fr));gap:0.375rem;margin:0}
+.sec{flex-direction:row;flex-wrap:wrap;align-items:center;gap:0.25rem 0.5rem;padding:0.5rem 0.6875rem 0.5625rem}
+.sec .n{font:600 var(--fs-sm) var(--mono);color:var(--muted);width:auto} .sec .nm{margin:0;flex:1;font-size:var(--fs-body);color:var(--text-2)}
+.sec.cur .nm,.sec.done .nm{color:var(--text)} .sec.cur .n{color:var(--cyan)}
+.sec .ticks{flex:1 0 100%;margin:0}
+.sec .open-hint{top:0.4375rem}
+.nowline{display:flex;align-items:baseline;gap:0.625rem;margin:0 0.125rem 0.5rem;font-size:var(--fs-lead);font-weight:500;color:var(--text);min-width:0}
+.nowline .now{background:var(--cyan);color:#062528;padding:0.125rem 0.5625rem;border-radius:999px;font-weight:600;font-size:var(--fs-sm);flex:none}
+.nowline .what{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0} .nowline .what .muted{font-size:var(--fs-body)}
+.nowline .done{background:var(--panel-2);color:var(--text-2)}
+.stagebody{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:1rem;margin-top:0.625rem}
+.evidence{border-radius:var(--r-lg);background:var(--panel);padding:0.75rem 0.875rem;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
+.evidence .eh{display:flex;align-items:baseline;gap:0.625rem;margin-bottom:0.375rem} .evidence .eh b{font-size:var(--fs-lead)} .evidence .eh .note{margin-left:auto;white-space:nowrap}
+.evidence .ask{font-size:var(--fs-body);color:var(--text-2);margin:0 0 0.5rem;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden} .evidence .ask b{color:var(--text);font-weight:600}
+.quotes{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;flex:0 1 auto;min-height:3.25rem;max-height:6rem}
+.quote{border-radius:var(--r-md);background:var(--inset);padding:0.5rem 0.6875rem;min-height:0;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.quote .who{font-size:var(--fs-sm);font-weight:600;color:#ff8a8a;margin-bottom:0.1875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .quote.b .who{color:var(--cyan)}
+.quote p{margin:0;font-size:var(--fs-body);line-height:1.5;color:var(--text);overflow:hidden;flex:1;min-height:0}
+.quote::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1.75rem;background:linear-gradient(transparent,var(--inset));pointer-events:none}
+.tally{display:flex;gap:0.375rem;flex-wrap:nowrap;overflow:hidden;margin-top:0.5rem;font-size:var(--fs-sm);white-space:nowrap}
+.tally span{padding:0.125rem 0.5625rem;border-radius:999px;background:var(--panel-2);color:var(--text-2)} .tally .m{background:#3a1a1e;color:#ffb4b4} .tally .d{background:#14261b;color:var(--green)}
+.evidence > *{flex-shrink:0} .evidence > .quotes{flex-shrink:1;min-height:3.25rem}
+.claims{display:flex;flex-direction:column;gap:0.5rem;min-height:0;overflow:hidden}
+.claims .c{display:grid;grid-template-columns:1.875rem minmax(0,1fr);gap:0.5rem;font-size:1rem;line-height:1.45} .claims .c b{font:600 var(--fs-sm) var(--mono);color:var(--cyan);padding-top:0.125rem}
+.claims .c span{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.probe4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0.375rem;margin-top:0.625rem}
+.probe4 div{border-radius:var(--r-sm);background:var(--inset);padding:0.375rem 0.5rem;font-size:var(--fs-sm);color:var(--text-2)} .probe4 b{display:block;font:600 var(--fs-lead) var(--display);color:var(--text)}
+.steps{gap:0.1875rem}
+.step{display:grid;grid-template-columns:3.625rem 3.25rem minmax(0,1fr);gap:0.5rem;align-items:baseline;padding:0.375rem 0.625rem 0.375rem 0.75rem;border-radius:var(--r-sm)}
+.step::before{top:0.4375rem;bottom:0.4375rem}
+.step .tm{font:var(--fs-sm) var(--mono);color:var(--muted)} .step .who{font-size:var(--fs-sm);font-weight:600;color:var(--text-2)}
+.step .tt{margin:0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.step .q{grid-column:2/4;margin-top:0.125rem;-webkit-line-clamp:1}
+.step:not(:first-child){background:none} .step:not(:first-child) .tt{color:var(--text-2)}
+.step.bad:not(:first-child),.step.partial:not(:first-child),.step.preprint:not(:first-child){background:none}
+
+.vote{display:flex;align-items:center;gap:0.375rem;margin-top:0.5rem}
+.vote .q{font-size:var(--fs-sm);color:var(--text-2);margin-right:auto;white-space:nowrap}
+.vbtn{border:0;border-radius:999px;padding:0.25rem 0.625rem;font-size:var(--fs-sm);font-weight:600;background:var(--panel-2);color:var(--text-2);display:inline-flex;gap:0.375rem;align-items:center;transition:background .16s var(--ease),transform .12s var(--ease)}
+.vbtn:hover:not(:disabled){background:#252b34;color:var(--text)} .vbtn:active:not(:disabled){transform:scale(.96)}
+.vbtn b{font-family:var(--mono);font-weight:500}
+.vbtn.yes.mine{background:#3a1a1e;color:#ffb4b4} .vbtn.no.mine{background:#14261b;color:var(--green)}
+.vbtn:disabled{opacity:.45;cursor:not-allowed}
+.vbar{height:0.1875rem;border-radius:0.125rem;background:#1d3a2a;overflow:hidden;margin-top:0.375rem} .vbar i{display:block;height:100%;background:var(--red)}
+/* ---- progress charts (rail) ---- */
+.prog{display:flex;flex-direction:column;gap:0.5rem}
+.pp{position:relative;border-radius:var(--r-md);background:var(--inset);padding:0.5rem 0.625rem 0.125rem}
+.pp .ph{display:flex;align-items:baseline;gap:0.5rem;font-size:var(--fs-sm);color:var(--text-2);white-space:nowrap;min-width:0}
+.pp .ph b{font:600 1.375rem/1 var(--sans);color:var(--c)} .pp .ph .d{margin-left:auto;font-family:var(--mono);font-size:0.75rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.pp svg{display:block;width:100%;margin-top:0.125rem;cursor:crosshair}
+@keyframes ppulse{0%{r:3;opacity:1}80%,100%{r:9;opacity:0}} .livedot{animation:ppulse 1.6s ease-out infinite}
+.linkbtn{border:0;cursor:pointer;color:var(--cyan)!important;font:inherit;background:none;padding:0 0.25rem;border-radius:0.375rem} .linkbtn:hover{background:#173436!important}
+.brow .pv.hot{color:var(--red)!important}
+/* ---- current session's calls under the budget ---- */
+.mycalls{margin-top:0.25rem} .mycalls .cells{grid-template-columns:repeat(75,1fr);gap:1.5px} .mycalls .lg{margin-top:0.3125rem;flex-wrap:nowrap;white-space:nowrap;overflow:hidden}
+/* ---- all flagged papers ---- */
+#flaggedView:not([hidden]){display:flex;flex-direction:column;min-height:0;flex:1}
+.fl-head{display:flex;align-items:baseline;gap:0.75rem;margin:0.125rem 0.125rem 0.75rem} .fl-head h2{margin:0;font:600 1.375rem var(--sans);letter-spacing:-.01em} .fl-head .note{flex:1}
+.fl-list{display:flex;flex-direction:column;gap:0.5rem;overflow:auto;min-height:0;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
+.fl-row{display:grid;grid-template-columns:1.75rem minmax(0,1fr) 6rem 17rem;gap:1rem;align-items:center;background:var(--panel);border-radius:var(--r-md);padding:0.75rem 1rem}
+.fl-row .rk{font:500 var(--fs-sm) var(--mono);color:var(--muted)}
+.fl-row .t{font-weight:600;font-size:var(--fs-lead);line-height:1.3} .fl-row .t a{text-decoration:none} .fl-row .t a:hover{text-decoration:underline}
+.fl-row .m{font-size:var(--fs-sm);color:var(--text-2);margin-top:0.1875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fl-row .pv{font:700 1.625rem/1 var(--sans);color:var(--red);text-align:right} .fl-row .pv small{display:block;font:400 var(--fs-sm) var(--sans);color:var(--muted);margin-top:0.1875rem}
+.fl-row .vote{margin:0}
+body.flaggedmode #stageView,body.flaggedmode #flowView{display:none!important}
+
+/* ---- target facts and the paper duel ---- */
+.pairhead{display:flex;flex-direction:column;min-width:0}
+.duel{display:grid;grid-template-columns:minmax(0,1fr) 12rem minmax(0,1fr);align-items:center;gap:0.5rem;margin-top:0.25rem}
+.side{display:grid;grid-template-columns:minmax(0,1fr) 7.5rem;gap:1.25rem;align-items:center;min-width:0} .side.a .pg{order:2} .side.a .cap{text-align:right;align-items:flex-end}
+.side.b{grid-template-columns:7.5rem minmax(0,1fr)}
+.cap{display:flex;flex-direction:column;gap:0.25rem;font-size:var(--fs-sm);color:var(--text-2);min-width:0} .cap a{text-decoration:none} .cap a:hover{text-decoration:underline}
+.cap .who{font-weight:700;font-size:var(--fs-sm);letter-spacing:.08em;text-transform:uppercase} .side.a .who{color:#ff8a8a} .side.b .who{color:var(--cyan)}
+.cap .srcl{font:600 1.25rem/1.28 var(--sans);color:#f3c4cb;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden} .cap b{color:var(--text);font-weight:600}
+.pg{position:relative;aspect-ratio:8.5/11;border-radius:0.1875rem;background:#f3f0e8;color:#1c1c1c;padding:0.55rem 0.5rem 0.4rem;overflow:hidden;font-family:Georgia,'Times New Roman',serif;transition:transform .3s var(--ease)}
+.pg.a{transform:rotate(-5deg);box-shadow:0 0.6rem 1.4rem #000a,0 0 1.6rem -0.3rem rgba(239,122,122,.8)} .pg.b{transform:rotate(5deg);box-shadow:0 0.6rem 1.4rem #000a,0 0 1.6rem -0.3rem rgba(87,199,207,.75)}
+.pg.ghost{background:repeating-linear-gradient(180deg,#2a2f37 0 0.25rem,transparent 0.25rem 0.55rem),var(--panel-2);opacity:.5}
+.pg-h{font-size:0.3rem;color:#666;text-align:center;font-style:italic;margin-bottom:0.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pg-t{font-weight:700;font-size:0.5rem;line-height:1.2;text-align:center;margin-bottom:0.2rem;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.pg-a{font-size:0.3rem;text-align:center;color:#555;margin-bottom:0.3rem}
+.pg-ab{font-weight:700;font-size:0.34rem;text-align:center;margin-bottom:0.15rem;font-variant:small-caps}
+.pg-x{font-size:0.28rem;line-height:1.35;text-align:justify;color:#333;hyphens:auto;column-count:1}
+.pg .stamp{position:absolute;left:0.05rem;top:50%;transform:translate(-40%,-50%) rotate(-90deg);font-size:0.36rem;color:#9a9a9a;white-space:nowrap;letter-spacing:.02em}
+.arena{position:relative;height:9.5rem} .arena svg{display:block;width:100%;height:100%;overflow:visible}
+.arena .blades,.arena .spark{opacity:.18;transition:opacity .5s} .arena .core{opacity:.6}
+.arena.on .blades{opacity:1;animation:flicker 2.6s infinite} .arena.on .core{opacity:1}
+.arena.on .spark{opacity:1;animation:flare 1.7s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.arena.on .ray{animation:ray 0.5s steps(3) infinite} .arena .r1,.arena .r4{animation-delay:-.17s!important} .arena .r2,.arena .r5{animation-delay:-.33s!important}
+.vsb{position:absolute;left:50%;bottom:-0.2rem;transform:translateX(-50%);font:800 1rem var(--sans);letter-spacing:.12em;color:#e9edf2;text-shadow:0 0 0.6rem rgba(255,255,255,.35)}
+@keyframes flicker{0%,100%{opacity:1}47%{opacity:1}48%{opacity:.86}49%{opacity:1}72%{opacity:.94}73%{opacity:1}}
+@keyframes flare{0%,100%{opacity:.75}50%{opacity:1}}
+@keyframes ray{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
+.tl{margin-top:0.875rem!important}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.cap .fact{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden} .cap .fact b{color:var(--orlabel);font-weight:600;margin-right:0.25rem}
+.side.a .srcl{color:#f3c4cb} .side.b .srcl{color:#bfeef2}
+
+/* ---- about / corrections ---- */
+#about .mail{color:var(--cyan);font-weight:600;text-decoration:none} #about .mail:hover{text-decoration:underline}
+.wrong{font-size:var(--fs-sm);color:var(--text-2);text-decoration:underline;text-decoration-color:var(--line-2);text-underline-offset:0.2rem;background:none;border:0;padding:0;cursor:pointer;white-space:nowrap} .wrong:hover{color:var(--text)}
+#about{max-width:40rem;width:calc(100% - 2rem);border:0;border-radius:var(--r-lg);background:var(--panel);color:var(--text);padding:1.5rem 1.75rem 1.25rem;box-shadow:0 1.5rem 4rem #000c;font-size:var(--fs-body);line-height:1.55}
+#about::backdrop{background:rgba(5,7,10,.7)}
+#about h2{margin:0 0 0.75rem;font:600 var(--fs-head) var(--sans)} #about h3{margin:1.1rem 0 0.4rem;font:600 var(--fs-lead) var(--sans)} #about p{margin:0 0 0.6rem;color:var(--text-2)} #about b{color:var(--text)}
+.ab-close{position:absolute;right:1rem;top:1rem;margin:0}
+.ab-paper{background:var(--inset);border-radius:var(--r-md);padding:0.6rem 0.8rem;color:var(--text)!important}
+.ab-labels{display:grid;grid-template-columns:auto 1fr;gap:0.3rem 1rem;margin:1rem 0 0;font-size:var(--fs-sm)} .ab-labels dt{font-weight:600} .ab-labels dd{margin:0;color:var(--text-2)}
+.verdict .vfoot{flex-wrap:wrap;row-gap:0.25rem} .verdict .vote{flex-wrap:wrap;row-gap:0.3rem} .verdict .vote .q{flex:1 0 100%}
+
+/* ---- source not found yet ---- */
+.vwait{display:flex;align-items:center;gap:1rem;min-height:4.5rem} .vwait .spin{flex:none;width:3rem;height:3rem;border-radius:50%;border:0.25rem solid rgba(87,199,207,.18);border-top-color:var(--cyan);border-right-color:var(--cyan);animation:spin 0.9s linear infinite;box-shadow:0 0 1rem rgba(87,199,207,.35)}
+.vwait b{display:block;font-weight:600;font-size:var(--fs-lead);color:var(--text)} .vwait span{font-size:var(--fs-sm);color:var(--text-2)}
+.pg.ghost{background:linear-gradient(180deg,#1f242b,#171b21);opacity:1;box-shadow:0 0.6rem 1.4rem #000a,inset 0 0 0 1px #2b313a;display:grid;place-items:center}
+.pg.ghost::before{content:'';position:absolute;inset:0.6rem 0.55rem;background:repeating-linear-gradient(180deg,#2a3038 0 0.2rem,transparent 0.2rem 0.5rem);opacity:.55;mask:linear-gradient(90deg,#000 70%,transparent)}
+.pg.ghost .scan{position:absolute;left:0;right:0;height:1.4rem;top:-1.4rem;background:linear-gradient(180deg,transparent,rgba(87,199,207,.28),transparent);animation:scan 2.2s linear infinite}
+.pg.ghost .spin{position:relative;width:2.4rem;height:2.4rem;border-radius:50%;border:0.22rem solid rgba(87,199,207,.18);border-top-color:var(--cyan);border-right-color:var(--cyan);animation:spin 0.9s linear infinite;box-shadow:0 0 1rem rgba(87,199,207,.35)}
+.side.b.waiting .srcl{color:var(--text)}
+.dots i{font-style:normal;animation:dot 1.2s infinite;opacity:.2} .dots i:nth-child(2){animation-delay:.2s} .dots i:nth-child(3){animation-delay:.4s}
+@keyframes spin{to{transform:rotate(360deg)}} @keyframes scan{to{top:100%}} @keyframes dot{40%{opacity:1}}
+
+/* ---- one-screen shell on large displays (rsiarena-style alignment) ---- */
+@media (min-width:1200px) and (min-height:600px){
+  .evidence > .quotes{flex:1 1 auto;max-height:none}
+  .steps{overflow:hidden}
+  html{font-size:clamp(11px,min(.8333vw,1.4815vh),30px)}  /* 1rem = 16px at 1920x1080; everything below is in rem */
+  body{height:100dvh;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;overflow:hidden}
+  .grid{min-height:0;align-items:stretch}
+  .maincol{min-height:0;display:grid;grid-template-rows:minmax(0,3fr) minmax(0,1fr)}
+  .stage{min-height:0;overflow:hidden}
+  #stageView{flex:1;min-height:0;display:flex;flex-direction:column}
+  #stageView[hidden]{display:none}
+  .stagebody{flex:1;min-height:0}
+  .evidence{min-height:0}
+  .traj{min-height:0} .steps{flex:1;max-height:none;min-height:0}
+  .bottom{min-height:0} .bottom .card{min-height:0;overflow:hidden}
+  #chart svg{flex:1;min-height:3.75rem;height:auto}
+  .bottom .kpi{font-size:1.75rem} .bottom .kpis{gap:0.375rem} .budgetbody{overflow:hidden} .gaugewrap svg{max-width:none;height:100%;max-height:100%}
+  .rail{min-height:0;display:grid;grid-template-rows:minmax(0,1fr) minmax(0,1.1fr)}
+  .rail .card:first-child{min-height:0;overflow:hidden} #prog{flex:1;min-height:0} .prog{flex:1;min-height:0}
+  .rail .card{min-height:0}
+  .rail .card:nth-child(2){overflow:hidden} .rail .board{flex:1;min-height:0;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent;padding-right:0.125rem}
+  body.flowmode .maincol{grid-template-rows:minmax(0,1fr)}
+  #flowView:not([hidden]){flex:1;min-height:0;align-items:stretch}
+  .flowwrap{min-height:0} #flowdetail{position:static;max-height:none;min-height:0;overflow:auto}
+  .foot{padding-top:0}
+  .flowwrap{display:flex;height:100%} .flowwrap svg{width:100%;height:100%;min-width:0}
+}
+@media (max-width:1180px){.top{grid-template-columns:auto 1fr auto auto}.grid{grid-template-columns:minmax(0,1fr)}.stagebody{grid-template-columns:1fr}.hero{grid-template-columns:1fr}.top{grid-template-columns:auto 1fr auto}.headline{display:none}#flowView:not([hidden]){grid-template-columns:minmax(0,1fr)}#flowdetail{position:static;max-height:none}}
+@media (max-width:760px){.fl-row{grid-template-columns:1.5rem minmax(0,1fr) 4rem}.fl-row .vote{grid-column:2/4}.quotes{grid-template-columns:1fr}.sections{grid-template-columns:repeat(2,minmax(0,1fr))}.step{grid-template-columns:3.25rem minmax(0,1fr)}.step .who{display:none}.step .q{grid-column:1/3}.tabs{border-radius:var(--r-md);flex-wrap:wrap}.tab{max-width:100%;flex:1 1 100%}.seg{margin-left:0;flex:1 1 100%;justify-content:center}.grid{grid-template-columns:1fr;padding:0.75rem 1rem}.bottom{grid-template-columns:1fr}.vsrow{grid-template-columns:1fr}.vsrow .vs{justify-self:center}.says{grid-template-columns:1fr}.sections{grid-template-columns:repeat(2,minmax(0,1fr))}.top{grid-template-columns:1fr;padding:0.75rem 1rem}.counters{flex-wrap:wrap}.srow{grid-template-columns:1rem 1fr}.srow .dl{grid-column:1/3}.replay{flex-wrap:wrap;padding:0.5rem 1rem}.two{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="flag" viewBox="0 0 32 32"><path d="M10 5v23" stroke="#c9ced6" stroke-width="2.4" stroke-linecap="round" fill="none"/><path fill="#ff5d4f" d="M11 6.5c3.5-1.8 6.5 1.6 10 0s4.5-.8 4.5-.8v10.3s-1.4 1-4.5.8-6.5-2.4-10 0z"/></symbol></svg>
+<a class="skip" href="#stage">Skip to the main stage</a>
+<header class="top">
+  <a class="brand" href="../" title="Project homepage" aria-label="Red-flag Research home"><svg class="mark" width="24" height="24" aria-hidden="true"><use href="#flag"/></svg><span class="wm"><span class="r">Red</span>-flag Research</span><span class="home">Home ↗</span></a>
+  <div class="clock" id="clock">--:--:-- ET</div>
+  <div class="headline">Can AI agents find <b>unattributed sources</b> in ICLR 2027 submissions?</div>
+  <div class="counters" id="counters"></div>
+  <a class="fbk" id="feedback" href="#" target="_blank" rel="noopener" title="Opens a GitHub issue with the session, paper and replay time filled in"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"/><path d="M8 5.5v2M8 9.2v.1"/></svg>Report a problem</a>
+</header>
+<div class="replay">
+  <span class="badge" id="modeBadge">Replay</span>
+  <span class="dim" id="replayLabel"></span>
+  <button class="btn" id="play">Pause</button><button class="btn" id="next">Next session ▸</button>
+  <button class="btn" data-speed="10">10×</button><button class="btn" data-speed="30">30×</button><button class="btn" data-speed="90">90×</button>
+  <input type="range" id="scrub" min="0" max="1000" value="0" step="1" aria-label="Replay time">
+  <span class="note dim" id="elapsed"></span>
+</div>
+<main class="grid">
+  <div class="maincol">
+  <section class="card stage" id="stage" aria-label="Main stage">
+    <div class="tabs" id="tabs"></div>
+    <div id="stageView">
+      <div class="hero">
+        <div class="pairhead" id="pairhead"></div>
+        <div class="verdict" id="verdict" aria-live="polite"></div>
+      </div>
+      <div class="sections" id="sections"></div>
+      <div class="stagebody">
+        <div class="evidence" id="evidence"></div>
+        <div class="traj">
+          <div class="nowline" id="nowline"></div>
+          <div class="steps" id="steps"></div>
+        </div>
+      </div>
+    </div>
+    <div id="flaggedView" hidden></div>
+    <div id="flowView" hidden>
+      <div class="flowwrap" id="flow"></div>
+      <div id="flowdetail"></div>
+    </div>
+  </section>
+  <div class="bottom">
+    <section class="card" aria-label="Budget">
+      <h3>Budget <span class="tag" id="budgetTag"></span></h3>
+      <div class="budgetbody"><div class="gaugewrap" id="gauge"></div><div class="kpis" id="budget"></div></div>
+      <div class="mycalls"><div class="cells" id="mycalls"></div><div class="lg"><span style="--c:var(--qwen)">Qwen</span><span style="--c:var(--jev)">Jev</span><span style="--c:var(--arxiv)">search</span><span style="--c:var(--ocr)">OCR</span><span style="--c:var(--red)">failed</span><span class="note" id="mycallsTag" style="margin-left:auto"></span></div></div>
+    </section>
+    <section class="card chart" aria-label="Jev checkpoints">
+      <h3>Jev per claim <span class="tag">P(review recommended) at each checkpoint</span></h3>
+      <div id="chart"></div>
+    </section>
+    <section class="card" aria-label="Activity">
+      <h3>Activity <span class="tag" id="actTag"></span></h3>
+      <div class="act" id="activity"></div>
+      <div class="strip" id="strip"></div>
+    </section>
+  </div>
+  </div>
+
+  <aside class="rail">
+    <section class="card" aria-label="Progress">
+      <h3>Progress <span class="tag" id="progTag" title="Each paper is counted once with its latest label. Times before Oct 14 are when the result was last written (the first cohort was resumed and repaired), so that part of the curve is approximate.">all papers</span></h3>
+      <div class="prog" id="prog"></div>
+    </section>
+    <section class="card" aria-label="Suspect leaderboard">
+      <h3>Highest scores so far <button class="tag linkbtn" id="flaggedBtn" title="Every paper whose current result is Source review recommended, with votes">All flagged ›</button></h3>
+      <div class="board" id="board"></div>
+    </section>
+  </aside>
+</main>
+<p class="foot" id="foot"></p>
+<dialog id="about" aria-labelledby="aboutTitle">
+  <form method="dialog" class="ab-close"><button class="btn" aria-label="Close">Close</button></form>
+  <h2 id="aboutTitle">About these results</h2>
+  <p><b>Red-flag Research</b> is a research project that screens conference submissions automatically. A <b>Source review recommended</b> label means the system found passages, numbers or tables that closely match an earlier public paper without a clear attribution, so a person should compare the two papers side by side.</p>
+  <p>It is <b>not</b> a finding of plagiarism, misconduct or bad faith. It has not been reviewed by the conference, the authors or any integrity committee. The system uses language models and can be wrong: shared authors, an earlier version of the same work, a cited dataset or a common baseline can all explain matching text, and the system may not see them. A paper without a label has not been cleared either.</p>
+  <p>Benchmark cases are anonymized before release.</p>
+  <h3>Think a result is wrong?</h3>
+  <p>If you are an author and believe a result about your paper is wrong, email <a class="mail" id="contactMail" href="mailto:red.flag.autoresearch@gmail.com">red.flag.autoresearch@gmail.com</a>. We will correct it right away, and we take the result off the live page and the public data while we check.</p>
+  <p class="ab-paper" id="aboutPaper" hidden></p>
+  <dl class="ab-labels"><dt>Source review recommended</dt><dd>Closely matching passages without clear attribution; a person should compare the papers.</dd><dt>No source finding</dt><dd>Nothing found in the sources checked. This does not mean the paper is cleared.</dd><dt>Inconclusive</dt><dd>Not enough evidence to reach a result.</dd><dt>Same paper (preprint)</dt><dd>The candidate is this paper's own preprint.</dd></dl>
+</dialog>
+
+<script src="data.js"></script>
+<script>
+const D = window.LIVE_DATA;
+// Public repository for feedback issues (decided 2026-10-15; may move to a company org later, so change only this line).
+const REPO_URL = 'https://github.com/OpenLAIR/red-flag-research';
+// Corrections and support (decided 2026-10-15).
+const CONTACT_EMAIL = 'red.flag.autoresearch@gmail.com';
+const $ = id => document.getElementById(id);
+// Model text can quote internal label names; every string shown goes through esc, so map them to the public wording here.
+const PUBLIC_LABEL = {YES_SUSPECTED: 'Source review recommended', NO_SUPPORTED: 'No source finding', UNRESOLVED: 'Inconclusive', PREPRINT: 'Same paper (preprint)'};
+const esc = s => String(s ?? '').replace(/\b(YES_SUSPECTED|NO_SUPPORTED|UNRESOLVED)\b/g, k => PUBLIC_LABEL[k]).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pct = v => v == null ? '—' : Math.round(v * 100) + '%';
+// Public wording (decided 2026-10-15). Internal labels stay in data and code only.
+const LABEL = PUBLIC_LABEL;
+const labelText = k => LABEL[k] || (k ? String(k).replace(/_/g, ' ').toLowerCase() : 'delivered');
+const PAPER_CATS = [['YES_SUSPECTED','var(--red)','review recommended'],['UNRESOLVED','var(--amber)','inconclusive'],['NO_SUPPORTED','var(--green)','no source finding']];
+const MAT_CATS = [['SPECIFIC','var(--coral)','specific'],['RELATED','var(--purple)','related'],['TOPIC_ONLY','var(--blue)','topic only'],['UNKNOWN','var(--gray)','unknown']];
+const catsFor = p => p && 'SPECIFIC' in p ? MAT_CATS : PAPER_CATS;
+const IN_FLIGHT_OR_OK = new Set(['completed', 'started', 'running', 'unknown', 'reused']);
+const PROV = {qwen:'var(--qwen)', jev:'var(--jev)', arxiv:'var(--arxiv)', openreview:'var(--arxiv)', ocr:'var(--ocr)', python:'var(--python)'};
+const PLAIN = {
+  pdf_target:'Check the target PDF and its page count', target_materials:'Turn target pages into text materials (OCR)',
+  intake:'Qwen reads the paper and lists the core claims to check', jev_global_after_intake:'Jev checkpoint: first view of each claim',
+  autonomous_search:'Search arXiv and OpenReview using only the public title', jev_candidate_rerank:'Jev ranks candidate source papers',
+  jev_global_after_candidate_rerank:'Jev checkpoint after candidate ranking', official_dates:'Check official publication dates',
+  candidate_fulltext:'Fetch candidate full text', candidate_fulltext_table_overlay:'Recover tables from source PDFs',
+  jev_section_ranking:'Jev ranks source sections for each claim', jev_four_condition_probes:'Build four probe conditions per claim–section pair',
+  probe_s:'Probe S: claim question only', probe_sa:'Probe S+A: claim plus target text', probe_sb:'Probe S+B: claim plus source text',
+  probe_sab:'Probe S+A+B: claim plus both texts', jev_global_after_probes:'Jev checkpoint after the four probes',
+  exact_span_handoff:'Hand exact quoted spans to review', claim_tree_low:'Qwen LOW reviews each evidence scope',
+  scope_acceptance:'Python accepts or rejects each scope', jev_global_after_local:'Jev checkpoint after local review',
+  evidence_freeze:'Freeze the evidence packet', xhigh_final:'Qwen XHIGH writes the final pair review',
+  final_format_gate:'Python checks quotes and format', jev_final:'Jev final classification',
+  outer_delivery_archive:'Deliver and archive the report', attempt_terminal:'Close the attempt'};
+const ROLE_ACTOR = r => ({qwen:'qwen', jev:'jev', python:'python'})[r] || 'python';
+const fmtT = t => new Date(t * 1000).toLocaleTimeString('en-US', {hour12:false, timeZone:'America/New_York'});
+const fmtDur = s => s < 1 ? '<1s' : s < 60 ? Math.round(s) + 's' : Math.floor(s / 60) + 'm' + String(Math.round(s % 60)).padStart(2, '0') + 's';
+const normTitle = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+
+function distBar(p, big) {
+  if (!p) return '<div class="bar"></div>';
+  return `<div class="bar${big ? ' big' : ''}">` + catsFor(p).map(([k, c]) => `<i style="width:${(p[k] || 0) * 100}%;background:${c}" title="${k} ${pct(p[k])}"></i>`).join('') + '</div>';
+}
+function topCat(p) {
+  if (!p) return '<span class="note">no score</span>';
+  const cats = catsFor(p); let best = cats[0];
+  for (const c of cats) if ((p[c[0]] || 0) > (p[best[0]] || 0)) best = c;
+  return `<span style="color:${best[1]}">${best[2]} ${pct(p[best[0]])}</span>`;
+}
+
+function prep(s) {
+  s.events.sort((a, b) => a.seq - b.seq);
+  s.calls.sort((a, b) => a.t0 - b.t0);
+  s.stageById = Object.fromEntries(s.stages.map(x => [x.id, x]));
+  // The saved title-screen overlay only applies to the run whose saved label it was computed from.
+  const overlay = (D.history.screen?.by_paper || {})[s.paper_id] || null;
+  s.screen = overlay && (!s.screening || overlay.label_before === s.screening) ? overlay : null;
+  const runtimePre = (s.preprints || []).map(p => ({id: p.id, title: p.title, url: p.url, provider: (p.id || '').split('-')[0], date: null, p: null, similarity: p.similarity}));
+  const pre = new Set([...runtimePre.map(p => p.id), ...(s.screen?.matches || []).map(m => m.candidate_id)]);
+  s.archived = [...runtimePre, ...s.candidates.filter(c => pre.has(c.id) && !runtimePre.some(r => r.id === c.id))];
+  s.retained = s.candidates.filter(c => !pre.has(c.id));
+  s.candById = Object.fromEntries([...s.candidates, ...runtimePre].map(c => [c.id, c]));
+  s.label = s.screening ? (s.screen?.label_after || s.screening) : null;
+  s.totalTokens = s.calls.reduce((a, c) => a + (['qwen', 'jev'].includes(c.provider) ? c.tokens : 0), 0) || 1;
+  s.ocrCalls = s.calls.filter(c => c.provider === 'ocr').length || 1;
+  s.steps = buildSteps(s);
+  return s;
+}
+let S = D.sessions.map(prep);
+let MODE = 'replay', SOURCE = 'saved export', BATCH = D.batch;
+const lastEventT = s => s.events.length ? s.events[s.events.length - 1].t : s.started;
+const durOf = s => (s.finished == null ? Math.max(Date.now() / 1000, lastEventT(s)) : Math.max(s.finished, lastEventT(s))) - s.started + (s.finished == null ? 0 : 8);
+
+function loopOf(s, stageId) {
+  const idx = id => s.stages.findIndex(x => x.id === id), i = idx(stageId);
+  return (s.loops || []).find(l => i >= idx(l.from) && i <= idx(l.to)) || null;
+}
+function loopProgress(s, st) {
+  return (s.loops || []).filter(l => l.from !== l.to).map(l => {
+    const n = (st.completions[l.to] || 0), running = st.status[l.from] === 'run' || (n > 0 && st.status[l.to] !== 'done');
+    return {l, n, running};
+  });
+}
+const trunc = (t, n) => { t = String(t || ''); return t.length > n ? t.slice(0, n - 1).trimEnd() + '…' : t; };
+function claimShort(s, id, n = 44) { const c = s.claims.find(x => x.id === id); return c ? `${id} · ${trunc(c.text, n)}` : (id || ''); }
+function srcName(s, id, n = 34) { return id === 'target' ? 'target paper' : trunc((s.candById[id] || {}).title || id, n); }
+function matShort(s, mid) { const m = s.materials[mid]; return m ? `${srcName(s, m.src)} · p.${m.page}` : (mid || '').slice(0, 10); }
+function readable(s, e) {
+  const sc = e.scope || {};
+  if (sc.candidate_id) return srcName(s, sc.candidate_id, 70);
+  if (sc.material_id) return `${claimShort(s, sc.claim_id, 36)}  ↔  ${matShort(s, sc.material_id)}${sc.condition ? ' · ' + sc.condition : ''}`;
+  if (sc.question_id) { const m = sc.question_id.match(/claim-(\d+)$/); return m ? claimShort(s, 'C' + m[1], 70) : 'Whole paper'; }
+  return sc.claim_id ? claimShort(s, sc.claim_id, 70) : 'Whole paper';
+}
+function scopeLabel(s, e) {
+  const sc = e.scope || {};
+  if (sc.candidate_id && s.candById[sc.candidate_id]) return s.candById[sc.candidate_id].title;
+  const parts = [];
+  if (sc.claim_id) parts.push(sc.claim_id);
+  if (sc.condition) parts.push(sc.condition);
+  if (sc.material_id) parts.push(sc.material_id.slice(0, 10));
+  if (!parts.length && sc.question_id) { const m = sc.question_id.match(/claim-(\d+)$/); parts.push(m ? 'C' + m[1] : /paper$/.test(sc.question_id) ? 'paper' : sc.question_id); }
+  return parts.join(' · ') || e.stage;
+}
+
+function buildSteps(s) {
+  const steps = [], dists = {}, rounds = {}, callsBad = s.calls.filter(c => c.status && !IN_FLIGHT_OR_OK.has(c.status));
+  for (const e of s.events) {
+    if (e.type === 'stage.distribution') { (dists[e.stage] = dists[e.stage] || []).push(e); continue; }
+    if (e.type !== 'stage.completed') continue;
+    const st = s.stageById[e.stage] || {label: e.stage, role: 'python'};
+    let actor = ROLE_ACTOR(st.role), title = st.label, quote = '', partial = false;
+    const ds = dists[e.stage] || [];
+    if (e.stage === 'intake') { actor = 'qwen'; title = `Qwen read the paper and listed ${s.claims.length} claims to check`; quote = s.claims[0] ? `${s.claims[0].id}: “${s.claims[0].text}”` : ''; }
+    else if (e.stage === 'autonomous_search') { actor = 'arxiv'; title = `Searched arXiv and OpenReview with the public title · ${s.candidates.length} candidates`; quote = (s.queries || []).map(q => typeof q === 'string' ? q : (q.query || q.text || JSON.stringify(q))).slice(0, 2).join('  |  '); }
+    else if (e.stage === 'jev_candidate_rerank' && s.retained[0]) { title = `Jev ranked ${s.candidates.length} candidates`; quote = `Top non-preprint: “${s.retained[0].title}” — specific ${pct(s.retained[0].p?.SPECIFIC)}, related ${pct(s.retained[0].p?.RELATED)}`; }
+    else if (e.stage === 'jev_section_ranking' && ds.length) { const b = ds.reduce((a, d) => (d.p?.SPECIFIC || 0) > (a.p?.SPECIFIC || 0) ? d : a); title = `Jev ranked ${ds.length} source sections across claims`; quote = `Most specific: ${scopeLabel(s, b)} — specific ${pct(b.p?.SPECIFIC)}`; }
+    else if (/^probe_/.test(e.stage) && ds.length) { const b = ds.reduce((a, d) => (d.p?.SPECIFIC || 0) > (a.p?.SPECIFIC || 0) ? d : a); title = `${st.label}: ${ds.length} questions answered`; quote = `Highest: ${scopeLabel(s, b)} — specific ${pct(b.p?.SPECIFIC)}`; }
+    else if (/^jev_global_/.test(e.stage) && ds.length) { title = st.label; quote = ds.map(d => `${scopeLabel(s, d)}: review ${pct(d.p?.YES_SUSPECTED)}, inconclusive ${pct(d.p?.UNRESOLVED)}`).join('  ·  '); }
+    else if (e.stage === 'xhigh_final') { actor = 'qwen'; title = `Qwen final review: ${labelText(s.final.status)}`; quote = s.final.conclusion ? `“${s.final.conclusion}”` : ''; }
+    else if (e.stage === 'jev_final' && s.jev_final.p) { title = `Jev final: ${labelText(s.jev_final.label)}`; quote = PAPER_CATS.map(([k, , n]) => `${n} ${pct(s.jev_final.p[k])}`).join(' · '); }
+    else if (e.stage === 'claim_tree_low') { actor = 'qwen'; title = 'Qwen LOW reviewed each evidence scope'; }
+    else { title = `${st.label} done`; quote = PLAIN[e.stage] || st.purpose || ''; }
+    if (e.status === 'partial') { title += ' (partial)'; quote = (quote ? quote + '  ·  ' : '') + 'Some questions here have no score; the gaps are kept, not filled.'; partial = true; }
+    else if (e.status && !['completed', 'reused'].includes(e.status)) actor = 'bad';
+    const prev = steps[steps.length - 1];
+    rounds[e.stage] = (rounds[e.stage] || 0) + 1;
+    const loop = loopOf(s, e.stage);
+    let passTxt = null;
+    if (loop && loop.from === loop.to) passTxt = rounds[e.stage] > 1 ? `batch ${rounds[e.stage]}` : null;
+    else if (loop) { const n = e.stage === loop.to ? rounds[loop.to] : (rounds[loop.to] || 0) + 1; passTxt = `${loop.label.split('·')[0].trim().replace(/^Next /, '')} ${n}${loop.bound ? '/' + loop.bound : ''}`; }
+    if (prev && prev.stage === e.stage && prev.title === title) { prev.t = e.t; prev.n = (prev.n || 1) + 1; continue; }
+    if (rounds[e.stage] > 1 && actor === 'python') {
+      const back = steps.slice(-4).find(x => x.stage === e.stage);
+      if (back) { back.t = e.t; back.round = passTxt; steps.splice(steps.indexOf(back), 1); steps.push(back); continue; }
+    }
+    steps.push({t: e.t, actor, title, quote, stage: e.stage, round: passTxt, partial});
+    if (e.stage === 'autonomous_search' && s.archived.length) steps.push({t: e.t + 0.001, actor: 'preprint', stage: 'title_screen',
+      title: `Title screen: ${s.archived.length} candidate archived as PREPRINT`, round: 'applied after this run',
+      quote: s.archived.map(c => `“${c.title}” · ${c.id}`).join('  |  ') + ` · similarity ≥ ${D.history.screen.threshold}; not reviewed further`});
+  }
+  for (const c of callsBad) steps.push({t: c.t1, actor: 'bad', title: `A ${c.provider} request ended as ${c.status}`, quote: `${c.name}${c.http ? ' · HTTP ' + c.http : ''}`});
+  steps.sort((a, b) => a.t - b.t);
+  return steps;
+}
+
+function stateAt(s, T) {
+  const ev = s.events.filter(e => e.t <= T);
+  const status = {}, dist = {}, completions = {};
+  for (const e of ev) {
+    if (e.type === 'stage.started') status[e.stage] = status[e.stage] === 'done' ? 'done' : 'run';
+    else if (e.type === 'stage.completed') (completions[e.stage] = (completions[e.stage] || 0) + 1), status[e.stage] = ['completed', 'reused'].includes(e.status) || !e.status ? 'done' : 'gap';
+    else if (e.type === 'stage.distribution') (dist[e.stage] = dist[e.stage] || []).push(e);
+  }
+  const finished = s.finished != null && T >= s.finished;
+  const running = s.stages.filter(x => status[x.id] === 'run');
+  const lastDone = [...ev].reverse().find(e => e.type === 'stage.completed');
+  const cur = running.length ? running[running.length - 1] : (lastDone ? s.stageById[lastDone.stage] : null);
+  const calls = s.calls.filter(c => c.t0 <= T);
+  const lastT = ev.length ? ev[ev.length - 1].t : 0;
+  return {status, dist, completions, finished, cur, calls, lastT, started: T >= s.started};
+}
+
+let view = 'stage', openStage = null, userPickedAt = 0;
+const isPipelinePage = () => location.hash === '#pipeline';
+let focus = 1, pos = S.map(s => durOf(s));
+pos[focus] = 0;
+let T = S[focus].started, playing = true, speed = 10, follow = false, openSec = null, expanded = {}, lastRender = 0, seenSteps = new Set();
+
+function pickFocus(states) {
+  let best = -1, bt = -1;
+  states.forEach((st, i) => { if (st.started && !st.finished && st.lastT > bt) { bt = st.lastT; best = i; } });
+  return best;
+}
+
+function render() {
+  T = S[focus].started + pos[focus];
+  const states = S.map((x, i) => stateAt(x, x.started + pos[i]));
+  const s = S[focus], st = states[focus], dur = durOf(s);
+  $('clock').textContent = fmtT(T) + ' ET';
+  $('elapsed').textContent = fmtDur(pos[focus]) + ' / ' + fmtDur(dur);
+  $('scrub').value = Math.round(pos[focus] / dur * 1000);
+  const liveN = S.filter(x => x.finished == null).length;
+  $('replayLabel').textContent = MODE === 'live' ? `Batch ${BATCH} · ${liveN} of ${S.length} sessions running · showing session #${s.rank}${userPickedAt ? '' : ' (most active)'}`
+    : `Session #${s.rank} · ${s.session}`;
+  document.body.classList.toggle('live', MODE === 'live');
+  document.body.classList.toggle('extra', MODE === 'live' && !!s.extra);
+  $('modeBadge').textContent = MODE === 'live' ? 'Live' : 'Replay';
+
+  // One source for the counters and the progress charts: each paper once, latest label wins.
+  const c = D.history.corpus, lastP = (PROGRESS.points || []).slice(-1)[0], L = labelsNow();
+  const checked = lastP ? lastP.checked : c.screened_count, susp = lastP ? lastP.suspected : c.suspected_count;
+  const prep = lastP ? Object.values(L).filter(v => v === 'PREPRINT').length : c.preprint_count;
+  $('counters').innerHTML = `<span class="chip cyan"><b>${checked}</b> / ${c.total.toLocaleString()} checked</span><span class="chip red"><b>${susp}</b> review recommended</span><span class="chip" title="0.90 title screen applied"><b>${prep}</b> same paper (preprint)</span>`;
+
+  // Feedback goes to the site repo's issue tracker, prefilled with where the viewer was.
+  $('feedback').href = REPO_URL + '/issues/new?' + new URLSearchParams({
+    title: `[Live page] ${s.paper_id}: `,
+    body: `Page: ${location.origin}${location.pathname}\nMode: ${MODE}\nSession: ${s.session} (#${s.rank})\nPaper: ${s.paper_id} — ${s.title}\nReplay clock: ${fmtT(T)} ET\nView: ${view}\n\nWhat looks wrong:\n`});
+  $('tabs').innerHTML = S.map((x, i) => {
+    const y = states[i], cls = i === focus && !y.finished ? 'run' : !y.started ? 'wait' : y.finished ? (x.label === 'YES_SUSPECTED' ? 'flag' : x.label === 'PREPRINT' ? 'pre' : 'done') : 'run';
+    return `<button class="tab${i === focus ? ' on' : ''}" data-i="${i}"><span class="dot ${cls}"></span><span class="muted">#${x.rank}</span><span class="t">${esc(x.title)}</span></button>`;
+  }).join('') + `<span class="seg" role="group" aria-label="View"><button data-view="stage" class="${view === 'stage' ? 'on' : ''}">Stage view</button><button data-view="flow" class="${view === 'flow' ? 'on' : ''}">Flow view</button></span>`;
+  const flowMode = isPipelinePage() || view === 'flow', flaggedMode = view === 'flagged';
+  document.body.classList.toggle('flaggedmode', flaggedMode); $('flaggedView').hidden = !flaggedMode;
+  if (flaggedMode) renderFlagged();
+  $('stageView').hidden = flowMode; $('flowView').hidden = !flowMode;
+
+  const groups = s.groups, gi = st.cur ? groups.findIndex(g => g.id === st.cur.group) : 0;
+  renderHero(s, st);
+  renderVerdict(s, st);
+  $('sections').innerHTML = groups.map((g, i) => {
+    const ss = s.stages.filter(x => x.group === g.id), nd = ss.filter(x => st.status[x.id] === 'done').length;
+    const cls = i === gi && !st.finished ? ' cur' : nd === ss.length ? ' done' : '';
+    return `<button class="sec${cls}" data-g="${g.id}" title="${esc(g.label)}: ${nd} of ${ss.length} stages done. Open in flow view.">
+      <span class="n">${i + 1}</span><span class="nm">${esc(g.label)}</span>
+      <div class="ticks">${ss.map(x => `<i class="${st.status[x.id] || ''}"></i>`).join('')}</div>
+      <span class="open-hint">Flow view ›</span></button>`;
+  }).join('');
+  const lp = st.cur ? loopProgress(s, st).find(p => p.n > 0 && s.stages.filter(x => x.group === st.cur.group).some(x => x.id === p.l.to)) : null;
+  $('nowline').innerHTML = !st.started ? '<span class="now done">Queued</span><span class="what">Waiting for a free worker</span>'
+    : st.finished ? `<span class="now done">Done</span><span class="what">Screened against ${s.retained.length} non-preprint candidates in ${fmtDur(s.finished - s.started)}${s.archived.length ? ` <span class="muted">· ${s.archived.length} same-title preprint set aside</span>` : ''}</span>`
+    : `<span class="now">Now</span><span class="what">${esc(PLAIN[st.cur?.id] || st.cur?.purpose || st.cur?.label || '')}${lp ? ` <span class="muted">· ${esc(lp.l.label.split('·')[0].trim().replace(/^Next /, ''))} ${lp.n}${lp.l.bound ? ' of ' + lp.l.bound : ''}</span>` : ''}</span>`;
+  renderEvidence(s, st);
+
+  const vis = s.steps.filter(x => x.t <= T).slice(-16).reverse();
+  $('steps').innerHTML = vis.length ? vis.map((x, k) => {
+    const key = s.session + x.stage + x.title, isNew = !seenSteps.has(key); seenSteps.add(key);
+    const who = {qwen:'Qwen', jev:'Jev', python:'Python', arxiv:'Search', ocr:'OCR', bad:'Problem', preprint:'Screen'}[x.actor];
+    return `<div class="step ${x.actor}${x.partial ? ' partial' : ''}${isNew ? ' new' : ''}" title="${esc(x.title + (x.quote ? ' — ' + x.quote : ''))}"><span class="tm">${fmtT(x.t)}</span><span class="who">${who}</span><span class="tt">${esc(x.title)}${x.round ? ` <span class="note">${esc(x.round)}</span>` : ''}${x.n > 1 ? ` <span class="note">×${x.n}</span>` : ''}</span>${k === 0 && x.quote ? `<div class="q">${esc(x.quote)}</div>` : ''}</div>`;
+  }).join('') : '<p class="empty">No steps yet.</p>';
+  fitRows($('steps'));
+  document.body.classList.toggle('flowmode', flowMode);
+  if (flowMode) renderFlow(s, st);
+  renderBudget(s, st, states);
+  renderChart(s, st);
+  renderActivity(s, st);
+  renderPair(states);
+  renderProgress();
+  renderMyCalls(s, st);
+}
+
+function jevRows(s, ds, n = 3, snip = false) {
+  const key = p => p ? ('SPECIFIC' in p ? (p.SPECIFIC || 0) + 0.5 * (p.RELATED || 0) : (p.YES_SUSPECTED || 0)) : 0;
+  const sorted = [...ds].sort((a, b) => key(b.p) - key(a.p)).slice(0, n);
+  return sorted.map(d => `<div class="drow2" title="${esc(d.q)}"><div class="lbl">${esc(readable(s, d))}</div><div class="bl">${distBar(d.p)}<span class="top1">${topCat(d.p)}</span></div>${snip && d.scope?.material_id && s.materials[d.scope.material_id] ? `<div class="snip">“${esc(trunc(s.materials[d.scope.material_id].text, 180))}”</div>` : ''}</div>`).join('');
+}
+const IOL = (k, v) => `<div class="iol"><b>${k}</b>${v}</div>`;
+const link = (url, t) => `<a href="${url}" target="_blank" rel="noopener">${esc(t)} ↗</a>`;
+function stageIO(s, st, x) {
+  const io = s.io, ds = st.dist[x.id] || [], id = x.id;
+  if (id === 'pdf_target') return IOL('in', s.openreview ? `Target PDF from ${link(s.openreview, 'OpenReview ' + s.paper_id)}` : 'Target PDF supplied for this case (no OpenReview page)') + IOL('out', `${io.pdf_pages ?? '?'} pages, file hash checked`);
+  if (id === 'target_materials') return IOL('out', `${io.pdf_pages ?? '?'} pages turned into text (${esc(io.ocr_coverage || '')})`) + (io.first_page ? `<div class="ex"><div class="h">Page 1</div><div class="snip">“${esc(trunc(io.first_page, 220))}”</div></div>` : '');
+  if (id === 'intake') return IOL('in', 'Full target text') + IOL('out', `${s.claims.length} core claims, each with technical checks`) + s.claims.map(c => `<div class="ex"><div class="h"><b>${esc(c.id)}</b> ${esc(trunc(c.text, 190))}</div>${c.checks[0] ? `<div class="snip">Check (${esc(c.checks[0].dim)}): ${esc(trunc(c.checks[0].q, 150))}</div>` : ''}</div>`).join('');
+  if (id === 'autonomous_search') {
+    const q = (s.queries || []).map(v => typeof v === 'string' ? v : (v.query || v.text || JSON.stringify(v)));
+    return IOL('in', 'Public title only' + (q.length ? ': ' + q.slice(0, 2).map(v => `<span class="mono">${esc(trunc(v, 80))}</span>`).join(' · ') : '')) +
+      IOL('out', `${s.candidates.length} candidate papers from arXiv and OpenReview`) +
+      s.candidates.slice(0, 5).map(c => `<div class="ex"><div class="h">${link(c.url, trunc(c.title, 90))}${s.archived.includes(c) ? '<span class="st-chip" style="color:var(--blue)">PREPRINT · same title</span>' : ''}</div><div class="snip">${esc(c.provider)} · ${esc(c.date || 'date unknown')}</div></div>`).join('') +
+      (s.candidates.length > 5 ? `<div class="iol">+${s.candidates.length - 5} more candidates</div>` : '');
+  }
+  if (id === 'jev_candidate_rerank') return IOL('in', 'Claims + candidate titles and abstracts') + IOL('out', 'Relevance of each candidate to the target claims') +
+    s.retained.slice(0, 3).map(c => `<div class="drow2"><div class="lbl">${link(c.url, trunc(c.title, 80))}</div><div class="bl">${distBar(c.p)}<span class="top1">${c.p ? topCat(c.p) : ''}</span></div></div>`).join('') +
+    (s.archived.length ? `<div class="iol" style="color:var(--blue)">${s.archived.length} same-title preprint left out</div>` : '');
+  if (id === 'official_dates') return IOL('out', 'First public date of each candidate; the date filter is off for free sources, so dates are recorded, not used to drop papers') +
+    s.retained.slice(0, 3).map(c => { const d = io.dates[c.id] || {}; return `<div class="ex"><div class="h">${esc(trunc(c.title, 80))}</div><div class="snip">${esc(d.date || 'date unknown')} · ${esc({ELIGIBLE: 'inside the 12 months before the ICLR deadline', OUTSIDE: 'outside that window (kept; filter off)'}[d.gate] || 'date could not be confirmed')}</div></div>`; }).join('');
+  if (id === 'candidate_fulltext') return IOL('in', 'Top candidates with public PDFs') + IOL('out', `${io.source_sections} source sections`) +
+    io.fulltext.map(a => `<div class="ex"><div class="h">${esc(srcName(s, a.id, 80))}</div><div class="snip">${a.pages ?? '?'} pages · ${a.chars ? Math.round(a.chars / 1000) + 'k characters' : ''} · ${esc(a.status)}</div></div>`).join('');
+  if (id === 'jev_section_ranking') return IOL('in', 'Each claim × each source section') + IOL('out', 'Which source sections matter most for each claim (top shown)') + jevRows(s, ds, 3, true);
+  if (id === 'jev_four_condition_probes') {
+    const t = [...io.trajectories].sort((a, b) => Math.max(...Object.values(b.p || {}).map(v => v.SPECIFIC || 0)) - Math.max(...Object.values(a.p || {}).map(v => v.SPECIFIC || 0)))[0];
+    return IOL('how', 'Jev answers the same question four times: S = claim question only · S+A = plus the target passage · S+B = plus the source passage · S+A+B = plus both') +
+      IOL('out', `${io.trajectories.length} claim–section pairs probed`) +
+      (t ? `<div class="ex"><div class="h">${esc(claimShort(s, t.claim, 70))}</div><div class="snip">Source: ${esc(matShort(s, t.material))} — “${esc(trunc(s.materials[t.material]?.text, 150))}”</div>
+        <table class="ptab"><tr><th>condition</th>${['S', 'S+A', 'S+B', 'S+A+B'].map(c => `<th>${c}</th>`).join('')}</tr><tr><td>specific</td>${['S', 'S+A', 'S+B', 'S+A+B'].map(c => `<td>${pct(t.p?.[c]?.SPECIFIC)}</td>`).join('')}</tr><tr><td>topic only</td>${['S', 'S+A', 'S+B', 'S+A+B'].map(c => `<td>${pct(t.p?.[c]?.TOPIC_ONLY)}</td>`).join('')}</tr></table></div>` : '');
+  }
+  if (/^probe_/.test(id)) return IOL('out', `${ds.length} Jev answers · strongest shown`) + jevRows(s, ds, 3, true);
+  if (/^jev_global_/.test(id)) return IOL('in', 'All evidence gathered so far') + IOL('out', 'Jev view of each claim and of the whole paper') + jevRows(s, ds, 4);
+  if (id === 'exact_span_handoff') return IOL('out', `Exact quoted spans for ${io.low.length ? new Set(io.low.map(r => r.claim + r.material)).size : '?'} claim–section scopes`);
+  if (id === 'claim_tree_low') {
+    const lowNow = io.low.filter(r => r.t == null || r.t <= T);  // only checks finished by the replay clock
+    const cnt = {}; lowNow.forEach(r => cnt[r.status] = (cnt[r.status] || 0) + 1);
+    const ex = [...lowNow].sort((a, b) => ({CONTRADICTED: 0, SUPPORTED: 1}[a.status] ?? 2) - ({CONTRADICTED: 0, SUPPORTED: 1}[b.status] ?? 2)).slice(0, 3);
+    return IOL('in', 'Each technical check with the target passage and the selected source section') + IOL('out', Object.entries(cnt).map(([k, v]) => `${v} ${k.toLowerCase()}`).join(' · ')) +
+      ex.map(r => `<div class="ex"><div class="h">${esc(trunc(r.q, 150))}<span class="st-chip ${esc(r.status)}">${esc(r.status)}</span></div><div class="two"><div class="snip"><b>Target</b>${esc(trunc(r.A, 160) || '—')}</div><div class="snip"><b>${esc(srcName(s, (s.materials[r.material] || {}).src, 26))}</b>${esc(trunc(r.B, 160) || '—')}</div></div></div>`).join('');
+  }
+  if (id === 'scope_acceptance') return IOL('out', 'Citations checked against the saved text; open points are kept, not dropped') + io.low_unresolved.slice(0, 3).map(u => `<div class="snip">• ${esc(u)}</div>`).join('');
+  if (id === 'evidence_freeze') return IOL('out', 'The evidence packet is frozen before the final review');
+  if (id === 'xhigh_final') return IOL('out', `Screening result: ${esc(labelText(s.final.status))}`) + (s.final.conclusion ? `<div class="snip">“${esc(trunc(s.final.conclusion, 260))}”</div>` : '') +
+    s.final.findings.slice(0, 2).map(f => `<div class="ex"><div class="h">${esc(claimShort(s, f.claim, 70))}</div><div class="snip">${esc(trunc(f.reason, 200))}</div><div class="two"><div class="snip"><b>Target p.${esc(f.A_page ?? '?')}</b>${esc(trunc(f.A, 150))}</div><div class="snip"><b>${esc(srcName(s, f.B_source, 26))} p.${esc(f.B_page ?? '?')}</b>${esc(trunc(f.B, 150))}</div></div></div>`).join('');
+  if (id === 'final_format_gate') return IOL('out', `Quotes match the saved text: ${esc(io.gate.literal_quote_gate || '?')} · ${io.gate_errors} format errors · scientific review: ${esc((io.gate.science_gate || '').toLowerCase())}`);
+  if (id === 'jev_final') return IOL('out', 'Jev classification of the whole paper') + jevRows(s, ds, 1);
+  if (id === 'outer_delivery_archive') return IOL('out', `Report delivered · ${esc(labelText(s.screening))}${s.label !== s.screening ? ` → ${esc(labelText(s.label))} after the 0.90 title screen` : ''}`);
+  if (ds.length) return jevRows(s, ds, 3, true);
+  return '';
+}
+function stageRow(s, st, x) {
+  const stc = st.status[x.id], reached = stc === 'done' || stc === 'run';
+  return `<div class="srow"><span class="dot ${stc === 'done' ? 'done' : stc === 'run' ? 'run' : stc === 'gap' ? 'flag' : 'wait'}" style="margin-top:5px"></span>
+    <div><div class="sl">${esc(x.label)}</div><div class="sp">${esc(PLAIN[x.id] || x.purpose || '')}</div><div class="role">${esc(x.role)}</div></div>
+    <div class="dl">${reached ? (stageIO(s, st, x) || '<span class="empty">Done</span>') : '<span class="empty">Not reached yet in this replay</span>'}</div></div>`;
+}
+const LEGEND = `<span class="lg">${PAPER_CATS.concat(MAT_CATS).map(([, c, n]) => `<span style="--c:${c}">${n}</span>`).join('')}</span>`;
+function renderSecDetail(s, st) {
+  if (!openSec) { $('secdetail').innerHTML = ''; return; }
+  const g = s.groups.find(x => x.id === openSec);
+  const rows = s.stages.filter(x => x.group === openSec).map(x => stageRow(s, st, x)).join('');
+  $('secdetail').innerHTML = `<div class="secdetail"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><b>${esc(g.label)}</b>${LEGEND}</div>${rows}<p class="note" style="margin:8px 0 0">Jev bars appear only where Jev answered a question; each bar is one question, never an average. Only the top items are shown.</p></div>`;
+}
+
+const dayMs = d => d ? Date.parse(d.length === 10 ? d + 'T00:00:00Z' : d) : null;
+const fmtDay = ms => new Date(ms).toISOString().slice(0, 10);
+const PROVNAME = {arxiv: 'arXiv', openreview: 'OpenReview', huggingface: 'Hugging Face'};
+const detex = t => String(t || '').replace(/\\(textbf|textit|emph|texttt|mathrm|text)\{([^{}]*)\}/g, '$2').replace(/\$([^$]{1,40})\$/g, '$1');
+window.addEventListener('resize', () => render());
+function timeline(srcDate, subDate, deadline) {
+  // Source public date, target submission and the ICLR deadline on one axis; missing dates are left out.
+  const pts = [[dayMs(srcDate), 'source', 'var(--cyan)'], [dayMs(subDate), 'submitted', '#ff8a8a'], [dayMs(deadline), 'ICLR deadline', 'var(--muted)']].filter(p => p[0]).sort((a, b) => a[0] - b[0]);
+  if (pts.length < 2) return '';
+  const lo = pts[0][0], hi = pts[pts.length - 1][0], X = v => ((v - lo) / Math.max(1, hi - lo) * 100).toFixed(2);
+  let row = 0, prev = -100;  // a label close to the previous one drops to a second line
+  const marks = pts.map(([v, l, c], i) => { const x = +X(v); row = x - prev < 24 ? 1 - row : 0; prev = x;
+    return `<i class="mk" style="left:${x}%;background:${c}"></i><span class="ml${i === 0 ? ' first' : i === pts.length - 1 ? ' last' : ''}" style="left:${x}%;top:${row ? 2.05 : 1.05}rem;color:${c}">${l} ${fmtDay(v)}</span>`; });
+  return `<div class="tl" style="height:${marks.some(m => m.includes('top:2.05rem')) ? 3.2 : 2.2}rem"><div class="axis"></div>${marks.join('')}</div>`;
+}
+function saber(id, x1, y1, x2, y2, core, glow) {
+  // Hilt from (x1,y1); the blade is a thin white core inside two blurred colour halos, the way a glowing tube photographs.
+  const ang = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI, len = Math.hypot(x2 - x1, y2 - y1), H = 26;
+  return `<g transform="translate(${x1} ${y1}) rotate(${ang})">
+    <line x1="${H}" y1="0" x2="${len}" y2="0" stroke="${glow}" stroke-width="15" stroke-linecap="round" opacity=".28" filter="url(#bw-${id})"/>
+    <line x1="${H}" y1="0" x2="${len}" y2="0" stroke="${glow}" stroke-width="6" stroke-linecap="round" opacity=".85" filter="url(#bn-${id})"/>
+    <line x1="${H}" y1="0" x2="${len}" y2="0" stroke="${core}" stroke-width="2.4" stroke-linecap="round" class="core"/>
+    <rect x="0" y="-3.4" width="${H}" height="6.8" rx="1.4" fill="url(#hilt)"/>
+    <rect x="3" y="-3.6" width="2.2" height="7.2" fill="#1b1e22"/><rect x="8" y="-3.6" width="2.2" height="7.2" fill="#1b1e22"/><rect x="13" y="-3.6" width="2.2" height="7.2" fill="#1b1e22"/>
+    <rect x="${H - 4}" y="-4.2" width="4" height="8.4" rx="0.8" fill="#9aa2ad"/><circle cx="${H - 9}" cy="-2.4" r="0.9" fill="${glow}"/></g>`;
+}
+function arena(on) {
+  return `<div class="arena${on ? ' on' : ''}" aria-hidden="true"><svg viewBox="0 0 200 150">
+    <defs><linearGradient id="hilt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3e7ec"/><stop offset=".45" stop-color="#8d949e"/><stop offset=".55" stop-color="#5d646d"/><stop offset="1" stop-color="#2b2f35"/></linearGradient>
+      <filter id="bw-a" filterUnits="userSpaceOnUse" x="-20" y="-30" width="240" height="60"><feGaussianBlur stdDeviation="5"/></filter><filter id="bn-a" filterUnits="userSpaceOnUse" x="-20" y="-30" width="240" height="60"><feGaussianBlur stdDeviation="1.6"/></filter>
+      <filter id="bw-b" filterUnits="userSpaceOnUse" x="-20" y="-30" width="240" height="60"><feGaussianBlur stdDeviation="5"/></filter><filter id="bn-b" filterUnits="userSpaceOnUse" x="-20" y="-30" width="240" height="60"><feGaussianBlur stdDeviation="1.6"/></filter>
+      <radialGradient id="flash"><stop offset="0" stop-color="#fff"/><stop offset=".25" stop-color="#fff7e6" stop-opacity=".9"/><stop offset=".6" stop-color="#ffd6a0" stop-opacity=".25"/><stop offset="1" stop-color="#ffd6a0" stop-opacity="0"/></radialGradient></defs>
+    <g class="blades">${saber('a', 22, 128, 172, 22, '#fff4f4', '#ff3b3b')}${saber('b', 178, 128, 28, 22, '#f2feff', '#36d3e0')}</g>
+    <g class="spark" transform="translate(100 73)"><circle r="16" fill="url(#flash)"/>
+      ${[[-1, -.35], [.9, -.6], [.4, .95], [-.7, .8], [1, .25], [-.95, .1]].map(([dx, dy], i) => `<line class="ray r${i}" x1="${dx * 3}" y1="${dy * 3}" x2="${dx * 13}" y2="${dy * 13}" stroke="#fff3d6" stroke-width="0.9" stroke-linecap="round"/>`).join('')}</g>
+  </svg><span class="vsb">VS</span></div>`;
+}
+function miniPage(side, title, text, stamp, head) {
+  // A stylised first page drawn from the paper's own title and abstract (no image is needed live or offline).
+  return `<div class="pg ${side}" aria-hidden="true">${stamp ? `<span class="stamp">${esc(stamp)}</span>` : ''}
+    <div class="pg-h">${esc(head)}</div><div class="pg-t">${esc(title)}</div><div class="pg-a">Anonymous authors</div>
+    <div class="pg-ab">Abstract</div><div class="pg-x">${esc(detex(text || '')) || '&nbsp;'}</div></div>`;
+}
+function renderHero(s, st) {
+  const top = st.status.jev_candidate_rerank === 'done' ? s.retained[0] : null;
+  const sub = s.submission || {}, tDate = /^\d{4}-\d{2}-\d{2}/.test(s.target_created || '') ? s.target_created.slice(0, 10) : null;
+  const out = (url, t) => `<a href="${url}" target="_blank" rel="noopener">${t}</a>`;
+  const left = `<div class="side a">${miniPage('a', s.title, sub.abstract, null, sub.number ? 'Under review as a conference paper at ICLR 2027' : 'Target paper')}
+    <div class="cap"><span class="who">Target</span><span class="srcl">${s.openreview ? out(s.openreview, esc(s.title)) : esc(s.title)}</span>
+      <span>${sub.number ? `ICLR 2027 #${sub.number}` : 'user-designated case'}${tDate ? ` · submitted ${tDate}` : ''}</span>
+      ${sub.primary_area ? `<span class="fact"><b>Primary Area</b> ${esc(sub.primary_area)}</span>` : ''}${sub.keywords?.length ? `<span class="fact"><b>Keywords</b> ${esc(sub.keywords.join(', '))}</span>` : ''}</div></div>`;
+  let right, tl = '';
+  if (top) {
+    const sd = dayMs(top.date), td = dayMs(tDate), id = String(top.id).replace(/^(arxiv|openreview|huggingface)-/, '');
+    const rel = sd && td ? (sd < td ? `<b>public ${Math.round((td - sd) / 864e5)} days before</b> the submission` : `appeared ${Math.round((sd - td) / 864e5)} days after`) : 'public date unknown';
+    right = `<div class="side b">${miniPage('b', top.title, top.abstract, top.provider === 'arxiv' ? 'arXiv:' + id : null, PROVNAME[top.provider] || 'Source')}
+      <div class="cap"><span class="who">Source</span><span class="srcl">${out(top.url, esc(top.title))}</span><span>${esc(PROVNAME[top.provider] || top.provider || '')} ${esc(id)} · ${rel}</span><span>Jev's closest of ${s.retained.length} candidates</span></div></div>`;
+    tl = timeline(top.date, tDate, s.iclr_deadline);
+  } else {
+    const n = st.status.autonomous_search === 'done' ? s.candidates.length : 0;
+    const [head, sub2] = st.status.autonomous_search === 'done' ? ['Ranking candidates', `Jev is comparing ${n} papers with the target`]
+      : st.status.intake === 'done' ? ['Searching for the source', 'arXiv · OpenReview · Hugging Face'] : ['Reading the target', 'The search starts once the claims are listed'];
+    right = `<div class="side b waiting"><div class="pg b ghost" aria-hidden="true"><i class="scan"></i><span class="spin"></span></div>
+      <div class="cap"><span class="who">Source</span><span class="srcl">${head}<span class="dots"><i>.</i><i>.</i><i>.</i></span></span><span>${sub2}</span></div></div>`;
+  }
+  setHTML($('pairhead'), `<h1 class="sr-only">${esc(s.title)}</h1><div class="duel">${left}${arena(!!top)}${right}</div>${tl}`);
+}
+
+function wrongLink(pid, title) {
+  return `<button class="wrong" data-wrong="${esc(pid)}" data-title="${esc(title || '')}">Think this is wrong?</button>`;
+}
+function openAbout(pid, title) {
+  const el = $('aboutPaper');
+  el.hidden = !pid;
+  if (pid) {
+    const mail = 'mailto:' + CONTACT_EMAIL + '?' + new URLSearchParams({subject: `Correction request: ${pid}`,
+      body: `Paper: ${title || pid}\nOpenReview: ${pid}\nPage: ${location.origin}${location.pathname}\n\nWhat is wrong:\n`}).toString().replace(/\+/g, '%20');
+    el.innerHTML = `About: <b>${esc(title || pid)}</b> (OpenReview ${esc(pid)}). <a class="mail" href="${mail}">Email us about this paper ↗</a>`;
+  }
+  $('about').showModal();
+}
+// ---- votes: one ballot per browser token per paper; the main stage and the flagged list share the count ----
+const VOTE_API = (new URLSearchParams(location.search).get('votes') || D.vote_base || '').replace(/\/+$/, '');
+let VOTES = {}, VOTE_STATE = 'off';
+const randHex = () => [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, '0')).join('');
+const VOTER = (() => { try { let v = localStorage.getItem('lw-voter'); if (!/^[0-9a-f]{32}$/.test(v || '')) { v = randHex(); localStorage.setItem('lw-voter', v); } return v; } catch { return randHex(); } })();
+async function fetchVotes() {
+  // Votes go only to an explicitly configured vote service (?votes= or D.vote_base); the read-only gateway has no vote routes.
+  const base = VOTE_API;
+  if (!base) { VOTE_STATE = 'off'; return; }
+  try {
+    const r = await fetch(base + '/api/votes', {cache: 'no-store', headers: {'X-Voter': VOTER}});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    VOTES = (await r.json()).votes || {}; VOTE_STATE = 'ok';
+  } catch (err) { VOTE_STATE = 'off'; }
+}
+async function castVote(pid, vote) {
+  const base = VOTE_API, next = VOTES[pid]?.mine === vote ? null : vote;
+  if (!base) return;  // clicking your own vote again withdraws it
+  try {
+    const r = await fetch(base + '/api/vote', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Voter': VOTER}, body: JSON.stringify({paper_id: pid, vote: next})});
+    const j = await r.json();
+    if (j.ok) VOTES[pid] = j.tally; else console.info('Vote not accepted:', j.error);
+  } catch (err) { console.info('Vote failed:', err.message); }
+  render();
+}
+function voteBox(pid, compact) {
+  const v = VOTES[pid] || {laundering: 0, not_laundering: 0, mine: null}, n = (v.laundering || 0) + (v.not_laundering || 0), off = VOTE_STATE !== 'ok';
+  const btn = (k, cls, txt) => `<button class="vbtn ${cls}${v.mine === k ? ' mine' : ''}" data-vote="${k}" data-pid="${esc(pid)}"${off ? ' disabled' : ''} aria-pressed="${v.mine === k}">${txt} <b>${v[k] || 0}</b></button>`;
+  return `<div class="vwrap"><div class="vote"${off ? ' title="Voting is not open yet"' : ''}>${compact ? '' : '<span class="q">Needs a source review?</span>'}${btn('laundering', 'yes', 'Yes')}${btn('not_laundering', 'no', 'No')}</div>` +
+    (compact ? '' : `<div class="vbar" style="${n ? '' : 'background:var(--line)'}"><i style="width:${n ? v.laundering / n * 100 : 0}%"></i></div>`) + '</div>';
+}
+
+// ---- progress: papers checked and suspected over time (each paper once, latest label wins) ----
+let PROGRESS = D.history.progress || {points: []}, PHOVER = null, PGEOM = {W: 320, H: 92};
+function labelsNow() { const m = {}; for (const p of PROGRESS.points || []) m[p.paper_id] = p.label; return m; }
+function fitRows(box) {
+  // Show as many whole rows as the box holds at the current size; a half-cut row reads as a glitch.
+  const lim = box.getBoundingClientRect().bottom;
+  for (const c of box.children) c.style.display = c.getBoundingClientRect().bottom > lim + 1 ? 'none' : '';
+}
+const setHTML = (el, html) => { if (el._html !== html) { const top = el.scrollTop; el.innerHTML = html; el._html = html; el.scrollTop = top; } };
+function progressRange() {
+  const pts = PROGRESS.points || []; if (!pts.length) return null;
+  const t0 = pts[0].t - 3600, tEnd = Math.max(pts[pts.length - 1].t + 1800, MODE === 'live' ? Date.now() / 1000 : 0);
+  return {pts, t0, t1: tEnd};
+}
+function renderProgress() {
+  const R = progressRange(); if (!R) { setHTML($('prog'), '<p class="empty">No progress data yet.</p>'); return; }
+  const box = $('prog'), W = Math.max(240, box.clientWidth - 20), H = Math.max(72, Math.min(220, Math.floor((box.clientHeight - 8) / 2) - 58));
+  PGEOM = {W, H};
+  const {pts, t0, t1} = R, L = 24, Rp = 6, T = 6, B = 15, X = t => L + (t - t0) / (t1 - t0) * (W - L - Rp);
+  const at = t => { let p = null; for (const q of pts) { if (q.t <= t) p = q; else break; } return p; };
+  const hp = PHOVER != null ? at(PHOVER) : null, last = pts[pts.length - 1];
+  const fmtD = t => new Date(t * 1000).toLocaleString('en-US', {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/New_York'});
+  const ticks = []; for (let t = Math.ceil(t0 / 86400) * 86400; t < t1 - (t1 - t0) * 0.06; t += 86400) ticks.push(t);
+  const panel = (key, name, color, cap) => {
+    const ymax = Math.max(cap, ...pts.map(p => p[key])), Y = v => T + (1 - v / ymax) * (H - T - B);
+    let d = `M${X(t0)},${Y(0)}`; for (const p of pts) d += `H${X(p.t)}V${Y(p[key])}`; d += `H${X(t1)}`;
+    let g = `<svg viewBox="0 0 ${W} ${H}" style="height:${H}px" data-prog="1" role="img" aria-label="${name} over time"><defs><linearGradient id="pg-${key}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".26"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>`;
+    [0, Math.round(ymax / 2), ymax].forEach(v => g += `<line x1="${L}" x2="${W - Rp}" y1="${Y(v)}" y2="${Y(v)}" stroke="#232831" vector-effect="non-scaling-stroke"/><text x="${L - 5}" y="${Y(v) + 3}" text-anchor="end" font-size="8.5" fill="#6c7584" font-family="IBM Plex Sans, sans-serif">${v}</text>`);
+    ticks.forEach(t => g += `<text x="${X(t)}" y="${H - 3}" text-anchor="middle" font-size="8.5" fill="#6c7584" font-family="IBM Plex Sans, sans-serif">${new Date(t * 1000).toLocaleDateString('en-US', {month: 'short', day: 'numeric', timeZone: 'UTC'})}</text>`);
+    g += `<path d="${d}V${Y(0)}Z" fill="url(#pg-${key})"/><path d="${d}" fill="none" stroke="${color}" stroke-width="1.8" vector-effect="non-scaling-stroke"/>`;
+    if (key === 'suspected') pts.forEach((p, i) => { if (p.suspected > (i ? pts[i - 1].suspected : 0)) g += `<circle cx="${X(p.t)}" cy="${Y(p.suspected)}" r="2.6" fill="${color}"><title>${esc(paperMeta(p.paper_id).title)}</title></circle>`; });
+    const ex = X(t1), ey = Y(last[key]);
+    g += `${MODE === 'live' ? `<circle class="livedot" cx="${ex}" cy="${ey}" r="3" fill="none" stroke="${color}"/>` : ''}<circle cx="${ex}" cy="${ey}" r="3" fill="${color}"/>`;
+    if (hp) g += `<line x1="${X(PHOVER)}" x2="${X(PHOVER)}" y1="${T}" y2="${H - B}" stroke="#8b94a3" stroke-dasharray="2 3" vector-effect="non-scaling-stroke"/><circle cx="${X(PHOVER)}" cy="${Y(hp[key])}" r="3.2" fill="#0b0d10" stroke="${color}" stroke-width="1.6" vector-effect="non-scaling-stroke"/>`;
+    g += '</svg>';
+    const v = hp ? hp[key] : last[key], prev = (at(t1 - 86400) || {})[key] ?? 0;
+    const right = hp ? fmtD(PHOVER) + ' ET' : `+${last[key] - prev} in 24h`;
+    const extra = key === 'suspected' ? (() => { const q = [...pts].reverse().find(p => p.label === 'YES_SUSPECTED' && (!hp || p.t <= PHOVER)); return q ? `<div class="note" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:2px 0 4px">newest: ${esc(paperMeta(q.paper_id).title)}</div>` : ''; })() : '';
+    return `<div class="pp" style="--c:${color}"><div class="ph"><b>${v}</b>${name}<span class="d">${right}</span></div>${g}${extra}</div>`;
+  };
+  setHTML($('prog'), panel('checked', 'papers checked', '#57c7cf', 10) + panel('suspected', 'review recommended', '#ef7a7a', 5));
+}
+document.addEventListener('mousemove', e => {
+  const svg = e.target.closest && e.target.closest('svg[data-prog]'), R = progressRange();
+  if (!svg || !R) { if (PHOVER != null && !(e.target.closest && e.target.closest('#prog'))) { PHOVER = null; renderProgress(); } return; }
+  const r = svg.getBoundingClientRect(), fx = (e.clientX - r.left) / r.width, W = PGEOM.W, L = 24, Rp = 6;
+  const t = R.t0 + Math.min(1, Math.max(0, (fx * W - L) / (W - L - Rp))) * (R.t1 - R.t0);
+  PHOVER = t; renderProgress();
+});
+$('prog').addEventListener('mouseleave', () => { PHOVER = null; renderProgress(); });
+
+function paperMeta(pid) {
+  const b = (BOARD.length ? BOARD : D.history.board || []).find(r => r.paper_id === pid), x = S.find(r => r.paper_id === pid);
+  const h = (D.history.papers || []).find(r => r.paper_id === pid);
+  const pair = (D.history.pairs || []).filter(r => r.case === pid).sort((a, c) => (c.p?.YES_SUSPECTED || 0) - (a.p?.YES_SUSPECTED || 0))[0];
+  return {pid, title: b?.title || x?.title || h?.title || pair?.target_title || pid, openreview: b?.openreview || x?.openreview || h?.openreview || `https://openreview.net/forum?id=${pid}`,
+    submission: b?.submission || x?.submission?.number || null, source_title: b?.source_title || null, source_url: b?.source_url || null,
+    p: b?.p || null, session: b?.session || x?.session || null};
+}
+function renderFlagged() {
+  const L = labelsNow(), when = {};
+  for (const p of PROGRESS.points || []) if (p.label === 'YES_SUSPECTED') when[p.paper_id] = p.t;
+  const rows = Object.keys(L).filter(k => L[k] === 'YES_SUSPECTED').map(paperMeta)
+    .sort((a, b) => (b.p?.YES_SUSPECTED || 0) - (a.p?.YES_SUSPECTED || 0) || when[b.pid] - when[a.pid]);
+  const tot = rows.reduce((a, r) => { const v = VOTES[r.pid] || {}; return [a[0] + (v.laundering || 0), a[1] + (v.not_laundering || 0)]; }, [0, 0]);
+  setHTML($('flaggedView'), `<div class="fl-head"><h2>Source review recommended</h2><span class="chip red"><b>${tot[0]}</b> yes</span><span class="chip"><b>${tot[1]}</b> no</span><span class="note">${rows.length} papers whose latest result is Source review recommended. This is not a finding of plagiarism or misconduct. Votes here and on the main stage are one count; one vote per paper per browser.</span><button class="btn" data-close-flagged="1">Back to the stage</button></div>
+    <div class="fl-list">${rows.map((r, i) => `<div class="fl-row"><span class="rk">${i + 1}</span>
+      <div style="min-width:0"><div class="t"><a href="${r.openreview}" target="_blank" rel="noopener">${esc(r.title)} ↗</a></div>
+      <div class="m">${r.submission ? `ICLR 2027 #${r.submission} · ` : ''}${r.source_title ? `vs ${r.source_url ? `<a href="${r.source_url}" target="_blank" rel="noopener">${esc(r.source_title)}</a>` : esc(r.source_title)}` : 'flagged by the earlier 50-paper run'}${r.session ? ` · <button class="linkbtn" data-open="${esc(r.session)}">trajectory ›</button>` : ''} · ${wrongLink(r.pid, r.title)}</div></div>
+      <div class="pv">${r.p ? pct(r.p.YES_SUSPECTED) : '—'}<small>${r.p ? 'Jev, whole paper' : 'no saved trajectory'}</small></div>${voteBox(r.pid)}</div>`).join('') || '<p class="empty">No paper is flagged yet.</p>'}</div>`);
+}
+
+const CKPTS = [['jev_global_after_intake', 'read'], ['jev_global_after_candidate_rerank', 'rank'], ['jev_global_after_probes', 'probe'], ['jev_global_after_local', 'check'], ['jev_final', 'final']];
+function paperSeries(s, st) {
+  return CKPTS.map(([id, lab]) => { const ds = (st.dist[id] || []).filter(d => id === 'jev_final' || scopeLabel(s, d) === 'paper'); return {id, lab, p: ds.length ? ds[ds.length - 1].p : null}; });
+}
+function renderVerdict(s, st) {
+  const ser = paperSeries(s, st), last = [...ser].reverse().find(x => x.p), p = last?.p, y = p ? (p.YES_SUSPECTED || 0) : null;
+  const col = y == null ? 'var(--muted)' : y >= .5 ? 'var(--red)' : y >= .25 ? '#f0a3a3' : 'var(--text)';
+  const W = 268, H = 52, X = i => 16 + i * (W - 32) / (ser.length - 1), Y = v => 5 + (1 - v) * (H - 21);
+  const pts = ser.map((x, i) => x.p ? [X(i), Y(x.p.YES_SUSPECTED || 0)] : null), on = pts.filter(Boolean);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Jev P(review recommended) for the whole paper at each checkpoint"><line x1="16" x2="${W - 16}" y1="${Y(.5)}" y2="${Y(.5)}" stroke="#2b313a" stroke-dasharray="2 4"/>`;
+  if (on.length > 1) svg += `<polyline fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" points="${on.map(q => q.join(',')).join(' ')}"/>`;
+  ser.forEach((x, i) => {
+    svg += pts[i] ? `<circle cx="${pts[i][0]}" cy="${pts[i][1]}" r="${i === ser.indexOf(last) ? 4 : 2.6}" fill="${col}"/>` : `<circle cx="${X(i)}" cy="${Y(0)}" r="2" fill="none" stroke="#3a414c"/>`;
+    svg += `<text x="${X(i)}" y="${H - 2}" text-anchor="middle" font-size="9.5" font-family="IBM Plex Sans, sans-serif" fill="${pts[i] ? '#a2a9b4' : '#4b525d'}">${x.lab}</text>`;
+  });
+  svg += '</svg>';
+  const res = st.finished ? `<span class="res ${esc(s.label)}">${esc(labelText(s.label))}</span>${wrongLink(s.paper_id, s.title)}` : st.started ? '<span class="res run">running</span>' : '<span class="res">queued</span>';
+  if (st.status.jev_candidate_rerank !== 'done' && !st.finished) {
+    // No source ranked yet: the probability means little without a candidate, so show the same searching state as the duel.
+    setHTML($('verdict'), `<div class="vwait"><span class="spin"></span><div><b>Scoring after the source is found</b><span>${st.started ? (st.status.intake === 'done' ? 'Searching for candidate sources' : 'Reading the target') : 'Queued'}<span class="dots"><i>.</i><i>.</i><i>.</i></span></span></div></div>
+      ${svg}<div class="vfoot"><span>${p ? `early read: review ${pct(y)}` : 'No score yet'}</span>${st.started ? '<span class="res run">running</span>' : '<span class="res">queued</span>'}</div>`);
+    return;
+  }
+  setHTML($('verdict'), `<div class="vtop"><span class="big" style="color:${col}">${y == null ? '—' : pct(y)}</span><span class="cap"><b>review</b>Jev, whole paper${last && last.id !== 'jev_final' ? ', so far' : ''}</span></div>${svg}
+    <div class="vfoot"><span>${p ? `inconclusive ${pct(p.UNRESOLVED)} · no finding ${pct(p.NO_SUPPORTED)}` : 'First score after Qwen reads the paper'}</span>${res}</div>${s.openreview ? voteBox(s.paper_id) : ''}`);
+}
+
+const LOWTXT = {SUPPORTED: 'match', CONTRADICTED: 'differs', UNKNOWN: 'unclear', POSSIBLE: 'possible'};
+const TECH = new Set(['method', 'data', 'result', 'training_stage', 'novelty']);
+const lead = t => t && /^[a-z0-9,;)]/.test(t) ? '…' + t : (t || '—');  // saved spans are cut mid-sentence
+function quotePair(aWho, a, bWho, b) {
+  return `<div class="quotes"><div class="quote a"><div class="who">${aWho}</div><p>${esc(lead(a))}</p></div><div class="quote b"><div class="who">${bWho}</div><p>${esc(lead(b))}</p></div></div>`;
+}
+function renderEvidence(s, st) {
+  const el = $('evidence');
+  if (st.status.xhigh_final === 'done' && s.final.findings.length) {
+    const top = s.retained[0], f = s.final.findings.find(x => top && x.B_source === top.id) || s.final.findings[0];
+    const src = trunc(s.candById[f.B_source]?.title || 'Source', 44);
+    el.innerHTML = `<div class="eh"><b>Final finding</b><span class="note">${s.final.findings.length} finding${s.final.findings.length > 1 ? 's' : ''} · Qwen XHIGH</span></div>
+      <p class="ask"><b>${esc(f.claim)}</b> ${esc(f.reason)}</p>${quotePair(`Target · p.${esc(f.A_page ?? '?')}`, f.A, `${esc(src)} · p.${esc(f.B_page ?? '?')}`, f.B)}`;
+    return;
+  }
+  const low = (s.io.low || []).filter(r => r.t != null && r.t <= T && TECH.has(r.dim));
+  if (low.length) {
+    const cnt = {}; low.forEach(r => cnt[r.status] = (cnt[r.status] || 0) + 1);
+    const pick = [...low].reverse().find(r => r.status === 'SUPPORTED') || low[low.length - 1], m = s.materials[pick.material] || {};
+    el.innerHTML = `<div class="eh"><b>${pick.status === 'SUPPORTED' ? 'Latest match' : 'Latest check'}</b><span class="note">Qwen LOW · ${esc((pick.dim || '').replace('_', ' '))}</span></div>
+      <p class="ask"><b>${esc(pick.claim)}</b> ${esc(pick.q)}</p>${quotePair('Target says', pick.A, `${esc(srcName(s, m.src, 40))}${m.page ? ' · p.' + m.page : ''} says`, pick.B)}
+      <div class="tally">${cnt.SUPPORTED ? `<span class="m">${cnt.SUPPORTED} source matches</span>` : ''}${cnt.CONTRADICTED ? `<span class="d">${cnt.CONTRADICTED} source differs</span>` : ''}${cnt.POSSIBLE ? `<span>${cnt.POSSIBLE} possible</span>` : ''}${cnt.UNKNOWN ? `<span>${cnt.UNKNOWN} unclear</span>` : ''}<span style="background:none;color:var(--muted)">of ${low.length} method, data and result checks</span></div>`;
+    return;
+  }
+  const secs = ['jev_section_ranking', 'probe_s', 'probe_sa', 'probe_sb', 'probe_sab'].flatMap(id => st.dist[id] || []).filter(d => d.scope?.material_id && d.p);
+  if (secs.length) {
+    const b = secs.reduce((x, d) => (d.p.SPECIFIC || 0) > (x.p.SPECIFIC || 0) ? d : x), m = s.materials[b.scope.material_id] || {}, c = s.claims.find(x => x.id === b.scope.claim_id);
+    const tr = (s.io.trajectories || []).find(t => t.claim === b.scope.claim_id && t.material === b.scope.material_id);
+    const probed = tr && ['probe_sab', 'jev_global_after_probes'].some(id => st.status[id] === 'done');
+    el.innerHTML = `<div class="eh"><b>Closest source passage so far</b><span class="note">Jev · specific ${pct(b.p.SPECIFIC)}</span></div>
+      ${quotePair(`Claim ${esc(b.scope.claim_id || '')}`, c?.text, `${esc(srcName(s, m.src, 40))}${m.page ? ' · p.' + m.page : ''}`, m.text)}
+      ${probed ? `<div class="probe4" title="Jev answers the same question four times: claim only, plus the target passage, plus the source passage, plus both. Values are P(specific).">${['S', 'S+A', 'S+B', 'S+A+B'].map(k => `<div><b>${pct(tr.p?.[k]?.SPECIFIC)}</b>${{S: 'claim only', 'S+A': '+ target', 'S+B': '+ source', 'S+A+B': '+ both'}[k]}</div>`).join('')}</div>` : ''}`;
+    return;
+  }
+  if (st.status.intake === 'done' && s.claims.length) {
+    el.innerHTML = `<div class="eh"><b>What the paper claims</b><span class="note">Qwen intake · ${s.claims.length} claims to check</span></div>
+      <div class="claims">${s.claims.map(c => `<div class="c"><b>${esc(c.id)}</b><span>${esc(c.text)}</span></div>`).join('')}</div>`;
+    return;
+  }
+  el.innerHTML = `<div class="eh"><b>Reading the target paper</b><span class="note">${s.io.pdf_pages ? s.io.pdf_pages + ' pages' : ''}</span></div>
+    ${s.io.first_page && st.status.target_materials === 'done' ? `<div class="quotes" style="grid-template-columns:1fr"><div class="quote a"><div class="who">Page 1</div><p>${esc(s.io.first_page)}</p></div></div>` : '<p class="empty">Qwen will list the core claims to check.</p>'}`;
+}
+
+function flowLayout(s) {
+  if (s._layout) return s._layout;
+  const fwd = s.edges.filter(e => e.kind !== 'loop'), rank = {};
+  s.stages.forEach(x => rank[x.id] = 0);
+  for (let k = 0; k < s.stages.length; k++) for (const e of fwd) rank[e.t] = Math.max(rank[e.t], (rank[e.s] ?? 0) + 1);
+  const W = 176, H = 56, GX = 34, GY = 16, PAD = 12, HEAD = 40, LOOPX = 30, pos = {}, cols = [];
+  let x = 6;
+  for (const g of s.groups) {
+    const ss = s.stages.filter(n => n.group === g.id), ranks = [...new Set(ss.map(n => rank[n.id]))].sort((a, b) => a - b);
+    const maxPer = Math.max(1, ...ranks.map(r => ss.filter(n => rank[n.id] === r).length));
+    const cw = maxPer * W + (maxPer - 1) * 10 + PAD * 2 + LOOPX;
+    ranks.forEach((r, ri) => ss.filter(n => rank[n.id] === r).forEach((n, j, row) => pos[n.id] = {x: x + PAD + j * (W + 10) + (maxPer - row.length) * (W + 10) / 2, y: HEAD + PAD + ri * (H + GY)}));
+    cols.push({g, x, w: cw, h: HEAD + PAD * 2 + ranks.length * (H + GY) - GY, n: ss.length});
+    x += cw + GX;
+  }
+  return s._layout = {pos, cols, W, H, width: x - GX + 6, height: Math.max(...cols.map(c => c.h)) + 8};
+}
+function renderFlow(s, st) {
+  const L = flowLayout(s), {pos, W, H} = L;
+  const curId = st.cur && st.status[st.cur.id] === 'run' ? st.cur.id : null;
+  const trunc = (t, n) => t.length > n ? t.slice(0, n - 1) + '…' : t;
+  let g = `<svg viewBox="0 0 ${L.width} ${L.height}" role="img" aria-label="Pipeline flow for session ${esc(s.session)}">`;
+  for (const c of L.cols) {
+    const ss = s.stages.filter(n => n.group === c.g.id), done = ss.filter(n => st.status[n.id] === 'done').length;
+ const selG = openStage && s.stageById[openStage]?.group === c.g.id;
+    g += `<rect class="fcol${selG ? ' sel' : ''}" x="${c.x}" y="0" width="${c.w}" height="${c.h}" rx="12"/><text class="fhead" x="${c.x + 12}" y="18">${esc(c.g.label)}</text><text class="fsub" x="${c.x + 12}" y="31">${done}/${ss.length} stages</text>`;
+  }
+  for (const e of s.edges) {
+    const a = pos[e.s], b = pos[e.t]; if (!a || !b) continue;
+    const st1 = st.status[e.s], cls = e.kind === 'loop' ? 'loop' : (e.t === curId && st1 === 'done') ? 'flowing' : st1 === 'done' && st.status[e.t] ? 'done' : '';
+    let d;
+    if (e.kind === 'loop' && e.s === e.t) d = `M${a.x + W} ${a.y + 16} C${a.x + W + 26} ${a.y + 4} ${a.x + W + 26} ${a.y + H - 4} ${a.x + W} ${a.y + H - 16}`;
+    else if (e.kind === 'loop') d = `M${a.x + W} ${a.y + H / 2} C${a.x + W + 28} ${a.y + H / 2} ${b.x + W + 28} ${b.y + H / 2} ${b.x + W} ${b.y + H / 2}`;
+    else if (Math.abs(a.x - b.x) < 2 && b.y > a.y) d = `M${a.x + W / 2} ${a.y + H} L${b.x + W / 2} ${b.y}`;
+    else if (b.x > a.x + W) d = `M${a.x + W} ${a.y + H / 2} C${a.x + W + 30} ${a.y + H / 2} ${b.x - 30} ${b.y + H / 2} ${b.x} ${b.y + H / 2}`;
+    else d = `M${a.x + W / 2} ${a.y + H} C${a.x + W / 2} ${a.y + H + 20} ${b.x + W / 2} ${b.y - 20} ${b.x + W / 2} ${b.y}`;
+    g += `<path class="fe ${cls}" d="${d}"/>`;
+    if (e.kind === 'loop') {
+      const l = (s.loops || []).find(x => x.from === e.t && x.to === e.s), n = st.completions[e.s] || 0;
+      g += `<text class="floop" x="${Math.max(a.x, b.x) + W + 6}" y="${(a.y + b.y) / 2 + H / 2 + (e.s === e.t ? 3 : 0)}">↻${l?.bound && e.s !== e.t ? ` ${n}/${l.bound}` : n > 1 ? ' ' + n : ''}</text>`;
+    }
+  }
+  for (const n of s.stages) {
+    const p = pos[n.id]; if (!p) continue;
+    const stc = st.status[n.id] || '', ds = st.dist[n.id] || [], last = ds[ds.length - 1];
+    let bar = '';
+    if (last && last.p) { let ox = 12; const bw = W - 24; for (const [k, c] of catsFor(last.p)) { const w = (last.p[k] || 0) * bw; if (w > 0) bar += `<rect x="${ox}" y="${H - 12}" width="${w}" height="6" style="fill:${c}"/>`; ox += w; } }
+    g += `<g class="fn ${stc}${openStage === n.id ? ' sel' : ''}" data-stage="${n.id}" transform="translate(${p.x},${p.y})"><title>${esc(PLAIN[n.id] || n.purpose || n.label)}</title>
+      <rect class="box" width="${W}" height="${H}" rx="9"/><rect class="bar" width="4" height="${H - 16}" x="0" y="8" rx="2"/>
+      <text class="fl" x="12" y="18">${esc(trunc(n.label, 25))}</text>
+      <text class="fr" x="12" y="32">${esc(n.role)}${ds.length ? ` · ${ds.length} Jev q · ${last && last.p ? esc(topCatText(last.p)) : ''}` : ''}</text>${bar}</g>`;
+  }
+  g += '</svg>';
+  $('flow').innerHTML = g;
+  const sel = openStage && s.stageById[openStage];
+  $('flowdetail').innerHTML = sel ? `<div class="secdetail"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:8px"><b>${esc(s.groups.find(x => x.id === sel.group)?.label || '')}</b><button class="btn" data-close="1">Close</button></div>${stageRow(s, st, sel)}${(st.dist[sel.id] || []).length ? `<div style="margin-top:8px">${LEGEND}</div>` : ''}</div>`
+    : `<div class="fd-empty"><b>Session #${s.rank}</b><br>Click a stage to see what went in and what came out. Click it again to close.<br><br><span class="note" style="">Purple dashed arrows are bounded loops · the cyan dashed arrow is the current handoff · colored bars appear only where Jev answered.</span></div>`;
+}
+function topKey(p) { if (!p) return null; const cats = catsFor(p); let b = cats[0]; for (const c of cats) if ((p[c[0]] || 0) > (p[b[0]] || 0)) b = c; return b[0]; }
+function topCatText(p) { if (!p) return 'no score'; const cats = catsFor(p); let b = cats[0]; for (const c of cats) if ((p[c[0]] || 0) > (p[b[0]] || 0)) b = c; return `${b[2]} ${pct(p[b[0]])}`; }
+
+function renderBudget(s, st, states) {
+  const fx = s.fx_cny_per_usd || 7, usd = v => { const x = v / fx; return '$' + (x < 1 ? x.toFixed(3) : x.toFixed(2)); };
+  const tokOf = y => y.calls.reduce((a, c) => a + (['qwen', 'jev'].includes(c.provider) ? c.tokens : 0), 0);
+  const modelOf = (x, y) => x.budget?.totals ? +x.budget.totals.model_cny || 0 : y.finished ? x.cost.model : x.cost.model * tokOf(y) / x.totalTokens;
+  const ocrOf = (x, y) => x.budget?.totals ? +x.budget.totals.ocr_cny || 0 : y.finished ? x.cost.ocr : x.cost.ocr * y.calls.filter(c => c.provider === 'ocr').length / x.ocrCalls;
+  const model = modelOf(s, st), ocr = ocrOf(s, st), capModel = s.caps.models_cny, capCalls = s.caps.maximum_physical_calls;
+  const batchAI = S.reduce((a, x, i) => a + modelOf(x, states[i]) + ocrOf(x, states[i]), 0);
+  const hours = Math.max(1 / 60, (Math.min(T, s.finished ?? T) - s.started) / 3600);
+  const fSpend = Math.min(1, model / capModel), fCalls = Math.min(1, st.calls.length / capCalls);
+  const arc = (r1, r2, n, frac, on, off, w) => Array.from({length: n}, (_, i) => {
+    const a = Math.PI * (1 - i / (n - 1)), c = Math.cos(a), sn = Math.sin(a);
+    return `<line x1="${110 + r1 * c}" y1="${108 - r1 * sn}" x2="${110 + r2 * c}" y2="${108 - r2 * sn}" stroke="${i < Math.round(frac * n) ? on : off}" stroke-width="${w}" stroke-linecap="round"/>`;
+  }).join('');
+  $('gauge').innerHTML = `<svg viewBox="0 0 220 116" role="img" aria-label="AI spend ${pct(fSpend)} of cap, calls ${pct(fCalls)} of cap">${arc(76, 100, 46, fSpend, '#e8b44c', '#262b33', 3.2)}${arc(58, 68, 34, fCalls, '#57c7cf', '#22272e', 2.4)}</svg>`;
+  $('budgetTag').textContent = `${usd((model + ocr) / hours)} per hour`;
+  $('budget').innerHTML = `
+    <div class="bk"><div class="kpi">${usd(model)}</div><span class="kmeta"><span class="sw" style="background:#e8b44c"></span> AI spend · ${pct(fSpend)} of ${usd(capModel)}</span></div>
+    <div class="bk"><span class="kmeta"><span class="sw" style="background:#57c7cf"></span> inner ring: calls · ${pct(fCalls)} of ${capCalls}</span></div>`;
+  const basis = s.budget?.totals ? (st.finished ? 'settled' : 'settled or reserved') : (st.finished ? 'settled' : 'estimated');
+  $('budgetTag').dataset.foot = `OCR ${usd(ocr)} / ${usd(s.caps.ocr_cny)} · batch ${usd(batchAI)} · ${basis}`;
+  $('budgetTag').title = `OCR ${usd(ocr)} of ${usd(s.caps.ocr_cny)}; batch AI + OCR spend ${usd(batchAI)} across 5 sessions; ${st.finished ? 'settled cost' : 'estimated from token share until the session settles'}; converted at ¥${fx} per $.`;
+}
+
+function renderChart(s, st) {
+  const order = s.stages.filter(x => /^jev_global_|^jev_final$/.test(x.id)).map(x => x.id);
+  const claims = [...new Set(order.flatMap(id => (st.dist[id] || []).map(d => id === 'jev_final' ? 'paper' : scopeLabel(s, d))))];
+  if (!claims.length) { $('chart').innerHTML = '<p class="empty">Waiting for the first Jev checkpoint.</p>'; return; }
+  const box = $('chart'), W = 360, H = Math.max(110, Math.round(W * Math.max(80, box.clientHeight - 24) / Math.max(200, box.clientWidth))), L = 30, B = 22, xs = i => L + i * (W - L - 10) / Math.max(1, order.length - 1), ys = v => 8 + (1 - v) * (H - B - 8);
+  const colors = ['#fb7185', '#e8b44c', '#60a5fa', '#a78bfa', '#4ade80'];
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Jev P(review recommended) per claim at each checkpoint">`;
+  [0, .5, 1].forEach(v => svg += `<line x1="${L}" x2="${W - 6}" y1="${ys(v)}" y2="${ys(v)}" stroke="#262b33"/><text x="2" y="${ys(v) + 4}" fill="#6c7584" font-size="9" font-family="IBM Plex Sans, sans-serif">${v * 100}%</text>`);
+  order.forEach((id, i) => svg += `<text x="${xs(i)}" y="${H - 6}" fill="#6c7584" font-size="8.5" text-anchor="middle" font-family="IBM Plex Sans, sans-serif">${id === 'jev_final' ? 'final' : id.replace('jev_global_after_', '').replace('candidate_rerank', 'rerank')}</text>`);
+  let lastVal = null, lastAt = null;
+  claims.forEach((cl, ci) => {
+    const pts = order.map((id, i) => { const d = (st.dist[id] || []).find(d => (id === 'jev_final' ? 'paper' : scopeLabel(s, d)) === cl); return d ? [xs(i), ys(d.p?.YES_SUSPECTED || 0), d.p?.YES_SUSPECTED || 0] : null; }).filter(Boolean);
+    const col = cl === 'paper' ? '#f87171' : colors[ci % colors.length];
+    if (pts.length > 1) svg += `<polyline fill="none" stroke="${col}" stroke-width="1.8" points="${pts.map(p => p[0] + ',' + p[1]).join(' ')}"/>`;
+    pts.forEach(p => svg += `<circle cx="${p[0]}" cy="${p[1]}" r="${cl === 'paper' ? 4.5 : 3}" fill="${col}"/>`);
+    if (cl === 'paper' && pts.length) { lastVal = pts[pts.length - 1][2]; lastAt = order[order.indexOf(order.filter(id => (st.dist[id] || []).some(d => (id === 'jev_final' ? 'paper' : scopeLabel(s, d)) === 'paper')).pop())]; }
+  });
+  svg += '</svg>';
+  $('chart').innerHTML = svg + `<div class="lg">${claims.map((c, i) => `<span style="--c:${c === 'paper' ? '#f87171' : colors[i % colors.length]}">${esc(c === 'paper' ? 'paper' : c)}</span>`).join('')}</div>`;
+}
+
+function renderActivity(s, st) {
+  const done = st.calls, failed = done.filter(c => c.status && !IN_FLIGHT_OR_OK.has(c.status)).length;
+  $('actTag').textContent = `${done.length} calls · ${failed} failed`;
+  const fit = Math.max(3, Math.floor(($('activity').clientHeight || 220) / (parseFloat(getComputedStyle(document.documentElement).fontSize) * 1.85)));
+  const rows = done.slice(-fit).reverse();
+  const maxDur = Math.max(1, ...rows.map(c => Math.min(T, c.t1 ?? T) - c.t0));
+  $('activity').innerHTML = rows.length ? rows.map(c => {
+    const run = (c.t1 == null || c.t1 > T), dur = Math.max(0, Math.min(T, c.t1 ?? T) - c.t0), col = PROV[c.provider] || 'var(--python)';
+    return `<div class="arow"><span class="prov" style="background:${col}"></span><span class="nm">${esc(c.name)} · ${esc(c.provider)}</span><span class="db"><i style="width:${Math.max(4, dur / maxDur * 100)}%;background:${run ? 'var(--cyan)' : col}"></i></span><span style="text-align:right">${run ? 'running' : fmtDur(dur)}</span></div>`;
+  }).join('') : '<p class="empty">No calls yet.</p>';
+  const a = s.started, b = Math.max(s.finished, T);
+  $('strip').innerHTML = done.map(c => `<i style="left:${(c.t0 - a) / (b - a) * 100}%;background:${PROV[c.provider] || 'var(--python)'}"></i>`).join('') +
+    `<span class="note" style="position:absolute;left:0;bottom:-14px;font-size:10px">${fmtT(a)}</span><span class="note" style="position:absolute;right:0;bottom:-14px;font-size:10px">${fmtT(b)}</span>`;
+}
+
+let BOARD = [];
+function boardRows(states) {
+  // Saved board (one finished session per paper) with each loaded session's score at the current clock laid over it.
+  const rows = (D.history.board || []).map(r => ({...r}));
+  S.forEach((x, i) => {
+    // Only sessions running in a live batch move the board; a replay shows saved results, not a rewound score.
+    const st = states[i]; if (x.label === 'PREPRINT' || MODE !== 'live' || x.extra) return;
+    const last = [...paperSeries(x, st)].reverse().find(v => v.p); if (!last) return;
+    const src = st.status.jev_candidate_rerank === 'done' ? x.retained[0] : null;
+    const row = {session: x.session, run_id: x.run_id, rank: x.rank, paper_id: x.paper_id, title: x.title, openreview: x.openreview,
+      submission: x.submission?.number, label: st.finished ? x.label : null, p: last.p, source_title: src?.title, source_url: src?.url, live: !st.finished};
+    const k = rows.findIndex(r => r.paper_id === x.paper_id);
+    if (k >= 0) rows[k] = row; else rows.push(row);
+  });
+  return rows.sort((a, b) => (b.p?.YES_SUSPECTED || 0) - (a.p?.YES_SUSPECTED || 0));
+}
+const onStage = r => S[focus] && S[focus].session === r.session;
+function renderPair(states) {
+  BOARD = boardRows(states);
+  setHTML($('board'), BOARD.slice(0, 10).map((r, i) => `<button class="brow${onStage(r) ? ' on' : ''}" data-open="${esc(r.session)}" title="Replay the trajectory of session ${esc(r.session)}">
+    <span class="rk">${i + 1}</span>
+    <div class="tt"><span class="clamp1">${esc(r.title)}</span><div class="src">vs ${esc(r.source_title || '—')}</div></div>
+    <span class="pv${i < 3 ? ' hot' : ''}">${pct(r.p?.YES_SUSPECTED)}<span class="go">trajectory ›</span></span></button>`).join('') || '<p class="empty">No scored paper yet.</p>');
+  const n = Object.values(labelsNow()).filter(v => v === 'YES_SUSPECTED').length;
+  $('flaggedBtn').textContent = `All flagged (${n}) ›`;
+}
+
+function renderMyCalls(s, st) {
+  const cap = s.caps.maximum_physical_calls || 150;
+  $('mycalls').innerHTML = Array.from({length: cap}, (_, k) => {
+    const c = st.calls[k]; if (!c) return '<i></i>';
+    const run = (c.t1 == null || c.t1 > T), bad = c.status && !IN_FLIGHT_OR_OK.has(c.status);
+    return `<i class="${run ? 'run' : ''}${bad ? ' fail' : ''}" style="background:${PROV[c.provider] || 'var(--python)'}"></i>`;
+  }).join('');
+  $('mycallsTag').textContent = `${st.calls.length}/${cap} calls`;
+}
+
+function tick(now) {
+  const dt = (now - (tick.prev || now)) / 1000; tick.prev = now;
+  const advance = () => { const d = durOf(S[focus]); pos[focus] = Math.min(d, pos[focus] + dt * speed); if (pos[focus] >= d) { playing = false; $('play').textContent = 'Replay'; } };
+  if (MODE === 'live') {
+    S.forEach((x, i) => { if (!x.extra) pos[i] = durOf(x); });
+    if (S[focus].extra) { if (playing) advance(); }  // a saved session opened from the board replays until the viewer leaves it
+    else if (!userPickedAt || Date.now() - userPickedAt > 60000) { userPickedAt = 0; const f = pickFocus(S.map((x, i) => stateAt(x, x.started + pos[i]))); if (f >= 0) focus = f; }
+  } else if (playing) advance();
+  if (now - lastRender > 250) { lastRender = now; render(); }
+  requestAnimationFrame(tick);
+}
+function pickStage(s, groupId) {
+  const st = stateAt(s, s.started + pos[S.indexOf(s)]), ss = s.stages.filter(x => x.group === groupId);
+  return (ss.find(x => st.status[x.id] === 'run') || [...ss].reverse().find(x => st.status[x.id] === 'done' && stageIO(s, st, x)) || ss[0]).id;
+}
+function watch(i) {
+  focus = i; openStage = null;
+  if (MODE === 'live') { userPickedAt = Date.now(); if (!S[i].extra) { render(); return; } }
+  if (pos[i] >= durOf(S[i])) pos[i] = 0; playing = true; $('play').textContent = 'Pause'; render();
+}
+async function openSession(name) {
+  let i = S.findIndex(x => x.session === name);
+  if (i < 0) {
+    const r = BOARD.find(x => x.session === name) || (D.history.board || []).find(x => x.session === name); if (!r) return;
+    try {
+      // From the public API when it is up, otherwise from the saved per-session export next to this page.
+      const x = SOURCE === 'api' ? await loadRun({run_id: r.run_id, status: 'completed', started_at: null})
+        : await fetch('sessions/' + encodeURIComponent(name) + '.json').then(q => { if (!q.ok) throw new Error('HTTP ' + q.status); return q.json(); });
+      x.rank = x.rank || r.rank; x.extra = true;
+      S.push(prep(x)); pos.push(0); i = S.length - 1;
+    } catch (err) { console.info('Could not load session', name, err.message); return; }
+  }
+  pos[i] = 0; watch(i);
+}
+
+document.addEventListener('click', e => {
+  const tab = e.target.closest('.tab[data-i]'); if (tab) { if (view === 'flagged') view = 'stage'; watch(+tab.dataset.i); return; }
+  if (e.target.closest('#followBtn')) { follow = !follow; render(); return; }
+  const vb = e.target.closest('[data-view]'); if (vb) { view = vb.dataset.view; render(); return; }
+  const fc = e.target.closest('[data-focus]'); if (fc) { watch(+fc.dataset.focus); return; }
+  const op = e.target.closest('[data-open]'); if (op) { view = 'stage'; openSession(op.dataset.open); return; }
+  const wr = e.target.closest('[data-wrong]'); if (wr) { openAbout(wr.dataset.wrong, wr.dataset.title); return; }
+  if (e.target.closest('[data-about]')) { openAbout(null); return; }
+  const vb2 = e.target.closest('[data-vote]'); if (vb2) { castVote(vb2.dataset.pid, vb2.dataset.vote); return; }
+  if (e.target.closest('#flaggedBtn')) { view = view === 'flagged' ? 'stage' : 'flagged'; render(); return; }
+  if (e.target.closest('[data-close-flagged]')) { view = 'stage'; render(); return; }
+  if (e.target.closest('[data-close]')) { openStage = null; render(); return; }
+  const fn = e.target.closest('.fn'); if (fn) { openStage = openStage === fn.dataset.stage ? null : fn.dataset.stage; render(); return; }
+  const sec = e.target.closest('.sec'); if (sec) { view = 'flow'; openStage = pickStage(S[focus], sec.dataset.g); render(); window.scrollTo(0, 0); return; }
+  const more = e.target.closest('[data-more]'); if (more) { expanded[more.dataset.more] = !expanded[more.dataset.more]; render(); return; }
+  const sp = e.target.closest('[data-speed]'); if (sp) { speed = +sp.dataset.speed; document.querySelectorAll('[data-speed]').forEach(b => b.classList.toggle('on', b === sp)); }
+});
+$('play').onclick = () => { if (pos[focus] >= durOf(S[focus])) pos[focus] = 0; playing = !playing; $('play').textContent = playing ? 'Pause' : 'Play'; };
+$('next').onclick = () => watch((focus + 1) % S.length);
+$('scrub').oninput = e => { pos[focus] = durOf(S[focus]) * e.target.value / 1000; render(); };
+document.querySelector('[data-speed="10"]').classList.add('on');
+
+function setFoot() {
+  $('foot').textContent = (SOURCE === 'saved export' ? `Replay of saved batch ${D.batch} (exported ${D.exported_at}). ` : `Data from the public read-only API (${MODE === 'live' ? 'live' : 'latest finished batch'}). `) +
+    'Results are automated screening signals, not findings of plagiarism or misconduct. ';
+  $('foot').insertAdjacentHTML('beforeend', '<button class="linkbtn" data-about="1">About these results · Think a result is wrong?</button>');
+}
+setFoot();
+
+const API = (new URLSearchParams(location.search).get('api') || D.api_base || 'https://exercise-nano-patrick-crm.trycloudflare.com').replace(/\/+$/, '');
+const enc = encodeURIComponent, TERMINAL = new Set(['completed', 'failed', 'stopped', 'cancelled', 'canceled', 'delivered', 'error', 'aborted']);
+async function getJSON(path, ms = 10000) {
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), ms);
+  try { const r = await fetch(API + path, {cache: 'no-store', signal: ctl.signal}); if (!r.ok) throw new Error(path + ' ' + r.status); return await r.json(); }
+  finally { clearTimeout(timer); }
+}
+const tsOf = v => v ? Date.parse(v) / 1000 : null;
+function compactEvent(e) {
+  const p = e.payload || {}, row = {seq: e.seq, t: tsOf(e.occurred_at), type: e.type, stage: e.stage_id, scope: e.scope || {}};
+  if (['run.heartbeat', 'artifact.registered', 'stage.evidence'].includes(e.type) || row.t == null) return null;
+  if (e.type === 'stage.distribution') Object.assign(row, {q: p.label, p: p.probabilities, ok: p.accepted});
+  else if (e.type === 'stage.completed') row.status = p.status || p.result?.status;
+  return row;
+}
+async function eventsAfter(runId, after) {
+  const out = [];
+  for (let guard = 0; guard < 50; guard++) {
+    const pg = await getJSON(`/api/events?run_id=${enc(runId)}&after_seq=${after}&limit=1000`);
+    out.push(...(pg.events || []).map(compactEvent).filter(Boolean));
+    after = pg.next_after_seq ?? pg.last_seq ?? after;
+    if (!pg.has_more) break;
+  }
+  return {events: out, last: after};
+}
+function applyStageIO(x, sio) {
+  Object.assign(x, {session: sio.session || x.session, rank: sio.rank ?? x.rank, paper_id: sio.paper_id || x.paper_id, title: sio.title || x.title,
+    openreview: sio.openreview === undefined ? x.openreview : sio.openreview, in_corpus: sio.in_corpus, caps: sio.caps || x.caps || {}, target_created: sio.target_created, iclr_deadline: sio.iclr_deadline,
+    fx_cny_per_usd: sio.fx_cny_per_usd || 7, calls: sio.calls || [], claims: sio.claims || [], queries: sio.queries || [], candidates: sio.candidates || [],
+    preprints: sio.preprints || [], final: sio.final || {findings: []}, jev_final: sio.jev_final || {}, materials: sio.materials || {}, io: sio.io || {}, budget: sio.budget, result: sio.result || null, submission: sio.submission || null});
+}
+async function loadRun(row) {
+  const [man, ev, sio] = await Promise.all([getJSON('/api/manifest?run_id=' + enc(row.run_id)), eventsAfter(row.run_id, 0), getJSON('/api/stage-io?run_id=' + enc(row.run_id))]);
+  const m = man.manifest || {}, edges = m.edges || [];
+  const x = {run_id: row.run_id, status: row.status, started: tsOf(row.started_at) ?? ev.events[0]?.t, events: ev.events, _last: ev.last,
+    stages: (m.stages || []).map(st => ({id: st.id, group: st.group, label: st.label, purpose: st.purpose, role: st.role})),
+    groups: m.groups || [], edges: edges.map(e => ({s: e.source, t: e.target, kind: e.kind})),
+    loops: edges.filter(e => e.kind === 'loop').map(e => ({from: e.target, to: e.source, bound: e.loop?.bound, label: e.loop?.label || ''}))};
+  applyStageIO(x, sio);
+  settle(x);
+  return x;
+}
+function settle(x) {
+  const done = TERMINAL.has(x.status);
+  x.finished = done ? (x.events.length ? x.events[x.events.length - 1].t : x.started) : null;
+  x.screening = done ? (x.result?.screening || x.final?.status || null) : null;
+}
+function pickBatch(runs) {
+  const groups = {};
+  for (const r of runs) {
+    if (!r.started_at) continue;
+    const m = r.run_id.match(/^public-demo-(.+)-r(\d+)$/), key = m ? m[1] : r.run_id;
+    (groups[key] = groups[key] || []).push(r);
+  }
+  const score = rows => Math.max(...rows.map(r => tsOf(r.started_at)));
+  const keys = Object.keys(groups).sort((a, b) => score(groups[b]) - score(groups[a]));
+  const liveKey = keys.find(k => groups[k].some(r => !TERMINAL.has(r.status)));
+  if (liveKey) return {key: liveKey, rows: groups[liveKey], live: true};
+  return keys.length ? {keys, groups, live: false} : null;
+}
+// The page does not draw the et-v1 flow yet (element table, row checks, gap loop; no Jev final score), so a finished
+// batch whose runs have no Jev final score is not picked for replay. A running batch is always shown.
+async function pickReplayable(batch) {
+  for (const key of batch.keys) {
+    try { const sio = await getJSON('/api/stage-io?run_id=' + enc(batch.groups[key][0].run_id)); if (sio.jev_final?.p) return {key, rows: batch.groups[key], live: false}; }
+    catch (err) { /* try the next batch */ }
+  }
+  return null;
+}
+async function boot() {
+  try {
+    const runs = (await getJSON('/api/runs')).runs || [];
+    let batch = pickBatch(runs);
+    if (batch && !batch.live) batch = await pickReplayable(batch);
+    if (!batch) return;
+    const loaded = await Promise.all(batch.rows.map(r => loadRun(r).then(x => (x.result = x.result || null, x))));
+    loaded.forEach(x => { if (!x.rank) { const m = x.run_id.match(/-r(\d+)$/); x.rank = m ? +m[1] : 0; } });
+    loaded.sort((a, b) => a.rank - b.rank);
+    S = loaded.map(prep); BATCH = batch.key; SOURCE = 'api'; MODE = batch.live ? 'live' : 'replay';
+    pos = S.map(x => durOf(x));
+    if (MODE === 'replay') { focus = Math.min(focus, S.length - 1); pos[focus] = 0; playing = true; $('play').textContent = 'Pause'; }
+    try { PROGRESS = await getJSON('/api/progress'); } catch (err) { console.info('Progress kept from the saved export:', err.message); }
+    seenSteps = new Set(); setFoot(); render();
+    if (MODE === 'live') pollLoop();
+  } catch (err) {
+    console.info('Public API unavailable, keeping the saved export:', err.message);
+  }
+}
+let pollN = 0;
+async function pollLoop() {
+  for (;;) {
+    await new Promise(r => setTimeout(r, 3000));
+    pollN++;
+    try {
+      const runs = pollN % 4 === 0 ? ((await getJSON('/api/runs')).runs || []) : null;
+      await Promise.all(S.filter(x => x.finished == null).map(async x => {
+        const ev = await eventsAfter(x.run_id, x._last);
+        if (ev.events.length) { x.events.push(...ev.events); x._last = ev.last; }
+        if (runs) { const row = runs.find(r => r.run_id === x.run_id); if (row) x.status = row.status; }
+        if (pollN % 4 === 0 || TERMINAL.has(x.status)) { const sio = await getJSON('/api/stage-io?run_id=' + enc(x.run_id)); applyStageIO(x, sio); x.result = sio.result; }
+        settle(x); prep(x);
+      }));
+      if (S.every(x => x.finished != null)) { MODE = 'replay'; setFoot(); render(); return; }
+    } catch (err) { console.info('Live poll failed; retrying:', err.message); }
+  }
+}
+function applyPage() {
+  const pipe = isPipelinePage();
+  document.body.classList.toggle('pipeline', pipe);
+  render();
+}
+window.addEventListener('hashchange', applyPage);
+applyPage();
+requestAnimationFrame(tick);
+boot().then(fetchVotes).then(render);
+setInterval(async () => {
+  if (SOURCE === 'api') { try { PROGRESS = await getJSON('/api/progress'); } catch (err) { /* keep the last series */ } }
+  await fetchVotes(); render();
+}, 15000);
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "_comment": "repoUrl is the single repository constant; issue templates, CONTRIBUTING.md, MAINTAINERS.md, docs/CORRECTIONS.md and the security policy links are built from it.",
+  "productName": "Red-flag Research",
+  "subtitle": "Live, open-source screening for automated-research attacks on peer review",
+  "question": "Can a language-model pipeline tell when a submission closely matches earlier public work it does not credit?",
+  "mission": "Red-flag Research studies how automated tools can be turned against the research process, for example to rewrite earlier work into a paper that looks new. Reusing work without credit is one such attack, and screening for it is where we start.",
+  "intro": "Our first application screens all 43,013 ICLR 2027 submissions in public, in nine stages, and shows every step as it happens. A flag is a lead for a person to check, not a finding of misconduct.",
+  "author": "Ziqian Zhang",
+  "organization": {
+    "name": "OpenLAIR",
+    "url": "https://openlair.github.io/"
+  },
+  "liveUrl": "./live/",
+  "repoUrl": "https://github.com/OpenLAIR/red-flag-research",
+  "contactEmail": "red.flag.autoresearch@gmail.com",
+  "showOptionalPlaceholders": false,
+  "privacyContactUrl": "https://github.com/OpenLAIR/red-flag-research.github.io/issues",
+  "privacyEffective": "2026-10-16"
+}

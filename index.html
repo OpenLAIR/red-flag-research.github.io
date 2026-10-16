@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Red-flag Research · Live screening of ICLR 2027</title>
+<meta name="description" content="Live, open-source screening for automated-research attacks on peer review. The first application screens all 43,013 ICLR 2027 submissions for unattributed reuse of earlier work, in nine public stages. Flags are leads for human review, not findings of misconduct.">
+<link rel="canonical" href="https://openlair.github.io/red-flag-research.github.io/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://openlair.github.io/red-flag-research.github.io/">
+<meta property="og:title" content="Red-flag Research">
+<meta property="og:description" content="Live, open-source screening for automated-research attacks on peer review. The first application screens all 43,013 ICLR 2027 submissions for unattributed reuse of earlier work, in nine public stages. Flags are leads for human review, not findings of misconduct.">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0d10'/%3E%3Cpath d='M10 6v21' stroke='%23c9ced6' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M11 7c3.5-1.8 6.5 1.6 10 0s4.5-.8 4.5-.8v10s-1.4 1-4.5.8-6.5-2.4-10 0z' fill='%23ff5d4f'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --panel:#13161b; --panel-2:#1a1e24; --inset:#0f1216; --line-2:#2b313a;
+  --text:#e8eaed; --text-2:#b3b9c2; --muted:#8a919c;
+  --flag:#ff5d4f; --flag-dim:rgba(255,93,79,.14);
+  --cyan:#57c7cf; --cyan-dim:rgba(87,199,207,.11); --red:#ef7a7a; --amber:#e8b44c; --blue:#6ba3e8;
+  --r-lg:18px; --r-md:12px; --r-sm:8px;
+  --sans:'IBM Plex Sans',system-ui,sans-serif; --serif:'Newsreader',Georgia,serif; --code:ui-monospace,SFMono-Regular,Menlo,monospace; /* taste-skill-ignore: only for <code> (git clone line, e-mail address) */
+  /* six sizes: small, body, lead, heading, section, display */
+  --s-sm:13px; --s-body:16px; --s-lead:20px; --s-h3:28px; --s-h2:52px; --s-display:clamp(76px,10.5vw,148px);
+  --wrap:1160px; --gutter:32px;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{margin:0;background:var(--bg);color:var(--text);font:400 var(--s-body)/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+.num{font-variant-numeric:tabular-nums}
+.wrap{max-width:calc(var(--wrap) + 2*var(--gutter));margin:0 auto;padding:0 var(--gutter)}
+.skip{position:absolute;left:-999px;top:8px;background:var(--cyan);color:#062528;padding:8px 12px;border-radius:var(--r-sm);z-index:20}
+.skip:focus{left:8px}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:4px}
+
+/* flag mark: <use> clones cannot be styled through ancestors, so the whole mark sways from the foot of the pole */
+.mark{flex:none;display:block}
+.wave{transform-origin:31% 88%;transform-box:fill-box;animation:sway 4.2s ease-in-out infinite}
+@keyframes sway{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-5deg)}}
+
+/* top bar: a plain sticky bar */
+.top{position:sticky;top:0;z-index:10;background:var(--bg)}
+.top .wrap{display:flex;align-items:center;gap:28px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font:500 var(--s-lead)/1 var(--serif);letter-spacing:-.01em}
+.nav{display:flex;gap:26px;margin-left:auto}
+.nav a{text-decoration:none;color:var(--text-2);font-size:var(--s-sm);transition:color .2s}
+.nav a:hover{color:var(--text)}
+.btn{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 var(--s-body)/1 var(--sans);text-decoration:none;white-space:nowrap;transition:background .2s var(--ease),color .2s,transform .2s var(--ease)}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(1px) scale(.98)}
+.btn-primary{background:var(--cyan);color:#062528}
+.btn-primary:hover{background:#7bd6dc}
+.btn-ghost{background:var(--panel-2);color:var(--text)}
+.btn-ghost:hover{background:#232830}
+.btn-sm{height:38px;padding:0 16px;font-size:var(--s-sm)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.dot.is-live{background:var(--flag);animation:blink 1.6s ease-in-out infinite}
+@keyframes blink{50%{opacity:.35}}
+
+/* hero */
+.hero{padding:88px 0 0}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:48px;align-items:center}
+.wordmark{position:relative;display:inline-block;font:500 var(--s-display)/.9 var(--serif);letter-spacing:-.045em;margin:0 0 16px}
+.wordmark .r{font-style:italic;color:var(--flag)}
+.wordmark .d{color:var(--muted);margin:0 .02em}
+.wordmark .w1{position:relative;display:inline-block}
+.wordmark .w2{display:block;color:var(--text-2)}
+.wordmark .m{position:absolute;top:-.08em;right:-.42em;width:.36em;height:.36em}
+.subtitle{font:italic 400 var(--s-lead)/1.35 var(--serif);color:var(--text-2);margin:0 0 32px}
+.subtitle:empty{display:none}
+.question{font:400 var(--s-h3)/1.28 var(--serif);letter-spacing:-.005em;margin:0 0 20px;max-width:28ch;text-wrap:balance}
+.mission{color:var(--text);margin:0 0 12px;max-width:56ch;text-wrap:pretty}
+.intro{color:var(--text-2);margin:0 0 32px;max-width:56ch;text-wrap:pretty}
+.actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.byline{margin:20px 0 0;font-size:var(--s-sm);color:var(--muted)}
+.byline a{color:var(--text-2)}
+.page-art{position:relative;margin:0}
+.page-art svg{display:block;width:100%;height:auto;overflow:visible}
+.page-art .scan{animation:scan 7s var(--ease) infinite}
+@keyframes scan{0%{transform:translateY(0);opacity:0}8%{opacity:1}85%{opacity:1}100%{transform:translateY(300px);opacity:0}}
+.page-art figcaption{text-align:right;margin-top:6px;font-size:var(--s-sm);color:var(--muted)}
+
+/* countdown band: tone steps instead of lines */
+.band{margin-top:72px;display:grid;grid-template-columns:minmax(0,2.3fr) repeat(4,minmax(0,1fr));gap:4px;border-radius:var(--r-lg);overflow:hidden}
+.band > .count,.figs > .fig{background:var(--panel);padding:26px 24px}
+.count{position:relative;background:var(--panel-2)!important;padding-left:30px!important}
+.count::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--flag)}
+.digits{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 12px}
+.digit{display:flex;align-items:baseline;gap:3px}
+.digit b{font:500 var(--s-h2)/1 var(--sans);font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.digit span{font-size:var(--s-sm);color:var(--muted)}
+.count-label{display:flex;align-items:center;gap:8px;margin:12px 0 0;font-size:var(--s-sm);color:var(--text-2)}
+.count-label b{color:var(--text);font-weight:500}
+.figs{display:contents}
+.fig{display:flex;flex-direction:column;justify-content:center}
+.fig b{display:block;font:500 var(--s-h3)/1.05 var(--sans);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.fig span{font-size:var(--s-sm);color:var(--text-2);margin-top:6px}
+
+/* sections */
+section.block{padding:152px 0 0}
+.sec-head{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:56px;margin-bottom:48px;align-items:end}
+h2{font:500 var(--s-h2)/1.02 var(--serif);letter-spacing:-.03em;margin:0;text-wrap:balance}
+.sec-head p{margin:0;color:var(--text-2);max-width:58ch}
+
+/* schedule */
+.tl{margin:0 0 40px;font-size:var(--s-sm);color:var(--muted)}
+.tl-top,.tl-bottom,.tl-axis{position:relative;height:24px}
+.tl-top{height:30px}
+.tl-bottom{margin-top:6px}
+.tl-axis{margin-top:8px}
+.tl-top span,.tl-bottom span,.tl-axis span{position:absolute;bottom:0;transform:translateX(-50%);white-space:nowrap}
+.tl-top span{display:flex;align-items:center;gap:6px;color:var(--amber);padding-bottom:6px}
+.tl-top svg{width:14px;height:14px}
+.tl-top b{font-weight:500}
+.tl span.first{transform:none}
+.tl span.last{transform:translateX(-100%)}
+.tl-bar{position:relative;height:48px;border-radius:10px;background:var(--panel)}
+.tl-bar i{position:absolute;top:7px;bottom:7px;border-radius:6px;background:var(--line-2);font-style:normal}
+.tl-bar i em{position:absolute;inset:0;display:grid;place-items:center;font:500 var(--s-sm)/1 var(--sans);color:var(--text-2);font-style:normal}
+.tl-bar i.done{background:var(--cyan)}
+.tl-bar i.done em,.tl-bar i.running em{color:#062528}
+.tl-bar i.running{background:repeating-linear-gradient(-45deg,var(--cyan) 0 6px,rgba(87,199,207,.55) 6px 12px);background-size:17px 17px;animation:stripes 1s linear infinite} /* taste-skill-ignore: striped fill marks the running stage */
+@keyframes stripes{to{background-position:17px 0}}
+.tl-band{position:absolute;top:0;bottom:0;background:rgba(232,180,76,.10);border-radius:6px}
+.tl-tick{position:absolute;top:-8px;bottom:-4px;width:2px;margin-left:-1px;background:var(--amber);border-radius:1px}
+.tl-now{position:absolute;top:-6px;bottom:-6px;width:3px;margin-left:-1.5px;background:var(--flag);border-radius:2px}
+.tl-axis span{color:var(--muted)}
+.tl-key{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:14px}
+.tl-key span{display:inline-flex;align-items:center;gap:8px}
+.tl-key i{width:14px;height:8px;border-radius:2px;display:block}
+.k-run{background:var(--line-2)}
+.k-band{background:rgba(232,180,76,.35)}
+.rows{display:grid;gap:3px;border-radius:var(--r-lg);overflow:hidden}
+.row{display:grid;grid-template-columns:110px 110px 1fr 1fr 90px 120px;gap:16px;align-items:center;padding:16px 24px;background:var(--panel)}
+.row.head{color:var(--muted);font-size:var(--s-sm);padding-top:14px;padding-bottom:14px;background:var(--inset)}
+.row .stage{font-weight:600}
+.row .when{color:var(--text-2)}
+.row .when b{color:var(--text);font-weight:500}
+.row .est{color:var(--muted);font-size:var(--s-sm);margin-left:6px}
+.row{position:relative}
+.row.is-running{background:var(--panel-2)}
+.row.is-running::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--cyan)}
+.row.total{background:var(--panel-2);font-weight:500}
+.row.ms{grid-template-columns:110px minmax(0,1fr) auto;padding-top:11px;padding-bottom:11px;background:#16150f;font-size:var(--s-sm)}
+.row.ms .stage{display:flex;align-items:center;gap:8px;font-weight:500;color:var(--amber)}
+.row.ms .stage svg{width:13px;height:13px}
+.row.ms .ms-label{color:var(--text-2)}
+.row.ms .ms-date{color:var(--text-2);text-align:right}
+.chip{display:inline-flex;align-items:center;gap:7px;font-size:var(--s-sm);color:var(--text-2);white-space:nowrap}
+.chip .dot.run{background:var(--cyan)}
+.chip .dot.ok{background:var(--text-2)}
+.sched-note{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:16px}
+.note{background:var(--panel);border-radius:var(--r-md);padding:18px 22px;font-size:var(--s-sm);color:var(--text-2)}
+.note b{color:var(--text);font-weight:500}
+
+/* updates: a dated column beside each note */
+.feed{display:grid;gap:16px}
+.card{display:grid;grid-template-columns:200px minmax(0,1fr);gap:40px;background:var(--panel);border-radius:var(--r-lg);padding:32px}
+.card .day{font:500 var(--s-h2)/1 var(--serif);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.card .mon{font-size:var(--s-sm);color:var(--text-2);margin-top:8px}
+.card .kind{margin-top:18px;font-size:var(--s-sm);color:var(--cyan);font-weight:500}
+.card .meta{font-size:var(--s-sm);color:var(--muted)}
+.card h3{font:500 var(--s-h3)/1.15 var(--serif);letter-spacing:-.015em;margin:0 0 10px;text-wrap:balance}
+.card p{margin:0;color:var(--text-2);max-width:62ch}
+.stats{display:flex;flex-wrap:wrap;gap:4px;margin-top:24px}
+.stat{background:var(--inset);border-radius:var(--r-md);padding:14px 18px;min-width:150px}
+.stat b{display:block;font:500 var(--s-h3)/1.1 var(--sans);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.stat span{font-size:var(--s-sm);color:var(--text-2)}
+.card .more{display:inline-flex;margin-top:22px;color:var(--cyan);text-decoration:none;font-weight:500;transition:transform .2s var(--ease)}
+.card .more:hover{transform:translateX(3px)}
+.card.tpl{background:var(--inset)}
+.tpl-badge{display:inline-block;margin-bottom:12px;font-size:var(--s-sm);color:var(--amber);background:rgba(232,180,76,.1);padding:3px 8px;border-radius:6px}
+
+/* live */
+.live{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:56px;align-items:center}
+.live-status{display:inline-flex;align-items:center;gap:8px;font-size:var(--s-sm);color:var(--text-2);margin-bottom:18px}
+.live p{color:var(--text-2);margin:0 0 16px;max-width:52ch}
+.steps{margin:0 0 32px;padding-left:1.4em;display:grid;gap:14px;font-size:var(--s-lead);line-height:1.35}
+.steps li{padding-left:6px}
+.steps li::marker{color:var(--flag);font:500 var(--s-body) var(--sans)}
+.window{border-radius:14px;background:var(--panel-2);overflow:hidden;margin:0}
+.window-bar{display:flex;align-items:center;gap:8px;height:42px;padding:0 14px;background:#20252c}
+.window-bar i{width:10px;height:10px;border-radius:50%;background:#353b45}
+.window-bar .url{flex:1;margin:0 8px;height:26px;border-radius:6px;background:var(--panel);font-size:var(--s-sm);line-height:26px;color:var(--muted);padding:0 10px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.window-bar .pill{font-size:var(--s-sm);font-weight:500;padding:3px 9px;border-radius:6px;background:var(--flag-dim);color:#ffb3ab}
+.window-body{padding:24px}
+.window-body svg{display:block;width:100%;height:auto}
+.window figcaption{font-size:var(--s-sm);color:var(--muted);padding:0 24px 18px;text-align:right}
+
+/* about */
+.about{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px}
+.panel{background:var(--panel);border-radius:var(--r-lg);padding:32px}
+.panel h3{font:500 var(--s-h3)/1.2 var(--serif);letter-spacing:-.01em;margin:0 0 18px}
+.panel p{color:var(--text-2);margin:0 0 14px}
+.panel p:last-child{margin-bottom:0}
+.panel strong{color:var(--text);font-weight:600}
+.labels{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0;padding:0;list-style:none}
+.labels li{position:relative;overflow:hidden;background:var(--inset);border-radius:var(--r-md);padding:18px 16px 18px 18px}
+.labels li::before{content:'';position:absolute;left:0;right:0;top:0;height:4px;background:var(--c)}
+.labels .tag{display:block;font-weight:600;line-height:1.3;margin:4px 0 6px;color:var(--text)}
+.labels .d{font-size:var(--s-sm);color:var(--text-2);line-height:1.5}
+.correct{margin-top:16px;background:var(--cyan-dim);border-radius:var(--r-lg);padding:26px 30px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:20px 24px;align-items:center}
+.correct .ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(87,199,207,.16);color:var(--cyan)}
+.correct p{margin:0;max-width:70ch;color:var(--text)}
+.correct p span{color:var(--text-2)}
+.link{color:var(--cyan);text-decoration:none;font-weight:500;transition:transform .2s var(--ease);display:inline-block}
+.link:hover{transform:translateX(3px)}
+
+/* code */
+.repo{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center;background:var(--panel);border-radius:var(--r-lg);padding:32px}
+.repo .path{display:flex;align-items:center;gap:10px;font:500 var(--s-lead)/1.3 var(--sans);color:var(--text);margin-bottom:6px}
+.repo p{margin:0;color:var(--text-2);max-width:64ch}
+.clone{grid-column:1/-1;display:flex;align-items:center;gap:12px;background:var(--inset);border-radius:var(--r-md);padding:12px 12px 12px 18px;overflow:hidden}
+.clone code{flex:1;font:var(--s-sm)/1.4 var(--code);color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clone code b{color:var(--flag);font-weight:500;margin-right:10px}
+.copy{flex:none;font:500 var(--s-sm)/1 var(--sans);height:32px;padding:0 12px;border-radius:8px;border:0;background:var(--panel-2);color:var(--text);cursor:pointer;transition:background .2s,transform .15s}
+.copy:hover{background:#232830}
+.copy:active{transform:scale(.97)}
+
+/* contribute: corrections first, then a list set in large type */
+.ways-main{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:24px 40px;align-items:end;background:var(--cyan-dim);border-radius:var(--r-lg);padding:36px}
+.ways-main h3{font:500 var(--s-h3)/1.15 var(--serif);letter-spacing:-.015em;margin:0 0 12px}
+.ways-main p{margin:0 0 8px;color:var(--text);max-width:62ch}
+.ways-main p.sub{color:var(--text-2);margin:0}
+.ways-main .actions{justify-content:flex-end}
+.ways{display:grid;gap:3px;margin-top:16px;border-radius:var(--r-lg);overflow:hidden}
+.way{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr) 170px;gap:32px;align-items:baseline;padding:26px 32px;background:var(--panel);text-decoration:none;transition:background .25s var(--ease)}
+.way:hover{background:var(--panel-2)}
+.way h3{font:500 var(--s-h3)/1.15 var(--serif);margin:0;letter-spacing:-.015em}
+.way p{margin:0;color:var(--text-2)}
+code{font:var(--s-sm)/1.4 var(--code);color:var(--text)}
+.way > span{justify-self:end;color:var(--cyan);font-weight:500;white-space:nowrap;transition:transform .25s var(--ease)}
+.way:hover > span{transform:translateX(4px)}
+.contrib-foot{margin-top:24px;line-height:1.8;color:var(--text-2);max-width:90ch}
+.contrib-foot a{color:var(--text);text-decoration:underline;text-decoration-color:var(--line-2);text-underline-offset:3px}
+.contrib-foot a:hover{text-decoration-color:var(--cyan)}
+
+/* optional placeholders (prototype only; hidden when published) */
+.opt{background:var(--inset);border-radius:var(--r-lg);padding:18px 22px;color:var(--muted);font-size:var(--s-sm);display:flex;gap:12px;align-items:baseline;margin-top:16px}
+.opt b{color:var(--text-2);font-weight:500;white-space:nowrap}
+body.no-opt .opt{display:none}
+
+/* footer: the name returns at full width */
+footer{margin-top:160px;background:var(--inset);padding:0 0 48px;overflow:hidden}
+.foot-mark{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:56px 0 44px}
+.foot-mark .big{font:500 clamp(56px,9vw,132px)/.9 var(--serif);letter-spacing:-.05em;color:#1d2229}
+.foot-mark .big .w2{display:block}
+.foot-mark .big .r{font-style:italic;color:rgba(255,93,79,.3)}
+.foot-mark p{margin:0 0 6px;color:var(--text-2);text-align:right}
+.foot-mark p b{color:var(--text);font-weight:500}
+.foot-mark p a{color:var(--cyan);text-decoration:none}
+.foot{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr);gap:40px}
+.foot h4{font-size:var(--s-sm);color:var(--muted);font-weight:500;margin:0 0 12px}
+.foot ul{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.foot a{color:var(--text-2);text-decoration:none;transition:color .2s}
+.foot a:hover{color:var(--text)}
+.fine{margin:0;font-size:var(--s-sm);color:var(--muted);max-width:48ch}
+
+/* entrances: content is visible without script; .js arms the reveal */
+.js [data-reveal]{opacity:0;transform:translateY(24px);transition:opacity .7s var(--ease),transform .9s var(--ease);transition-delay:var(--d,0ms)}
+.js [data-reveal].is-in{opacity:1;transform:none}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}.js [data-reveal]{opacity:1;transform:none}}
+
+@media (max-width:1040px){
+  .hero-grid,.sec-head,.live,.about,.ways-main{grid-template-columns:1fr}
+  .page-art{max-width:520px}
+  .sec-head{gap:16px}
+  .band{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .count{grid-column:1/-1}
+  .row{grid-template-columns:110px 1fr 1fr 110px}
+  .row .c-papers,.row .c-dur{display:none}
+  .way{grid-template-columns:minmax(0,1fr) auto;gap:8px 24px}
+  .way > span{justify-self:start}
+  .way p{grid-column:1/-1;grid-row:2}
+  .ways-main .actions{justify-content:flex-start}
+  .foot{grid-template-columns:1fr 1fr}
+  .foot .c-fine{grid-column:1/-1}
+}
+@media (max-width:720px){
+  :root{--gutter:16px;--s-h2:38px;--s-h3:24px;--s-lead:18px}
+  .nav{display:none}
+  .top .wrap{gap:12px;justify-content:space-between}
+  .hero{padding-top:44px}
+  .wordmark .m{right:-.38em}
+  .subtitle{margin-bottom:22px}
+  .band{margin-top:44px;grid-template-columns:1fr 1fr}
+  .band > .count,.figs > .fig{padding:18px 20px}
+  .count{padding-left:24px!important}
+  .digit b{font-size:40px}
+  section.block{padding-top:104px}
+  .sec-head{margin-bottom:32px}
+  .row.head{display:none}
+  .row{grid-template-columns:1fr auto;gap:2px 12px;padding:14px 18px}
+  .row .stage{grid-column:1}
+  .row .c-status{grid-column:2;grid-row:1;justify-self:end}
+  .row .c-start,.row .c-end{grid-column:1/-1;font-size:var(--s-sm)}
+  .row .c-start::before{content:'Starts ';color:var(--muted)}
+  .row .c-end::before{content:'Ends ';color:var(--muted)}
+  .row.total .c-start::before{content:''}
+  .row.ms{grid-template-columns:1fr auto;gap:2px 12px}
+  .row.ms .ms-label{grid-column:1/-1;grid-row:2}
+  .sched-note{grid-template-columns:1fr}
+  .tl-top b{display:none}
+  .tl-bar i em{display:none}
+  .card{grid-template-columns:1fr;gap:14px;padding:22px}
+  .stats{display:grid;grid-template-columns:1fr 1fr}
+  .stat{min-width:0}
+  .steps{font-size:var(--s-body)}
+  .window-body{padding:14px}
+  .panel,.repo,.ways-main{padding:22px}
+  .way{padding:20px 22px}
+  .repo{grid-template-columns:1fr}
+  .labels{grid-template-columns:1fr}
+  .correct{grid-template-columns:1fr;padding:22px}
+  .opt{flex-direction:column;gap:4px}
+  footer{margin-top:112px}
+  .foot-mark{flex-direction:column;align-items:flex-start}
+  .foot-mark p{text-align:left}
+  .foot{grid-template-columns:1fr;gap:28px}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="flag" viewBox="0 0 32 32"><path d="M10 5v23" stroke="#c9ced6" stroke-width="2.4" stroke-linecap="round" fill="none"/><path fill="#ff5d4f" d="M11 6.5c3.5-1.8 6.5 1.6 10 0s4.5-.8 4.5-.8v10.3s-1.4 1-4.5.8-6.5-2.4-10 0z"/></symbol>
+  <symbol id="mflag" viewBox="0 0 16 16"><path d="M4 2v12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/><path d="M4.6 2.6c1.8-.9 3.3.8 5 0s2.4-.4 2.4-.4v5.2s-.7.5-2.4.4-3.2-1.2-5 0z" fill="currentColor"/></symbol>
+</svg>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Red-flag Research home">
+      <svg class="mark" width="26" height="26" aria-hidden="true"><use href="#flag"/></svg>
+      <span data-bind="productName">Red-flag Research</span>
+    </a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#schedule">Schedule</a>
+      <a href="#updates">Updates</a>
+      <a href="#live">Live</a>
+      <a href="#about">About</a>
+      <a href="#code">Code</a>
+      <a href="#contribute">Contribute</a>
+    </nav>
+    <a class="btn btn-primary btn-sm" data-href="liveUrl" href="./live/"><span class="dot" data-live-dot></span>Watch live</a>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" id="top">
+    <div class="wrap">
+      <div class="hero-grid">
+        <div>
+          <h1 class="wordmark" id="wordmark" aria-label="Red-flag Research"><span class="w1"><span class="r">Red</span><span class="d">-</span>flag<svg class="mark m wave" aria-hidden="true"><use href="#flag"/></svg></span><span class="w2">Research</span></h1>
+          <p class="subtitle" data-bind="subtitle">Live, open-source screening for automated-research attacks on peer review</p>
+          <p class="question" data-bind="question"></p>
+          <p class="mission" data-bind="mission"></p>
+          <p class="intro" data-bind="intro"></p>
+          <div class="actions">
+            <a class="btn btn-primary" data-href="liveUrl" href="./live/">Watch live →</a>
+            <a class="btn btn-ghost" href="#schedule">See the schedule</a>
+          </div>
+          <p class="byline">A research project of <a data-href="orgUrl" href="https://openlair.github.io/" data-bind="orgName">OpenLAIR</a>, by <span data-bind="author">Ziqian Zhang</span>.</p>
+        </div>
+        <figure class="page-art">
+          <svg viewBox="-64 0 524 430" role="img" aria-label="Illustration: a submission page with a passage flagged in the margin and the matching passage in an earlier paper">
+            <defs>
+              <linearGradient id="scanG" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#57c7cf" stop-opacity="0"/><stop offset="1" stop-color="#57c7cf" stop-opacity=".28"/></linearGradient>
+              <clipPath id="pageClip"><rect x="40" y="24" width="270" height="360" rx="12"/></clipPath>
+            </defs>
+            <!-- earlier paper, behind -->
+            <g transform="rotate(5 360 220)">
+              <rect x="250" y="58" width="190" height="300" rx="12" fill="#151920" stroke="#2b313a"/>
+              <rect x="268" y="80" width="120" height="7" rx="3" fill="#4a525e"/><rect x="268" y="93" width="84" height="7" rx="3" fill="#4a525e"/>
+              <g fill="#262c35"><rect x="268" y="118" width="152" height="4" rx="2"/><rect x="268" y="128" width="140" height="4" rx="2"/><rect x="268" y="138" width="150" height="4" rx="2"/><rect x="268" y="148" width="120" height="4" rx="2"/></g>
+              <rect x="262" y="166" width="166" height="34" rx="5" fill="rgba(87,199,207,.12)"/>
+              <g fill="#57c7cf" opacity=".85"><rect x="268" y="172" width="150" height="4" rx="2"/><rect x="268" y="182" width="142" height="4" rx="2"/><rect x="268" y="192" width="96" height="4" rx="2"/></g>
+              <g fill="#262c35"><rect x="268" y="214" width="150" height="4" rx="2"/><rect x="268" y="224" width="136" height="4" rx="2"/><rect x="268" y="234" width="148" height="4" rx="2"/><rect x="268" y="244" width="110" height="4" rx="2"/><rect x="268" y="262" width="150" height="4" rx="2"/><rect x="268" y="272" width="128" height="4" rx="2"/></g>
+              <text x="322" y="338" font-family="IBM Plex Sans, sans-serif" font-size="10" fill="#57c7cf" opacity=".8">earlier paper</text>
+            </g>
+            <!-- submission, front -->
+            <rect x="40" y="24" width="270" height="360" rx="12" fill="#1a1e25" stroke="#2f3640"/>
+            <g clip-path="url(#pageClip)">
+              <rect x="62" y="50" width="196" height="9" rx="3" fill="#8b939f"/><rect x="62" y="65" width="150" height="9" rx="3" fill="#8b939f"/>
+              <rect x="62" y="84" width="90" height="5" rx="2" fill="#4a525e"/>
+              <g fill="#2c323c"><rect x="62" y="108" width="226" height="4.5" rx="2"/><rect x="62" y="119" width="214" height="4.5" rx="2"/><rect x="62" y="130" width="222" height="4.5" rx="2"/><rect x="62" y="141" width="180" height="4.5" rx="2"/>
+              <rect x="62" y="160" width="226" height="4.5" rx="2"/><rect x="62" y="171" width="208" height="4.5" rx="2"/></g>
+              <rect x="56" y="186" width="238" height="40" rx="5" fill="rgba(255,93,79,.16)"/>
+              <g fill="#ff8a7f"><rect x="62" y="193" width="226" height="4.5" rx="2"/><rect x="62" y="204" width="218" height="4.5" rx="2"/><rect x="62" y="215" width="140" height="4.5" rx="2"/></g>
+              <g fill="#2c323c"><rect x="62" y="240" width="226" height="4.5" rx="2"/><rect x="62" y="251" width="200" height="4.5" rx="2"/><rect x="62" y="262" width="220" height="4.5" rx="2"/><rect x="62" y="273" width="160" height="4.5" rx="2"/>
+              <rect x="62" y="292" width="226" height="4.5" rx="2"/><rect x="62" y="303" width="190" height="4.5" rx="2"/><rect x="62" y="314" width="214" height="4.5" rx="2"/><rect x="62" y="325" width="140" height="4.5" rx="2"/></g>
+              <g class="scan"><rect x="40" y="24" width="270" height="44" fill="url(#scanG)"/><rect x="40" y="67" width="270" height="1.5" fill="#57c7cf" opacity=".7"/></g>
+            </g>
+            <text x="62" y="368" font-family="IBM Plex Sans, sans-serif" font-size="10" fill="#8b939f">submission · 1 of 43,013</text>
+            <!-- connector -->
+            <path d="M294 206 C 318 206, 318 186, 340 186" stroke="#c9ced6" stroke-width="1.2" stroke-dasharray="3 4" fill="none" opacity=".7"/>
+            <!-- margin flag -->
+            <g transform="translate(6 176)">
+              <svg class="mark wave" width="34" height="34"><use href="#flag"/></svg>
+            </g>
+            <text x="30" y="232" text-anchor="end" font-family="Newsreader, Georgia, serif" font-style="italic" font-size="15" fill="#ff8a7f">check</text>
+            <text x="30" y="249" text-anchor="end" font-family="Newsreader, Georgia, serif" font-style="italic" font-size="15" fill="#ff8a7f">the source</text>
+          </svg>
+          <figcaption>Illustration, not a real case</figcaption>
+        </figure>
+      </div>
+
+      <div class="band" aria-live="polite" data-ui>
+        <div class="count">
+          <div class="digits">
+            <span class="digit"><b id="d-d">--</b><span>d</span></span>
+            <span class="digit"><b id="d-h">--</b><span>h</span></span>
+            <span class="digit"><b id="d-m">--</b><span>m</span></span>
+            <span class="digit"><b id="d-s">--</b><span>s</span></span>
+          </div>
+          <p class="count-label"><span class="dot" data-live-dot></span><span id="count-label">until Stage 1 starts</span></p>
+        </div>
+        <div class="figs">
+          <div class="fig"><b id="f-total">43,013</b><span>ICLR 2027 submissions</span></div>
+          <div class="fig"><b id="f-stages">9</b><span>public stages</span></div>
+          <div class="fig"><b id="f-per">5,000</b><span>papers per stage</span></div>
+          <div class="fig"><b id="f-lanes">5</b><span>concurrent sessions</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="schedule" aria-labelledby="schedule-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><h2 id="schedule-h">Nine stages, back to back</h2></div>
+        <p>All 43,013 submissions in nine stages. Times are US Eastern; those marked est. are estimates and move as stages finish. Amber flags mark ICLR 2027 dates for reference.</p>
+      </div>
+      <div class="tl" id="tl" aria-hidden="true"></div>
+      <div class="rows" id="rows" role="table" aria-label="Stage schedule"></div>
+      <div class="sched-note">
+        <div class="note" id="sched-scen"></div>
+        <div class="note" id="sched-note"></div>
+      </div>
+      <div class="opt"><b>Optional · Final report</b><span>A last row for a public report after Stage 9. Waiting for your decision on stage reports and data.</span></div>
+    </div>
+  </section>
+
+  <section class="block" id="updates" aria-labelledby="updates-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><h2 id="updates-h">Notes from the run</h2></div>
+        <p>Newest first. Numbers come from the run records; individual papers appear only on the live page.</p>
+      </div>
+      <div class="feed" id="feed"></div>
+      <div class="opt"><b>Optional · Stage reports and data</b><span>Downloads per stage (report, aggregate table, data). What to release, and when, is waiting for your decision.</span></div>
+    </div>
+  </section>
+
+  <section class="block" id="live" aria-labelledby="live-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><h2 id="live-h">Watch it as it runs</h2></div>
+        <p>The live page follows the running sessions one paper at a time, from the first claim to the final label.</p>
+      </div>
+      <div class="live">
+        <div>
+          <div class="live-status"><span class="dot" data-live-dot></span><span id="live-status">Live page opens when Stage 1 starts</span></div>
+          <p>For each submission you can see:</p>
+          <ol class="steps">
+            <li>The claims the pipeline extracts from the submission.</li>
+            <li>The earlier public papers it finds and ranks.</li>
+            <li>The closest passages, side by side, with model scores.</li>
+            <li>The result label, with a link to report a mistake.</li>
+          </ol>
+          <a class="btn btn-primary" data-href="liveUrl" href="./live/">Open the live page →</a>
+        </div>
+        <figure class="window" style="margin:0">
+          <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i><span class="url">openlair.github.io/…/live/</span><span class="pill" id="win-pill">Soon</span></div>
+          <div class="window-body">
+            <svg viewBox="0 0 520 250" role="img" aria-label="Schematic of the live page: a submission and an earlier paper compared passage by passage">
+              <rect x="0" y="0" width="520" height="250" rx="10" fill="#0f1216"/>
+              <g font-family="IBM Plex Sans, sans-serif" font-size="10">
+                <text x="20" y="26" fill="#ff8a7f">TARGET</text><text x="500" y="26" fill="#57c7cf" text-anchor="end">SOURCE</text>
+              </g>
+              <g transform="rotate(-4 105 120)"><rect x="40" y="42" width="130" height="160" rx="6" fill="#e8e6e1"/><rect x="54" y="58" width="96" height="6" rx="2" fill="#5a5f66"/><rect x="54" y="69" width="70" height="6" rx="2" fill="#5a5f66"/>
+                <g fill="#b9bcc1"><rect x="54" y="88" width="102" height="3" rx="1.5"/><rect x="54" y="96" width="96" height="3" rx="1.5"/><rect x="54" y="104" width="100" height="3" rx="1.5"/><rect x="54" y="132" width="102" height="3" rx="1.5"/><rect x="54" y="140" width="90" height="3" rx="1.5"/><rect x="54" y="148" width="98" height="3" rx="1.5"/></g>
+                <rect x="50" y="112" width="110" height="16" rx="3" fill="rgba(255,93,79,.35)"/></g>
+              <g transform="rotate(4 415 120)"><rect x="350" y="42" width="130" height="160" rx="6" fill="#e8e6e1"/><rect x="364" y="58" width="90" height="6" rx="2" fill="#5a5f66"/><rect x="364" y="69" width="76" height="6" rx="2" fill="#5a5f66"/>
+                <g fill="#b9bcc1"><rect x="364" y="88" width="102" height="3" rx="1.5"/><rect x="364" y="96" width="92" height="3" rx="1.5"/><rect x="364" y="124" width="100" height="3" rx="1.5"/><rect x="364" y="132" width="102" height="3" rx="1.5"/><rect x="364" y="140" width="90" height="3" rx="1.5"/><rect x="364" y="148" width="98" height="3" rx="1.5"/></g>
+                <rect x="360" y="104" width="110" height="16" rx="3" fill="rgba(87,199,207,.4)"/></g>
+              <path d="M180 120 C 240 100, 280 100, 340 114" stroke="#ff5d4f" stroke-width="1.5" fill="none" opacity=".9"/>
+              <path d="M180 124 C 240 140, 280 140, 340 118" stroke="#57c7cf" stroke-width="1.5" fill="none" opacity=".9"/>
+              <circle cx="260" cy="120" r="22" fill="#13161b" stroke="#2b313a"/><text x="260" y="124" text-anchor="middle" font-family="Newsreader, Georgia, serif" font-style="italic" font-size="14" fill="#a2a9b4">vs</text>
+              <g font-family="IBM Plex Sans, sans-serif" font-size="11"><rect x="20" y="218" width="480" height="20" rx="5" fill="#13161b"/>
+                <rect x="24" y="222" width="72" height="12" rx="3" fill="#57c7cf" opacity=".9"/><rect x="100" y="222" width="72" height="12" rx="3" fill="#57c7cf" opacity=".9"/><rect x="176" y="222" width="72" height="12" rx="3" fill="#57c7cf" opacity=".45"/><rect x="252" y="222" width="72" height="12" rx="3" fill="#2b313a"/><rect x="328" y="222" width="72" height="12" rx="3" fill="#2b313a"/>
+                <text x="410" y="232" fill="#6f7783">step 3 of 5</text></g>
+            </svg>
+          </div>
+          <figcaption>Schematic, not a real case</figcaption>
+        </figure>
+      </div>
+      <div class="opt"><b>Optional · Funding</b><span>A short request for support (compute and model costs). Placement, channel and wording are waiting for your decision.</span></div>
+    </div>
+  </section>
+
+  <section class="block" id="about" aria-labelledby="about-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><h2 id="about-h">A flag is a lead</h2></div>
+        <p>What a label means, what it does not mean, and how to get a result corrected.</p>
+      </div>
+      <div class="about">
+        <div class="panel">
+          <h3>A lead for review, not a verdict</h3>
+          <p><span data-bind="productName">Red-flag Research</span> is a research project that screens conference submissions automatically. A <strong>Source review recommended</strong> label means the system found passages, numbers or tables that closely match an earlier public paper without a clear attribution, so a person should compare the two papers side by side.</p>
+          <p>It is <strong>not</strong> a finding of plagiarism, misconduct or bad faith. It has not been reviewed by the conference, the authors or any integrity committee. The system uses language models and can be wrong: shared authors, an earlier version of the same work, a cited dataset or a common baseline can all explain matching text, and the system may not see them. A paper without a label has not been cleared either.</p>
+          <p>Benchmark cases are anonymized before release.</p>
+        </div>
+        <div class="panel">
+          <h3>Result labels</h3>
+          <ul class="labels">
+            <li style="--c:var(--red)"><span class="tag">Source review recommended</span><span class="d">Close matches to an earlier public paper without clear attribution. A person should compare the two.</span></li>
+            <li style="--c:var(--muted)"><span class="tag">No source finding</span><span class="d">Nothing found in the sources the system checked. This does not clear the paper.</span></li>
+            <li style="--c:var(--amber)"><span class="tag">Inconclusive</span><span class="d">Not enough evidence for either label.</span></li>
+            <li style="--c:var(--blue)"><span class="tag">Same paper (preprint)</span><span class="d">The closest match is this paper's own earlier preprint.</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="correct">
+        <span class="ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+        <p><strong>Think a result is wrong?</strong> <span>If you are an author and believe a result about your paper is wrong, email <code data-bind="contactEmail">red.flag.autoresearch@gmail.com</code>. We will correct it right away, and we take the result off the live page and the public data while we check.</span></p>
+        <div class="actions"><a class="btn btn-ghost" id="mail" href="#about">Email us</a><a class="link" data-href="corrections" href="#">How corrections work →</a></div>
+      </div>
+      <div class="opt"><b>Optional · How it works</b><span>A plain-language description of the pipeline steps and its limits.</span></div>
+      <div class="opt"><b>Optional · FAQ</b><span>Short answers: is a label an accusation, are authors told, why ICLR 2027, what data is kept.</span></div>
+    </div>
+  </section>
+
+  <section class="block" id="code" aria-labelledby="code-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><h2 id="code-h">Open by default</h2></div>
+        <p>The detection code and an anonymized benchmark are released in the project's GitHub repository, not on this site.</p>
+      </div>
+      <div class="repo">
+        <div>
+          <span class="path"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg><span data-bind="repoPath">github.com/OpenLAIR/red-flag-research</span></span>
+          <p>Code, the anonymized benchmark with its data card, and the issue tracker.</p>
+        </div>
+        <a class="btn btn-ghost" data-href="repoUrl" href="#">Open on GitHub →</a>
+        <div class="clone"><code><b>$</b><span id="clone-cmd">git clone https://github.com/OpenLAIR/red-flag-research</span></code><button class="copy" id="copy" type="button">Copy</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="contribute" aria-labelledby="contribute-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><h2 id="contribute-h">Help us get it right</h2></div>
+        <p>The whole detection pipeline is open source on GitHub. Bug reports, ideas, data and corrections are all welcome.</p>
+      </div>
+      <div class="contrib">
+        <article class="ways-main">
+          <div>
+            <h3>First: a result about a paper looks wrong</h3>
+            <p>Email <code data-bind="contactEmail">red.flag.autoresearch@gmail.com</code>. You do not need a GitHub account, and the message stays private. We take the result off the live page and the public data while we check, and correct it right away if it is wrong.</p>
+            <p class="sub">If you prefer, you can also file a public wrong-result report.</p>
+          </div>
+          <div class="actions">
+            <a class="btn btn-primary btn-sm" id="mail2" href="#about">Email us</a>
+            <a class="btn btn-ghost btn-sm" data-href="tplWrong" href="#">Public wrong-result report</a>
+            <a class="link" data-href="corrections" href="#">How corrections work →</a>
+          </div>
+        </article>
+        <div class="ways">
+          <a class="way" data-href="tplBug" href="#"><h3>Report a bug</h3><p>Something in the pipeline, the live page or this site does not work as described.</p><span>Bug report →</span></a>
+          <a class="way" data-href="tplFeature" href="#"><h3>Suggest a feature</h3><p>An idea for the pipeline, the search, or how results are shown.</p><span>Feature request →</span></a>
+          <a class="way" data-href="tplData" href="#"><h3>Fix a benchmark case</h3><p>A correction to an existing benchmark case, by its case id. Please do not name papers you suspect in a public issue.</p><span>Case correction →</span></a>
+          <a class="way" id="mail3" href="#contribute"><h3>Suggest a new case</h3><p>A possible new case for the benchmark goes by private email to <code data-bind="contactEmail">red.flag.autoresearch@gmail.com</code>, not to a public issue.</p><span>Email us →</span></a>
+        </div>
+      </div>
+      <div class="contrib-foot">
+        Before opening a pull request, read the <a data-href="contributing" href="#">contributing guide</a> and sign off your commits (DCO). Contributed data is released under CC BY 4.0.
+        See also <a data-href="maintainers" href="#">how the project is maintained</a> and the <a data-href="security" href="#">security policy</a>.
+      </div>
+      <div class="opt"><b>Optional · Stay updated</b><span>An RSS feed of the updates above, or an email list.</span></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-mark">
+      <div class="big" aria-hidden="true" id="foot-word"><span class="r">Red</span>-flag <span class="w2">Research</span></div>
+      <p>By <b data-bind="author">Ziqian Zhang</b><br>a research project of <a data-href="orgUrl" href="https://openlair.github.io/" data-bind="orgName">OpenLAIR</a></p>
+    </div>
+    <div class="foot">
+      <div class="c-fine">
+        <a class="brand" href="#top" style="margin-bottom:14px"><svg class="mark" width="22" height="22" aria-hidden="true"><use href="#flag"/></svg><span data-bind="productName">Red-flag Research</span></a>
+        <p class="fine">Labels are leads for human review, not findings of misconduct. Submission metadata is public on OpenReview. This site does not host papers or the benchmark.</p>
+      </div>
+      <div>
+        <h4>Project</h4>
+        <ul>
+          <li><a data-href="liveUrl" href="./live/">Live page</a></li>
+          <li><a href="#schedule">Schedule</a></li>
+          <li><a href="#updates">Updates</a></li>
+          <li><a data-href="repoUrl" href="#">GitHub repository</a></li>
+          <li><a href="#contribute">Contribute</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="#about">Report a wrong result</a></li>
+          <li><a data-href="tplBug" href="#">Report a problem with the site</a></li>
+          <li><span style="color:var(--text-2)" data-bind="contactEmail">red.flag.autoresearch@gmail.com</span></li>
+          <li><a href="privacy.html">Privacy policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="opt"><b>Optional · In collaboration with</b><span>Partners and compute acknowledgements, only with their permission.</span></div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const params = new URLSearchParams(location.search);
+  // The live page used to sit at this address. Old links that carry its parameters go on to /live/.
+  if (params.has('api') || params.has('votes') || location.hash === '#pipeline') {
+    location.replace('live/' + location.search + location.hash);
+    return;
+  }
+  document.documentElement.classList.add('js');
+  const T0 = Date.now();
+  const NOW0 = params.has('now') ? Date.parse(params.get('now')) : null;
+  const now = () => NOW0 == null ? Date.now() : NOW0 + (Date.now() - T0);
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const n = (x) => Number(x).toLocaleString('en-US');
+  const H = 3600e3;
+  const FLAG = '<svg aria-hidden="true"><use href="#mflag"/></svg>';
+
+  async function load(path) {
+    const r = await fetch(path, { cache: 'no-cache' });
+    if (!r.ok) throw new Error(path + ' ' + r.status);
+    return r.json();
+  }
+
+  function fmtFactory(tz) {
+    const f = (ms, o) => new Intl.DateTimeFormat('en-US', { timeZone: tz, ...o }).format(ms);
+    return {
+      f,
+      day: (ms) => f(ms, { weekday: 'short', month: 'short', day: 'numeric' }),
+      // Estimates are rounded to the half hour; anything finer would be false precision.
+      est: (ms) => { const r = Math.round(ms / (H / 2)) * (H / 2); return f(r, { weekday: 'short', month: 'short', day: 'numeric' }) + ' · ' + f(r, { hour: 'numeric', minute: '2-digit' }); },
+      exact: (ms) => f(ms, { weekday: 'short', month: 'short', day: 'numeric' }) + ' · ' + f(ms, { hour: 'numeric', minute: '2-digit' }),
+      short: (ms) => f(ms, { month: 'short', day: 'numeric' }),
+    };
+  }
+
+  // Planned end = estimatedEnd from the JSON, else start + papers x minutes / sessions.
+  // Once a stage has an actual end, later planned times shift by how early or late it was.
+  function computeStages(s, lanes, useEstimates = true) {
+    let cursor = Date.parse(s.start);
+    let shift = 0;
+    return s.stages.map((st) => {
+      const start = st.actualStart ? Date.parse(st.actualStart) : cursor;
+      const planned = useEstimates && st.estimatedEnd ? Date.parse(st.estimatedEnd) + shift : start + st.papers * s.minutesPerPaper / 60 / lanes * H;
+      const end = st.actualEnd ? Date.parse(st.actualEnd) : planned;
+      if (st.actualEnd) shift += end - planned;
+      cursor = end;
+      return { ...st, start, end, startActual: !!st.actualStart, endActual: !!st.actualEnd };
+    });
+  }
+
+  const milestoneTime = (m, tz) => {
+    // Noon on that calendar day in the display time zone (offset is close enough for placement).
+    const guess = Date.parse(m.date + 'T12:00:00Z');
+    const local = new Date(new Date(guess).toLocaleString('en-US', { timeZone: tz }));
+    const utc = new Date(new Date(guess).toLocaleString('en-US', { timeZone: 'UTC' }));
+    return guess + (utc - local);
+  };
+
+  function withStatus(stages, t) {
+    let prevDone = true;
+    return stages.map((st) => {
+      let status = 'upcoming';
+      if (st.endActual) status = 'done';
+      else if (prevDone && t >= st.start) status = 'running';
+      prevDone = st.endActual;
+      return { ...st, status };
+    });
+  }
+
+  // "Red-flag Research" -> line one: italic red first word, muted hyphen, the rest (plus the flag); line two: what follows the first space.
+  function wordmarkHTML(name, mark = '') {
+    const sp = name.indexOf(' ');
+    const head = sp > 0 ? name.slice(0, sp) : name, tail = sp > 0 ? name.slice(sp + 1) : '';
+    const i = head.indexOf('-');
+    const h = i > 0 ? `<span class="r">${esc(head.slice(0, i))}</span><span class="d">-</span>${esc(head.slice(i + 1))}` : esc(head);
+    return `<span class="w1">${h}${mark}</span>` + (tail ? ` <span class="w2">${esc(tail)}</span>` : '');
+  }
+
+  function bindSite(site) {
+    document.querySelectorAll('[data-bind]').forEach((el) => {
+      const k = el.dataset.bind;
+      const v = { orgName: site.organization.name, repoPath: site.repoUrl.replace(/^https?:\/\//, '') }[k] ?? site[k];
+      if (v != null) el.textContent = v;
+    });
+    const wm = $('wordmark');
+    wm.setAttribute('aria-label', site.productName);
+    wm.innerHTML = wordmarkHTML(site.productName, '<svg class="mark m wave" aria-hidden="true"><use href="#flag"/></svg>');
+    $('foot-word').innerHTML = wordmarkHTML(site.productName);
+    // Every repository link is built from the one repoUrl constant in site.json.
+    const R = site.repoUrl.replace(/\/$/, '');
+    const hrefs = {
+      liveUrl: site.liveUrl, repoUrl: R, orgUrl: site.organization.url,
+      contributing: R + '/blob/main/CONTRIBUTING.md', maintainers: R + '/blob/main/MAINTAINERS.md',
+      corrections: R + '/blob/main/docs/CORRECTIONS.md', security: R + '/security/policy',
+      tplBug: R + '/issues/new?template=1-bug_report.yml', tplFeature: R + '/issues/new?template=2-feature_request.yml',
+      tplWrong: R + '/issues/new?template=3-wrong_result.yml', tplData: R + '/issues/new?template=4-data_contribution.yml',
+    };
+    document.querySelectorAll('[data-href]').forEach((el) => { el.href = hrefs[el.dataset.href]; });
+    $('clone-cmd').textContent = 'git clone ' + R;
+    $('copy').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText('git clone ' + R); $('copy').textContent = 'Copied'; }
+      catch { $('copy').textContent = 'Select and copy'; }
+      setTimeout(() => { $('copy').textContent = 'Copy'; }, 1600);
+    });
+    // Mail links open with a subject so requests are easy to sort.
+    const subjects = { mail: 'Result correction', mail2: 'Result correction', mail3: 'New benchmark case' };
+    if (/@/.test(site.contactEmail)) Object.entries(subjects).forEach(([id, subj]) => { $(id).href = 'mailto:' + site.contactEmail + '?subject=' + encodeURIComponent('[Red-flag Research] ' + subj); });
+    if (!site.showOptionalPlaceholders || params.get('opt') === '0') document.body.classList.add('no-opt');
+    document.title = site.productName + ' · Live screening of ICLR 2027';
+  }
+
+  function renderSchedule(s, stages, fmt, tzLabel, t) {
+    const total = stages.reduce((a, b) => a + b.papers, 0);
+    const ms = (s.milestones || []).map((m) => ({ ...m, t: milestoneTime(m, s.displayTimeZone) }));
+    const t0 = stages[0].start, runEnd = stages.at(-1).end;
+    const t1 = Math.max(runEnd, ...ms.map((m) => m.t));
+    const pct = (x) => ((x - t0) / (t1 - t0) * 100).toFixed(3) + '%';
+    const wid = (a, b) => ((b - a) / (t1 - t0) * 100).toFixed(3) + '%';
+    const disc = ms.length >= 2 ? `<span class="tl-band" style="left:${pct(ms[0].t)};width:${wid(ms[0].t, ms[1].t)}"></span>` : '';
+    const segs = stages.map((st) => `<i class="${st.status}" style="left:${pct(st.start)};width:calc(${wid(st.start, st.end)} - 4px)" title="Stage ${st.id}"><em>${st.id}</em></i>`).join('');
+    const ticks = ms.map((m) => `<span class="tl-tick" style="left:${pct(m.t)}"></span>`).join('');
+    const nowMark = t > t0 && t < t1 ? `<span class="tl-now" style="left:${pct(t)}"></span>` : '';
+    const edge = (x) => x <= t0 ? ' first' : (x >= t1 ? ' last' : '');
+    // Month ticks on the first of each month inside the range.
+    const months = [];
+    const d = new Date(t0); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() + 1); d.setUTCHours(12, 0, 0, 0);
+    for (; d.getTime() < t1; d.setUTCMonth(d.getUTCMonth() + 1)) months.push(d.getTime());
+    $('tl').innerHTML = `
+      <div class="tl-top">${ms.map((m) => `<span class="${edge(m.t)}" style="left:${pct(m.t)}">${FLAG}<b>${esc(m.short)}</b> ${fmt.short(m.t)}</span>`).join('')}</div>
+      <div class="tl-bar">${disc}${segs}${ticks}${nowMark}</div>
+      <div class="tl-axis"><span class="first" style="left:0">${fmt.short(t0)}</span>${months.map((x) => `<span style="left:${pct(x)}">${fmt.f(x, { month: 'short' })} 1</span>`).join('')}</div>
+      <div class="tl-bottom"><span class="${edge(runEnd)}" style="left:${pct(runEnd)}">All ${n(total)} papers · est. ${fmt.short(runEnd)}</span></div>
+      <div class="tl-key"><span><i class="k-run"></i>Screening stages</span>${ms.length >= 2 ? '<span><i class="k-band"></i>ICLR 2027 review and discussion</span>' : ''}</div>`;
+    const chip = { upcoming: '<span class="chip"><span class="dot"></span>Upcoming</span>', running: '<span class="chip"><span class="dot run"></span>Running</span>', done: '<span class="chip"><span class="dot ok"></span>Done</span>' };
+    const when = (x, actual) => actual ? `<b>${fmt.exact(x)}</b>` : `${fmt.est(x)}<span class="est">est.</span>`;
+    const head = `<div class="row head" role="row"><span role="columnheader">Stage</span><span class="c-papers" role="columnheader">Papers</span><span class="c-start" role="columnheader">Starts (${tzLabel})</span><span class="c-end" role="columnheader">Ends (${tzLabel})</span><span class="c-dur" role="columnheader">Duration</span><span class="c-status" role="columnheader">Status</span></div>`;
+    const rows = stages.map((st) => `<div class="row is-${st.status}" role="row">
+      <span class="stage" role="cell">Stage ${st.id}</span>
+      <span class="c-papers num" role="cell">${n(st.papers)}</span>
+      <span class="when c-start" role="cell">${when(st.start, st.startActual || st.id === 1)}</span>
+      <span class="when c-end" role="cell">${when(st.end, st.endActual)}</span>
+      <span class="c-dur num" role="cell" style="color:var(--text-2)">~${Math.round((st.end - st.start) / H)} h</span>
+      <span class="c-status" role="cell">${chip[st.status]}</span></div>`);
+    const totalRow = `<div class="row total" role="row"><span class="stage" role="cell">All</span><span class="c-papers num" role="cell">${n(total)}</span><span class="when c-start" role="cell">${stages.length} stages</span><span class="when c-end" role="cell">${when(stages.at(-1).end, stages.at(-1).endActual)}</span><span class="c-dur num" role="cell" style="color:var(--text-2)">~${Math.round((stages.at(-1).end - stages[0].start) / 24 / H)} d</span><span class="c-status" role="cell"></span></div>`;
+    const msRow = (m) => `<div class="row ms" role="row"><span class="stage" role="cell">${FLAG}ICLR 2027</span><span class="ms-label" role="cell">${esc(m.label)}</span><span class="ms-date" role="cell">${fmt.day(m.t)}</span></div>`;
+    // Interleave reference dates by time; the ones after the run go below the total row.
+    const items = [...stages.map((st, i) => ({ t: st.start, html: rows[i] })), ...ms.filter((m) => m.t < runEnd).map((m) => ({ t: m.t, html: msRow(m) }))].sort((a, b) => a.t - b.t);
+    $('rows').innerHTML = head + items.map((x) => x.html).join('') + totalRow + ms.filter((m) => m.t >= runEnd).map(msRow).join('');
+
+    const dec = ms.at(-1);
+    const lead = dec && dec.t > runEnd ? `, about ${Math.round((dec.t - runEnd) / 24 / H)} days before ICLR 2027 ${esc(dec.label.toLowerCase())} (${fmt.short(dec.t)})` : '';
+    $('sched-scen').innerHTML = `<b>Current plan:</b> ${esc(s.plan)} All ${n(total)} papers by about ${fmt.short(runEnd)}${lead}.`;
+    $('sched-note').innerHTML = `Based on about ${s.minutesPerPaper} minutes per paper per session, measured in test runs. ${esc(s.note)}`;
+  }
+
+  function renderUpdates(list, fmt, site) {
+    const kinds = { announcement: 'Announcement', 'stage-report': 'Stage report', note: 'Note' };
+    const sorted = [...list].sort((a, b) => b.date.localeCompare(a.date));
+    $('feed').innerHTML = sorted.map((u) => {
+      const href = u.link && (u.link.href === 'live' ? site.liveUrl : u.link.href);
+      const at = Date.parse(u.date + 'T12:00:00Z');
+      return `<article class="card${u.template ? ' tpl' : ''}">
+        <div><div class="day">${fmt.f(at, { day: 'numeric' })}</div><div class="mon">${fmt.f(at, { weekday: 'long' })}, ${fmt.f(at, { month: 'long', year: 'numeric' })}</div><div class="kind">${esc(kinds[u.kind] || u.kind)}</div><div class="meta">${esc(u.meta || '')}</div></div>
+        <div>${u.template ? '<span class="tpl-badge">Layout preview · not a result · removed before publishing</span>' : ''}
+          <h3>${esc(u.title)}</h3><p>${esc(u.summary)}</p>
+          ${u.stats?.length ? `<div class="stats">${u.stats.map((x) => `<div class="stat"><b>${esc(x.value)}</b><span>${esc(x.label)}</span></div>`).join('')}</div>` : ''}
+          ${href ? `<a class="more" href="${esc(href)}">${esc(u.link.label)} →</a>` : ''}
+        </div></article>`;
+    }).join('');
+  }
+
+  // Each section's parts rise in once, heading first, 80ms apart. Content stays visible without script.
+  function armReveals() {
+    const groups = [
+      [...document.querySelectorAll('.hero-grid > div > *, .page-art, .band')],
+      ...[...document.querySelectorAll('section.block .wrap')].map((w) => [...w.querySelectorAll(':scope > .sec-head > *, :scope > *:not(.sec-head), .feed > .card, .ways > .way')]),
+      [...document.querySelectorAll('.foot-mark > *, .foot > *')],
+    ];
+    const io = 'IntersectionObserver' in window ? new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -40px 0px' }) : null;
+    groups.forEach((els) => els.forEach((el, i) => {
+      el.setAttribute('data-reveal', '');
+      el.style.setProperty('--d', Math.min(i, 6) * 80 + 'ms');
+      if (io) io.observe(el); else el.classList.add('is-in');
+    }));
+  }
+
+  function tickFactory(s, stages, fmt) {
+    const pad = (x) => String(x).padStart(2, '0'); // taste-skill-ignore: countdown clock digits
+    const total = stages.length;
+    return () => {
+      const t = now();
+      const live = withStatus(stages, t);
+      const running = live.find((x) => x.status === 'running');
+      const next = live.find((x) => x.status === 'upcoming');
+      const tz = s.displayTimeZoneLabel;
+      let target, label, isLive = false;
+      let elapsed = null;
+      if (running && t > running.end) {
+        // Past its estimate and no actualEnd yet: count up instead of sitting at zero.
+        isLive = true;
+        elapsed = t - running.start;
+        label = `since Stage ${running.id} of ${total} started · longer than the estimate of <b>${fmt.est(running.end)} ${tz}</b>`;
+      } else if (running) {
+        isLive = true;
+        target = running.end;
+        label = `until Stage ${running.id} of ${total} ends · est. <b>${fmt.est(running.end)} ${tz}</b>`;
+      } else if (next) {
+        target = next.start;
+        label = `until Stage ${next.id} starts · <b>${fmt.exact(next.start)} ${tz}</b>`;
+      } else {
+        label = `All stages complete · finished <b>${fmt.exact(live.at(-1).end)} ${tz}</b>`;
+      }
+      let d = elapsed ?? Math.max(0, (target ?? t) - t);
+      const dd = Math.floor(d / 864e5); d -= dd * 864e5;
+      const hh = Math.floor(d / H); d -= hh * H;
+      const mm = Math.floor(d / 6e4); d -= mm * 6e4;
+      const ss = Math.floor(d / 1e3);
+      $('d-d').textContent = pad(dd); $('d-h').textContent = pad(hh); $('d-m').textContent = pad(mm); $('d-s').textContent = pad(ss);
+      $('count-label').innerHTML = label;
+      document.querySelectorAll('[data-live-dot]').forEach((el) => el.classList.toggle('is-live', isLive));
+      $('live-status').textContent = isLive ? `Live now · Stage ${running.id} of ${total}` : (next ? `Live page opens when Stage ${next.id} starts` : 'Screening complete · replays available');
+      $('win-pill').textContent = isLive ? 'Live' : (next ? 'Soon' : 'Replay');
+      return { live, t };
+    };
+  }
+
+  Promise.all([load('data/site.json'), load('data/schedule.json'), load('data/updates.json')]).then(([site, s, up]) => {
+    bindSite(site);
+    const fmt = fmtFactory(s.displayTimeZone);
+    const lanes = Number(params.get('lanes')) || s.concurrentSessions;
+    const stages = computeStages(s, lanes, !params.has('lanes'));
+    $('f-total').textContent = n(s.totalPapers);
+    $('f-stages').textContent = s.stages.length;
+    $('f-per').textContent = n(s.stages[0].papers);
+    $('f-lanes').textContent = lanes;
+    const tick = tickFactory(s, stages, fmt);
+    const first = tick();
+    renderSchedule(s, first.live, fmt, s.displayTimeZoneLabel, first.t);
+    renderUpdates(up.updates, fmt, site);
+    armReveals();
+    let last = first.live.map((x) => x.status).join();
+    let lastMin = Math.floor(first.t / 6e4);
+    setInterval(() => {
+      const { live, t } = tick();
+      const sig = live.map((x) => x.status).join();
+      // Re-render when a stage changes state, and once a minute so the "Now" marker moves.
+      if (sig !== last || Math.floor(t / 6e4) !== lastMin) { last = sig; lastMin = Math.floor(t / 6e4); renderSchedule(s, live, fmt, s.displayTimeZoneLabel, t); }
+    }, 1000);
+  }).catch((e) => {
+    $('feed').innerHTML = `<p style="color:var(--text-2)">Could not load the page data (${esc(e.message)}). Serve this folder over HTTP, not file://.</p>`;
+  });
+})();
+</script>
+</body>
+</html>

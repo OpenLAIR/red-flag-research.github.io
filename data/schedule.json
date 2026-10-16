@@ -1,0 +1,93 @@
+{
+  "_comment": "Edit this file to change the schedule. A stage starts when the previous one ends. Its end is, in order of preference: actualEnd, estimatedEnd, or start + papers x minutesPerPaper / concurrentSessions. Set actualStart / actualEnd (ISO 8601 with offset) as stages really start and finish. Times are shown in America/New_York. Milestones are external reference dates, not part of the run.",
+  "displayTimeZone": "America/New_York",
+  "displayTimeZoneLabel": "ET",
+  "start": "2026-10-16T21:00:00-04:00",
+  "totalPapers": 43013,
+  "minutesPerPaper": 7.6,
+  "concurrentSessions": 5,
+  "plan": "5 concurrent sessions, started a few at a time, about 127 hours per 5,000-paper stage.",
+  "note": "Estimates assume the pipeline runs around the clock. Interruptions, reruns and manual checks will move them; we update this page as each stage ends.",
+  "stages": [
+    {
+      "id": 1,
+      "papers": 5000,
+      "estimatedEnd": "2026-10-22T03:30:00-04:00",
+      "actualStart": null,
+      "actualEnd": null
+    },
+    {
+      "id": 2,
+      "papers": 5000,
+      "estimatedEnd": "2026-10-27T10:00:00-04:00",
+      "actualStart": null,
+      "actualEnd": null
+    },
+    {
+      "id": 3,
+      "papers": 5000,
+      "estimatedEnd": "2026-11-01T16:30:00-05:00",
+      "actualStart": null,
+      "actualEnd": null
+    },
+    {
+      "id": 4,
+      "papers": 5000,
+      "estimatedEnd": "2026-11-06T23:30:00-05:00",
+      "actualStart": null,
+      "actualEnd": null
+    },
+    {
+      "id": 5,
+      "papers": 5000,
+      "estimatedEnd": "2026-11-12T06:00:00-05:00",
+      "actualStart": null,
+      "actualEnd": null
+    },
+    {
+      "id": 6,
+      "papers": 5000,
+      "estimatedEnd": "2026-11-17T12:30:00-05:00",
+      "actualStart": null,
+      "actualEnd": null
+    },
+    {
+      "id": 7,
+      "papers": 5000,
+      "estimatedEnd": "2026-11-22T19:00:00-05:00",
+      "actualStart": null,
+      "actualEnd": null
+    },
+    {
+      "id": 8,
+      "papers": 5000,
+      "estimatedEnd": "2026-11-28T01:30:00-05:00",
+      "actualStart": null,
+      "actualEnd": null
+    },
+    {
+      "id": 9,
+      "papers": 3013,
+      "estimatedEnd": "2026-12-01T06:00:00-05:00",
+      "actualStart": null,
+      "actualEnd": null
+    }
+  ],
+  "milestones": [
+    {
+      "date": "2026-11-05",
+      "short": "Reviews out",
+      "label": "Reviews released; author discussion opens"
+    },
+    {
+      "date": "2026-11-18",
+      "short": "Discussion ends",
+      "label": "Author discussion ends"
+    },
+    {
+      "date": "2026-12-16",
+      "short": "Decisions",
+      "label": "Final decisions"
+    }
+  ]
+}

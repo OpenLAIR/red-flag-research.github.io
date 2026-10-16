@@ -1,0 +1,30 @@
+{
+  "_comment": "Newest first is computed from date. kind: announcement | stage-report | note. Entries with template: true are layout previews and must be removed before publishing. Numbers must come from the run's own records.",
+  "updates": [
+    {
+      "date": "2026-10-16",
+      "kind": "announcement",
+      "meta": "Before Stage 1",
+      "title": "Public screening of ICLR 2027 starts tonight",
+      "summary": "Stage 1 starts at 9:00 PM ET. Five sessions run at once, started a few at a time. Each paper is checked against earlier public work, and every step is shown on the live page.",
+      "stats": [
+        {
+          "value": "43,013",
+          "label": "submissions"
+        },
+        {
+          "value": "9",
+          "label": "stages"
+        },
+        {
+          "value": "5",
+          "label": "concurrent sessions"
+        }
+      ],
+      "link": {
+        "label": "Watch live",
+        "href": "live"
+      }
+    }
+  ]
+}
