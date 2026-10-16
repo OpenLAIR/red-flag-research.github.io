@@ -1036,7 +1036,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
           <p class="k">Running count</p>
           <p class="pbig" id="p-live">—</p>
           <p class="prange" id="p-live-note"></p>
-          <p class="pmethod">Counted from the public live data, starting when Stage 1 starts. A flag can change after human review or a correction, so the count can go down as well as up.</p>
+          <p class="pmethod">Counted from the public live data. A flag can change after human review or a correction, so the count can go down as well as up.</p>
         </div>
       </div>
       <div class="charts" id="charts" hidden>
@@ -1500,10 +1500,19 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
     if (r.papers && r.flagged != null) {
       const [lo, hi] = wilson(r.flagged, r.papers);
       const point = Math.round(r.flagged / r.papers * N), L = Math.round(lo * N), H = Math.round(hi * N);
-      $('p-est').textContent = 'about ' + n(point);
-      $('p-est-range').textContent = `95% range ${n(L)}–${n(H)} of ${n(N)} submissions`;
-      $('p-method').textContent = `Method: ${r.flagged} of ${r.papers} papers in the ${r.name} were flagged. We scale that rate to all ${n(N)} submissions and give a 95% Wilson interval. The rehearsal papers were not a random sample of every topic, so treat the range as rough.`;
-      marks.push(H); bar.push((pct) => `<i style="left:${pct(L)};width:calc(${pct(H - L)} + 4px)"></i><b style="left:${pct(point)}"></b>`);
+      if (r.flagged === 0) {
+        // No flag in the sample: there is no point estimate, only an upper bound (0 to H).
+        const Hr = Math.round(H / 10) * 10;
+        $('p-est').textContent = 'At most about ' + n(Hr);
+        $('p-est-range').textContent = `0 of ${r.papers} ${r.name} papers flagged · 95% upper bound, of ${n(N)} submissions`;
+        $('p-method').hidden = true;  // the line above says it all (user decision: no method note)
+        marks.push(H); bar.push((pct) => `<i style="left:0;width:calc(${pct(H)} + 4px)"></i>`);
+      } else {
+        $('p-est').textContent = 'about ' + n(point);
+        $('p-est-range').textContent = `95% range ${n(L)}–${n(H)} of ${n(N)} submissions`;
+        $('p-method').textContent = `Method: ${r.flagged} of ${r.papers} ${r.name} papers were flagged. We scale that rate to all ${n(N)} submissions and give a 95% Wilson interval. The ${r.papers} papers do not cover every topic, so treat the range as rough.`;
+        marks.push(H); bar.push((pct) => `<i style="left:${pct(L)};width:calc(${pct(H - L)} + 4px)"></i><b style="left:${pct(point)}"></b>`);
+      }
     } else {
       $('p-est').textContent = 'Published after the rehearsal';
       $('p-est').classList.add('pending');
@@ -1711,7 +1720,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
       const b = mid && binOf(mid.id, N);
       if (b) lanes.push({ name: "Crowd's middle range", value: mid.label, lo: b[0], hi: b[1], color: 'var(--paper-acc)' });
     }
-    if (P && P.closed && P.est) lanes.push({ name: 'Our rehearsal estimate', value: `about ${n(P.est.point)} (95% range ${n(P.est.lo)}–${n(P.est.hi)})`, lo: P.est.lo, hi: P.est.hi, point: P.est.point, color: 'var(--paper-ink-3)' });
+    if (P && P.closed && P.est) lanes.push({ name: 'Our rehearsal estimate', value: P.est.point == null ? `at most about ${n(Math.round(P.est.hi / 10) * 10)} (95% upper bound)` : `about ${n(P.est.point)} (95% range ${n(P.est.lo)}–${n(P.est.hi)})`, lo: P.est.lo, hi: P.est.hi, point: P.est.point, color: 'var(--paper-ink-3)' });
     if (P && P.closed && R && S.stages.every((st) => st.actualEnd)) lanes.push({ name: 'Final count', value: `${n(R.flagged)} of ${n(N)}`, point: R.flagged, color: 'var(--field-red)' });
     const show4 = lanes.length >= 2;
     $('c-res').hidden = !show4;
@@ -1741,7 +1750,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
     $('poll-q').textContent = cfg.question;
     // Our own estimate, when the rehearsal has produced one, is marked on its range.
     const r = pr.rehearsal || {};
-    const est = r.papers && r.flagged != null ? (([lo, hi]) => ({ point: Math.round(r.flagged / r.papers * N), lo: Math.round(lo * N), hi: Math.round(hi * N) }))(wilson(r.flagged, r.papers)) : null;
+    const est = r.papers && r.flagged != null ? (([lo, hi]) => ({ point: r.flagged ? Math.round(r.flagged / r.papers * N) : null, lo: Math.round(lo * N), hi: Math.round(hi * N) }))(wilson(r.flagged, r.papers)) : null;
     const ours = est ? est.point : null;
     const inBin = (id, x) => { const m = id.match(/^(\d+)(?:-(\d+)|\+)$/); return m && x >= +m[1] && (m[2] ? x < +m[2] : true); };
     const fmtD = new Intl.DateTimeFormat('en-US', { timeZone: s.displayTimeZone, month: 'short', day: 'numeric' });

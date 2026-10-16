@@ -1,11 +1,13 @@
 {
-  "_comment": "Prediction module. Fill rehearsal.papers and rehearsal.flagged from the 100-paper rehearsal once it is final (D queue session reports it). Never enter a number that is not from a run record. The running count is read from the public API, counting only points after the schedule start. poll: the visitor prediction poll served by the D backend vote service (GET/POST {apiBase}{path}); keep enabled false until that service is approved and deployed. Choice ids must match the backend's polls.json.",
+  "_comment": "Prediction module. rehearsal = the 80 papers picked from Stage 1 for the 100-paper rehearsal (user decision 2026-10-16); the 20 benchmark papers, incl. 2 known positives, are excluded. With 0 flagged the page shows only the 95% Wilson upper bound. Never enter a number that is not from a run record. The running count is read from the public API, counting every paper on the public list. poll: the visitor prediction poll served by the D backend vote service (GET/POST {apiBase}{path}); keep enabled false until that service is approved and deployed. Choice ids must match the backend's polls.json.",
   "label": "Source review recommended",
   "rehearsal": {
-    "name": "100-paper rehearsal",
-    "papers": null,
-    "flagged": null,
-    "date": null
+    "name": "rehearsal",
+    "papers": 80,
+    "flagged": 0,
+    "excluded": 20,
+    "excludedPositives": 2,
+    "date": "2026-10-16"
   },
   "minLiveSample": 300,
   "confidence": 0.95,
