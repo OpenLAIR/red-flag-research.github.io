@@ -1227,7 +1227,7 @@ function setFoot() {
 }
 setFoot();
 
-const API = (new URLSearchParams(location.search).get('api') || D.api_base || 'https://exercise-nano-patrick-crm.trycloudflare.com').replace(/\/+$/, '');
+const API = (new URLSearchParams(location.search).get('api') || D.api_base || 'https://spec-integrity-unified-valium.trycloudflare.com').replace(/\/+$/, '');
 const enc = encodeURIComponent, TERMINAL = new Set(['completed', 'failed', 'stopped', 'cancelled', 'canceled', 'delivered', 'error', 'aborted']);
 async function getJSON(path, ms = 10000) {
   const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), ms);
