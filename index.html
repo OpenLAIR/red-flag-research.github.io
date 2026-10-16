@@ -1509,15 +1509,16 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
       $('p-est').classList.add('pending');
       $('p-method').textContent = `Method: the share of papers flagged in the ${r.name || 'rehearsal'}, scaled to all ${n(N)} submissions, with a 95% Wilson interval.`;
     }
-    // Running count: only points after the schedule start belong to the screening itself.
+    // Running count: every paper on the public list (the rehearsal papers kept for Stage 1 included), so it matches the live page's header.
     const t0 = Date.parse(s.start) / 1000;
     let live = null, series = null, proj = null;
     if (site.apiBase && now() / 1000 > t0) {
       try {
         const res = await fetch(site.apiBase.replace(/\/$/, '') + '/api/progress', { cache: 'no-store' });
-        const pts = res.ok ? ((await res.json()).points || []).filter((p) => p.t >= t0) : [];
+        const pts = res.ok ? ((await res.json()).points || []) : [];
         if (res.ok) {
-          live = { checked: pts.length, flagged: pts.filter((p) => p.label === 'YES_SUSPECTED').length };
+          const last = pts[pts.length - 1];  // the same totals the live page's header shows
+          live = last ? { checked: last.checked, flagged: last.suspected } : { checked: 0, flagged: 0 };
           series = cumulativeSeries(pts);
         }
       } catch { /* the live API can be down; the card says so */ }
