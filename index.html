@@ -1052,21 +1052,21 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
   <section class="block field" id="cost" aria-labelledby="cost-h">
     <div class="wrap">
       <div class="sec-head stack">
-        <div><h2 id="cost-h">What a paper costs</h2></div>
+        <div><h2 id="cost-h">What it costs</h2></div>
         <p>On our benchmark, doing every step with a large model costs 1.5–18× our pipeline, depending on the model and how it batches.</p>
       </div>
       <div class="cost-anchor">
-        <p class="cost-fig num">¥0.326 <span>($0.047)</span></p>
+        <p class="cost-fig num">$0.047</p>
         <p class="cost-cap"><b>Our pipeline</b>Model API fees per paper, mean over 19 benchmark papers.</p>
       </div>
       <div class="cost-tbl">
         <table class="cost-table">
-          <caption>Model API cost per paper with a large model doing every step</caption>
+          <caption>The same pipeline, with a large model doing every model step</caption>
           <thead>
             <tr>
               <th scope="col" class="c-m">Large model for every step</th>
               <th scope="col" class="c-p">Per paper</th>
-              <th scope="col" class="c-v">vs our ¥0.326</th>
+              <th scope="col" class="c-v">vs our $0.047</th>
               <th scope="col" class="c-l">Batched, 8 per call</th>
               <th scope="col" class="c-r" aria-hidden="true">Range<span class="est">multiple of ours, log scale</span><span class="cost-axis"><span>1× ours</span><span style="left:53.7%">5×</span><span style="left:76.9%">10×</span><span>20×</span></span></th>
             </tr>
@@ -1074,23 +1074,23 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
           <tbody>
             <tr>
               <th scope="row">Qwen3.8-flash low</th>
-              <td class="t-p" data-label="Per paper"><b>¥1.81</b> <span class="usd">($0.26)</span></td>
-              <td class="t-v" data-label="vs our ¥0.326"><b class="mult">5.6×</b></td>
-              <td class="t-l" data-label="Batched, 8 per call"><b>¥0.50</b> <span class="usd">($0.071)</span> <span class="mid">·</span> <b class="mult">1.5×</b></td>
+              <td class="t-p" data-label="Per paper"><b>$0.26</b></td>
+              <td class="t-v" data-label="vs our $0.047"><b class="mult">5.6×</b></td>
+              <td class="t-l" data-label="Batched, 8 per call"><b>$0.071</b> <span class="mid">·</span> <b class="mult">1.5×</b></td>
               <td class="t-r" aria-hidden="true"><span class="cost-track"><span class="one"></span><span class="rng" style="left:13.5%;width:44%"></span></span><span class="cost-ax-m"><span>1× ours</span><span>20×</span></span></td>
             </tr>
             <tr>
               <th scope="row">Qwen3.8-flash xhigh</th>
-              <td class="t-p" data-label="Per paper"><b>¥4.27</b> <span class="usd">($0.61)</span></td>
-              <td class="t-v" data-label="vs our ¥0.326"><b class="mult">13×</b></td>
-              <td class="t-l" data-label="Batched, 8 per call"><b>¥0.85</b> <span class="usd">($0.12)</span> <span class="mid">·</span> <b class="mult">2.6×</b></td>
+              <td class="t-p" data-label="Per paper"><b>$0.61</b></td>
+              <td class="t-v" data-label="vs our $0.047"><b class="mult">13×</b></td>
+              <td class="t-l" data-label="Batched, 8 per call"><b>$0.12</b> <span class="mid">·</span> <b class="mult">2.6×</b></td>
               <td class="t-r" aria-hidden="true"><span class="cost-track"><span class="one"></span><span class="rng" style="left:31.9%;width:53.7%"></span></span><span class="cost-ax-m"><span>1× ours</span><span>20×</span></span></td>
             </tr>
             <tr>
               <th scope="row">GPT-6 luna max</th>
-              <td class="t-p" data-label="Per paper"><b>¥6.04</b> <span class="usd">($0.86)</span></td>
-              <td class="t-v" data-label="vs our ¥0.326"><b class="mult">18.5×</b></td>
-              <td class="t-l" data-label="Batched, 8 per call"><b>¥1.08</b> <span class="usd">($0.15)</span> <span class="mid">·</span> <b class="mult">3.3×</b></td>
+              <td class="t-p" data-label="Per paper"><b>$0.86</b></td>
+              <td class="t-v" data-label="vs our $0.047"><b class="mult">18.5×</b></td>
+              <td class="t-l" data-label="Batched, 8 per call"><b>$0.15</b> <span class="mid">·</span> <b class="mult">3.3×</b></td>
               <td class="t-r" aria-hidden="true"><span class="cost-track"><span class="one"></span><span class="rng" style="left:39.9%;width:57.5%"></span></span><span class="cost-ax-m"><span>1× ours</span><span>20×</span></span></td>
             </tr>
           </tbody>
@@ -1099,10 +1099,10 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
       <details class="faq-item cost-basis">
         <summary><h3>What goes into these numbers</h3></summary>
         <ol>
-          <li>¥0.326 is the mean model API cost per paper measured on 19 benchmark papers. It does not include OCR or search.</li>
-          <li>Each paper has about 138 candidate sources. We screen their abstracts with a small, cheap model and send only 3 to full-text comparison. The large-model figures have it read every candidate.</li>
-          <li>The full-text pair cost is measured: ¥0.071–0.091 per pair for the large models ($0.010–0.013), ¥0.035 ($0.005) for ours.</li>
-          <li>Amounts in US dollars use ¥7.0 = $1.</li>
+          <li>$0.047 is the mean model API cost per paper measured on 19 benchmark papers. It does not include OCR or search.</li>
+          <li>The large-model rows run our own pipeline, step for step, with the large model in place of our models. Each paper has about 138 candidate sources. We screen their abstracts with a small, cheap model and send only 3 to full-text comparison. The large-model figures have it read every candidate.</li>
+          <li>The full-text pair cost is measured: $0.010–0.013 per pair for the large models, $0.005 for ours.</li>
+          <li>Costs were paid in CNY and are shown in US dollars at ¥7.0 = $1.</li>
         </ol>
       </details>
     </div>
