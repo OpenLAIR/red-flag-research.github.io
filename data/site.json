@@ -1,5 +1,5 @@
 {
-  "_comment": "repoUrl is the single repository constant; issue templates, CONTRIBUTING.md, MAINTAINERS.md, docs/CORRECTIONS.md and the security policy links are built from it.",
+  "_comment": "repoUrl is the benchmark repository; links to it appear only when repoPublic is true. The site repo, the pipeline and internal repos are never linked. Feedback goes through feedback.html (templated mailto to contactEmail).",
   "productName": "Red-flag Research",
   "subtitle": "Live, open-source screening for automated-research attacks on peer review",
   "question": "Can a language-model pipeline tell when a submission closely matches earlier public work it does not credit?",
@@ -14,6 +14,6 @@
   "repoUrl": "https://github.com/OpenLAIR/red-flag-research",
   "contactEmail": "red.flag.autoresearch@gmail.com",
   "showOptionalPlaceholders": false,
-  "privacyContactUrl": "https://github.com/OpenLAIR/red-flag-research.github.io/issues",
-  "privacyEffective": "2026-10-16"
+  "privacyEffective": "2026-10-16",
+  "repoPublic": false
 }

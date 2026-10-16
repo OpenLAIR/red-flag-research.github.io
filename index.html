@@ -29,6 +29,7 @@
   --ease:cubic-bezier(.22,1,.36,1);
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{scroll-behavior:smooth;scroll-padding-top:80px}
 body{margin:0;background:var(--bg);color:var(--text);font:400 var(--s-body)/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{color:inherit}
@@ -530,8 +531,8 @@ footer{margin-top:160px;background:var(--inset);padding:0 0 48px;overflow:hidden
       </div>
       <div class="correct">
         <span class="ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
-        <p><strong>Think a result is wrong?</strong> <span>If you are an author and believe a result about your paper is wrong, email <code data-bind="contactEmail">red.flag.autoresearch@gmail.com</code>. We will correct it right away, and we take the result off the live page and the public data while we check.</span></p>
-        <div class="actions"><a class="btn btn-ghost" id="mail" href="#about">Email us</a><a class="link" data-href="corrections" href="#">How corrections work →</a></div>
+        <p><strong>Think a result is wrong?</strong> <span>If you are an author and believe a result about your paper is wrong, tell us through the feedback form or at <code data-bind="contactEmail">red.flag.autoresearch@gmail.com</code>. We will correct it right away, and we take the result off the live page and the public data while we check.</span></p>
+        <div class="actions"><a class="btn btn-ghost" href="feedback.html?type=correction">Report a wrong result</a></div>
       </div>
       <div class="opt"><b>Optional · How it works</b><span>A plain-language description of the pipeline steps and its limits.</span></div>
       <div class="opt"><b>Optional · FAQ</b><span>Short answers: is a label an accusation, are authors told, why ICLR 2027, what data is kept.</span></div>
@@ -541,16 +542,23 @@ footer{margin-top:160px;background:var(--inset);padding:0 0 48px;overflow:hidden
   <section class="block" id="code" aria-labelledby="code-h">
     <div class="wrap">
       <div class="sec-head">
-        <div><h2 id="code-h">Open by default</h2></div>
-        <p>The detection code and an anonymized benchmark are released in the project's GitHub repository, not on this site.</p>
+        <div><h2 id="code-h">The benchmark</h2></div>
+        <p>An anonymized benchmark for this task is released on GitHub, not on this site. Cases are anonymized before release.</p>
       </div>
-      <div class="repo">
+      <div class="repo" data-repo="public" hidden>
         <div>
           <span class="path"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg><span data-bind="repoPath">github.com/OpenLAIR/red-flag-research</span></span>
-          <p>Code, the anonymized benchmark with its data card, and the issue tracker.</p>
+          <p>The anonymized benchmark with its data card.</p>
         </div>
         <a class="btn btn-ghost" data-href="repoUrl" href="#">Open on GitHub →</a>
         <div class="clone"><code><b>$</b><span id="clone-cmd">git clone https://github.com/OpenLAIR/red-flag-research</span></code><button class="copy" id="copy" type="button">Copy</button></div>
+      </div>
+      <div class="repo" data-repo="private">
+        <div>
+          <span class="path">The benchmark repository opens soon</span>
+          <p>This section will link to it on GitHub once it is public. Questions about the benchmark can go through the feedback form now.</p>
+        </div>
+        <a class="btn btn-ghost" href="feedback.html?type=benchmark">Ask about the benchmark</a>
       </div>
     </div>
   </section>
@@ -559,31 +567,25 @@ footer{margin-top:160px;background:var(--inset);padding:0 0 48px;overflow:hidden
     <div class="wrap">
       <div class="sec-head">
         <div><h2 id="contribute-h">Help us get it right</h2></div>
-        <p>The whole detection pipeline is open source on GitHub. Bug reports, ideas, data and corrections are all welcome.</p>
+        <p>Corrections, bug reports, benchmark data and ideas all go through one short form. It opens your own email app with a tagged message, so nothing is posted in public.</p>
       </div>
       <div class="contrib">
         <article class="ways-main">
           <div>
             <h3>First: a result about a paper looks wrong</h3>
-            <p>Email <code data-bind="contactEmail">red.flag.autoresearch@gmail.com</code>. You do not need a GitHub account, and the message stays private. We take the result off the live page and the public data while we check, and correct it right away if it is wrong.</p>
-            <p class="sub">If you prefer, you can also file a public wrong-result report.</p>
+            <p>Tell us which paper and what is wrong. You do not need an account, and the message stays private. We take the result off the live page and the public data while we check, and correct it right away if it is wrong.</p>
+            <p class="sub">Or email <code data-bind="contactEmail">red.flag.autoresearch@gmail.com</code> directly.</p>
           </div>
           <div class="actions">
-            <a class="btn btn-primary btn-sm" id="mail2" href="#about">Email us</a>
-            <a class="btn btn-ghost btn-sm" data-href="tplWrong" href="#">Public wrong-result report</a>
-            <a class="link" data-href="corrections" href="#">How corrections work →</a>
+            <a class="btn btn-primary btn-sm" href="feedback.html?type=correction">Report a wrong result</a>
           </div>
         </article>
         <div class="ways">
-          <a class="way" data-href="tplBug" href="#"><h3>Report a bug</h3><p>Something in the pipeline, the live page or this site does not work as described.</p><span>Bug report →</span></a>
-          <a class="way" data-href="tplFeature" href="#"><h3>Suggest a feature</h3><p>An idea for the pipeline, the search, or how results are shown.</p><span>Feature request →</span></a>
-          <a class="way" data-href="tplData" href="#"><h3>Fix a benchmark case</h3><p>A correction to an existing benchmark case, by its case id. Please do not name papers you suspect in a public issue.</p><span>Case correction →</span></a>
-          <a class="way" id="mail3" href="#contribute"><h3>Suggest a new case</h3><p>A possible new case for the benchmark goes by private email to <code data-bind="contactEmail">red.flag.autoresearch@gmail.com</code>, not to a public issue.</p><span>Email us →</span></a>
+          <a class="way" href="feedback.html?type=bug"><h3>Report a bug</h3><p>Something on the live page or this site does not load or work as described.</p><span>Bug report →</span></a>
+          <a class="way" href="feedback.html?type=benchmark"><h3>Benchmark data</h3><p>A case to fix, by its case id, or a possible new case. Please do not name papers you suspect in public.</p><span>Benchmark report →</span></a>
+          <a class="way" href="feedback.html?type=press"><h3>Press or collaboration</h3><p>Interviews, partnerships or compute.</p><span>Get in touch →</span></a>
+          <a class="way" href="feedback.html?type=other"><h3>Something else</h3><p>An idea for the screening, a question, or anything that does not fit above.</p><span>Send a note →</span></a>
         </div>
-      </div>
-      <div class="contrib-foot">
-        Before opening a pull request, read the <a data-href="contributing" href="#">contributing guide</a> and sign off your commits (DCO). Contributed data is released under CC BY 4.0.
-        See also <a data-href="maintainers" href="#">how the project is maintained</a> and the <a data-href="security" href="#">security policy</a>.
       </div>
       <div class="opt"><b>Optional · Stay updated</b><span>An RSS feed of the updates above, or an email list.</span></div>
     </div>
@@ -607,15 +609,16 @@ footer{margin-top:160px;background:var(--inset);padding:0 0 48px;overflow:hidden
           <li><a data-href="liveUrl" href="./live/">Live page</a></li>
           <li><a href="#schedule">Schedule</a></li>
           <li><a href="#updates">Updates</a></li>
-          <li><a data-href="repoUrl" href="#">GitHub repository</a></li>
+          <li data-repo="public" hidden><a data-href="repoUrl" href="#">Benchmark on GitHub</a></li>
           <li><a href="#contribute">Contribute</a></li>
         </ul>
       </div>
       <div>
         <h4>Contact</h4>
         <ul>
-          <li><a href="#about">Report a wrong result</a></li>
-          <li><a data-href="tplBug" href="#">Report a problem with the site</a></li>
+          <li><a href="feedback.html?type=correction">Report a wrong result</a></li>
+          <li><a href="feedback.html?type=bug">Report a problem with the site</a></li>
+          <li><a href="feedback.html">Send feedback</a></li>
           <li><span style="color:var(--text-2)" data-bind="contactEmail">red.flag.autoresearch@gmail.com</span></li>
           <li><a href="privacy.html">Privacy policy</a></li>
         </ul>
@@ -714,15 +717,10 @@ footer{margin-top:160px;background:var(--inset);padding:0 0 48px;overflow:hidden
     wm.setAttribute('aria-label', site.productName);
     wm.innerHTML = wordmarkHTML(site.productName, '<svg class="mark m wave" aria-hidden="true"><use href="#flag"/></svg>');
     $('foot-word').innerHTML = wordmarkHTML(site.productName);
-    // Every repository link is built from the one repoUrl constant in site.json.
+    // The one repository link is built from repoUrl in site.json and shown only once the repository is public.
     const R = site.repoUrl.replace(/\/$/, '');
-    const hrefs = {
-      liveUrl: site.liveUrl, repoUrl: R, orgUrl: site.organization.url,
-      contributing: R + '/blob/main/CONTRIBUTING.md', maintainers: R + '/blob/main/MAINTAINERS.md',
-      corrections: R + '/blob/main/docs/CORRECTIONS.md', security: R + '/security/policy',
-      tplBug: R + '/issues/new?template=1-bug_report.yml', tplFeature: R + '/issues/new?template=2-feature_request.yml',
-      tplWrong: R + '/issues/new?template=3-wrong_result.yml', tplData: R + '/issues/new?template=4-data_contribution.yml',
-    };
+    const hrefs = { liveUrl: site.liveUrl, repoUrl: R, orgUrl: site.organization.url };
+    document.querySelectorAll('[data-repo]').forEach((el) => { el.hidden = (el.dataset.repo === 'public') !== !!site.repoPublic; });
     document.querySelectorAll('[data-href]').forEach((el) => { el.href = hrefs[el.dataset.href]; });
     $('clone-cmd').textContent = 'git clone ' + R;
     $('copy').addEventListener('click', async () => {
@@ -730,9 +728,6 @@ footer{margin-top:160px;background:var(--inset);padding:0 0 48px;overflow:hidden
       catch { $('copy').textContent = 'Select and copy'; }
       setTimeout(() => { $('copy').textContent = 'Copy'; }, 1600);
     });
-    // Mail links open with a subject so requests are easy to sort.
-    const subjects = { mail: 'Result correction', mail2: 'Result correction', mail3: 'New benchmark case' };
-    if (/@/.test(site.contactEmail)) Object.entries(subjects).forEach(([id, subj]) => { $(id).href = 'mailto:' + site.contactEmail + '?subject=' + encodeURIComponent('[Red-flag Research] ' + subj); });
     if (!site.showOptionalPlaceholders || params.get('opt') === '0') document.body.classList.add('no-opt');
     document.title = site.productName + ' · Live screening of ICLR 2027';
   }

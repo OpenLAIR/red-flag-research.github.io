@@ -106,6 +106,7 @@ footer a:hover{color:var(--text)}
       <li><strong>No accounts, cookies or analytics.</strong> The site does not ask who you are.</li>
       <li><strong>A random identifier on the live page.</strong> When the live page loads, your browser stores a random identifier in its local storage. It is sent to our server only with voting requests, so that you can change or retract your vote. Clearing your browser's site data removes it.</li>
       <li><strong>Anonymous votes.</strong> If voting is open and you vote on a paper, our server stores the vote, that random identifier, the time, and a keyed one-way hash of your IP address (for IPv6, of its /64 prefix). The raw IP address is never stored. The hash is used only to limit abuse: how many voters per network per paper, and how many votes per minute. You can retract your vote on the page at any time.</li>
+      <li><strong>Feedback form.</strong> The feedback page has no server behind it. It writes a message in your own email app; we only receive what you choose to send.</li>
       <li><strong>Services that see your request.</strong> Pages are hosted on GitHub Pages, fonts come from Google Fonts, and live data is served through Cloudflare. These providers receive standard request information such as your IP address under their own privacy policies.</li>
     </ul>
 
@@ -113,7 +114,7 @@ footer a:hover{color:var(--text)}
     <p>The screened papers are public ICLR 2027 submissions on OpenReview. Results are produced automatically and are not findings of misconduct; they flag papers whose sources a person should review.</p>
 
     <h2 id="contact">Changes and contact</h2>
-    <p>If this policy changes, the new version and its date are posted on this page. Questions or requests: email <a data-mail href="mailto:red.flag.autoresearch@gmail.com"><span data-bind="contactEmail">red.flag.autoresearch@gmail.com</span></a>, or <a data-href="privacyContactUrl" href="https://github.com/OpenLAIR/red-flag-research.github.io/issues">open an issue on the project's GitHub repository</a>.</p>
+    <p>If this policy changes, the new version and its date are posted on this page. Questions or requests: use the <a href="feedback.html">feedback form</a> or email <a data-mail href="mailto:red.flag.autoresearch@gmail.com"><span data-bind="contactEmail">red.flag.autoresearch@gmail.com</span></a>.</p>
   </main>
 </div>
 
@@ -129,7 +130,7 @@ footer a:hover{color:var(--text)}
 fetch('data/site.json', { cache: 'no-cache' }).then((r) => r.ok ? r.json() : null).then((site) => {
   if (!site) return;
   document.querySelectorAll('[data-bind]').forEach((el) => { const v = site[el.dataset.bind]; if (v != null) el.textContent = v; });
-  const hrefs = { orgUrl: site.organization.url, liveUrl: site.liveUrl, privacyContactUrl: site.privacyContactUrl };
+  const hrefs = { orgUrl: site.organization.url, liveUrl: site.liveUrl,  };
   document.querySelectorAll('[data-href]').forEach((el) => { if (hrefs[el.dataset.href]) el.href = hrefs[el.dataset.href]; });
   if (/@/.test(site.contactEmail || '')) document.querySelectorAll('[data-mail]').forEach((el) => { el.href = 'mailto:' + site.contactEmail; });
   document.title = 'Privacy policy · ' + site.productName;
