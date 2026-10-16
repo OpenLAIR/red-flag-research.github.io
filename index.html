@@ -353,6 +353,14 @@ a{color:inherit}
 .tile-fig span{font-size:var(--s-body);margin-top:10px;color:var(--text-2)}
 .tile-fig em{font-style:normal;font-size:var(--s-sm);margin-top:4px;color:var(--text-2)}
 .tile-fig em span{font-size:inherit;margin:0}
+/* the two figure tiles are links: 43,013 opens the submissions on OpenReview, 9 stages jumps to the schedule */
+a.tile-fig{text-decoration:none;color:inherit;transition:background .2s var(--ease),transform .2s var(--ease)}
+a.tile-fig .go{font-style:normal;display:inline-block;margin-left:4px;transition:transform .2s var(--ease)}
+a.tile-fig:hover .go{transform:translate(2px,-2px)}
+a.t-b:hover .go{transform:translateX(3px)}
+a.t-a:hover{background:var(--cyan-hover)}
+a.t-b:hover{background:var(--panel-2)}
+a.tile-fig:active{transform:scale(.99)}
 .t-a{grid-column:1;grid-row:1/3;min-height:300px;background:var(--cyan);color:var(--cyan-ink)}
 .t-a span,.t-a em{color:#0b3a3e}
 .t-a b{font-size:var(--s-fig-xl)}
@@ -919,12 +927,12 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
         <p class="count-label"><span class="dot" data-live-dot></span><span id="count-label">until Stage 1 starts</span></p>
       </div>
       <div class="tiles">
-        <div class="tile-fig t-a"><b id="f-total">43,013</b><span>ICLR 2027 submissions</span></div>
+        <a class="tile-fig t-a" href="https://openreview.net/group?id=ICLR.cc/2027/Conference" aria-label="43,013 ICLR 2027 submissions, on OpenReview"><b id="f-total">43,013</b><span>ICLR 2027 submissions <i class="go" aria-hidden="true">↗</i></span></a>
         <div class="lede tone-paper">
           <p class="mission" data-bind="mission">Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027. It checks each submission against earlier public papers and flags close matches that lack clear credit, so a person can compare the two side by side. A flag is a lead, not a verdict.</p>
           <p class="intro">Public: benchmark, evaluation tools and saved baseline outputs.</p>
         </div>
-        <div class="tile-fig t-b"><b id="f-stages">9</b><span>public stages</span><em><span id="f-per">5,000</span> papers per stage</em></div>
+        <a class="tile-fig t-b" href="#schedule" aria-label="9 public stages, see the schedule"><b id="f-stages">9</b><span>public stages <i class="go" aria-hidden="true">→</i></span><em><span id="f-per">5,000</span> papers per stage</em></a>
         <div class="tile-fig t-c"><b id="f-lanes">5</b><span>concurrent sessions</span></div>
       </div>
     </div>
