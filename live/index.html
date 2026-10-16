@@ -1687,7 +1687,9 @@ async function boot() {
   try {
     const runs = (await getJSON('/api/runs')).runs || [];
     // ?runs=id,id,… pins the page to those runs (in that order) as a replay, e.g. for a demo of checked, finished papers.
-    const pinned = (new URLSearchParams(location.search).get('runs') || '').split(',').map(x => x.trim()).filter(Boolean);
+    // ?report=<run_id> opens one paper directly: its written report when it has one, otherwise its finished screen.
+    const reportRun = (URL_Q.get('report') || '').trim();
+    const pinned = reportRun ? [reportRun] : (new URLSearchParams(location.search).get('runs') || '').split(',').map(x => x.trim()).filter(Boolean);
     let batch;
     if (pinned.length) {
       const key = runKey(pinned[0]).key;
@@ -1715,7 +1717,12 @@ async function boot() {
     if (MODE === 'replay') { focus = Math.min(focus, S.length - 1); pos[focus] = 0; playing = true; $('play').textContent = 'Pause'; }
     try { PROGRESS = await getJSON('/api/progress'); } catch (err) { console.info('Progress kept from the saved export:', err.message); }
     await refreshTopPairs();  // so the board opens on the backend's list, not the few loaded papers
-    seenSteps = new Set(); setFoot(); render();
+    seenSteps = new Set(); setFoot();
+    if (reportRun && S[0]?.run_id === reportRun) {
+      pos[0] = durOf(S[0]); playing = false; $('play').textContent = 'Replay';
+      const st0 = stateAt(S[0], S[0].started + pos[0]);
+      if (st0.finished && reportButton(S[0], st0)) { await openReport(S[0].session); } else render();
+    } else render();
     scanPairs(runs);
     if (MODE === 'live') {
       // The running papers are on screen; the recently finished ones follow without holding up the first paint.
