@@ -5,6 +5,7 @@
   "mission": "Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027. It checks each submission against earlier public papers and flags close matches that lack clear credit, so a person can compare the two side by side. A flag is a lead, not a verdict.",
   "intro": "Public: benchmark, evaluation tools and saved baseline outputs.",
   "author": "Ziqian Zhang",
+  "authorUrl": "https://leozz04.github.io/",
   "organization": {
     "name": "OpenLAIR",
     "url": "https://openlair.github.io/"

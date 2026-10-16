@@ -57,6 +57,7 @@
    "founder": {
     "@type": "Person",
     "name": "Ziqian Zhang",
+    "url": "https://leozz04.github.io/",
     "affiliation": {
      "@id": "https://openlair.github.io/#org"
     }
@@ -836,7 +837,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
         <span data-bind="productName">Red-flag Research</span>
       </a>
       <span class="sep" aria-hidden="true"></span>
-      <p class="by"><span class="by-org"><span class="by-w">by</span> <a class="org-logo" data-href="orgUrl" href="https://openlair.github.io/" tabindex="-1" aria-hidden="true"><img src="icons/openlair-logo.png" alt="" width="28" height="28"></a><a data-href="orgUrl" href="https://openlair.github.io/" data-bind="orgName">OpenLAIR</a></span><span class="by-dot" aria-hidden="true"> · </span><span data-bind="author">Ziqian Zhang</span></p>
+      <p class="by"><span class="by-org"><span class="by-w">by</span> <a class="org-logo" data-href="orgUrl" href="https://openlair.github.io/" tabindex="-1" aria-hidden="true"><img src="icons/openlair-logo.png" alt="" width="28" height="28"></a><a data-href="orgUrl" href="https://openlair.github.io/" data-bind="orgName">OpenLAIR</a></span><span class="by-dot" aria-hidden="true"> · </span><a data-href="authorUrl" href="https://leozz04.github.io/" target="_blank" rel="noopener" data-bind="author">Ziqian Zhang</a></p>
     </div>
     <nav class="nav" aria-label="Sections">
       <a class="nv wide" href="#schedule">Schedule <b class="cnt" data-n-stages>9</b></a>
@@ -877,7 +878,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
             <a class="btn btn-primary" data-href="liveUrl" href="./live/">Watch live →</a>
             <a class="btn btn-ghost" href="#schedule">See the schedule</a>
           </div>
-          <p class="byline">A research project of <a data-href="orgUrl" href="https://openlair.github.io/" data-bind="orgName">OpenLAIR</a>, by <span data-bind="author">Ziqian Zhang</span>.</p>
+          <p class="byline">A research project of <a data-href="orgUrl" href="https://openlair.github.io/" data-bind="orgName">OpenLAIR</a>, by <a data-href="authorUrl" href="https://leozz04.github.io/" target="_blank" rel="noopener" data-bind="author">Ziqian Zhang</a>.</p>
         </div>
       </div>
       <figure class="page-art">
@@ -1188,7 +1189,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
         <p>Short answers about what the project does, what is public, and how to get a result corrected.</p>
       </div>
       <div class="faq">
-        <details class="faq-item"><summary><h3>What is Red-flag Research?</h3></summary><p>Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027. It was started by Ziqian Zhang at OpenLAIR (Lehigh AI Research Lab) in October 2026.</p></details>
+        <details class="faq-item"><summary><h3>What is Red-flag Research?</h3></summary><p>Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027. It was started by <a href="https://leozz04.github.io/" target="_blank" rel="noopener">Ziqian Zhang</a> at OpenLAIR (Lehigh AI Research Lab) in October 2026.</p></details>
         <details class="faq-item"><summary><h3>What is paper laundering?</h3></summary><p>Paper laundering is rewriting earlier public work into a submission that looks new, without credit to the original. Language models make the rewriting cheap, and text-similarity checkers can miss it because the wording changes while claims, numbers and tables stay close to the original.</p></details>
         <details class="faq-item"><summary><h3>Is Red-flag Research a plagiarism checker?</h3></summary><p>Not in the usual sense. Similarity checkers such as iThenticate look for copied wording. Red-flag Research compares claims, passages, numbers and tables with earlier public papers even after rewording, and it never decides whether anything is plagiarism. A person does.</p></details>
         <details class="faq-item"><summary><h3>What does “Source review recommended” mean?</h3></summary><p>It means the system found passages, numbers or tables that closely match an earlier public paper without a clear attribution, so a person should compare the two papers. It is not a finding of misconduct and has not been reviewed by the conference, the authors or any integrity committee.</p></details>
@@ -1235,7 +1236,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
       <div class="big" aria-hidden="true" id="foot-word"><span class="r">Red</span>-flag <span class="w2">Research</span></div>
       <div class="credit">
         <a class="org-logo lg" data-href="orgUrl" href="https://openlair.github.io/" tabindex="-1" aria-hidden="true"><img src="icons/openlair-logo.png" alt="" width="48" height="48"></a>
-        <p>By <b data-bind="author">Ziqian Zhang</b><br>a research project of <a data-href="orgUrl" href="https://openlair.github.io/" data-bind="orgName">OpenLAIR</a></p>
+        <p>By <b><a data-href="authorUrl" href="https://leozz04.github.io/" target="_blank" rel="noopener" data-bind="author">Ziqian Zhang</a></b><br>a research project of <a data-href="orgUrl" href="https://openlair.github.io/" data-bind="orgName">OpenLAIR</a></p>
       </div>
     </div>
     <div class="foot">
@@ -1358,7 +1359,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
     $('foot-word').innerHTML = wordmarkHTML(site.productName);
     // The one repository link is built from repoUrl in site.json and shown only once the repository is public.
     const R = site.repoUrl.replace(/\/$/, '');
-    const hrefs = { liveUrl: site.liveUrl, repoUrl: R, orgUrl: site.organization.url, issues: R + '/issues/new/choose', contributing: R + '/blob/main/CONTRIBUTING.md', security: R + '/security/policy' };
+    const hrefs = { liveUrl: site.liveUrl, repoUrl: R, orgUrl: site.organization.url, authorUrl: site.authorUrl || 'https://leozz04.github.io/', issues: R + '/issues/new/choose', contributing: R + '/blob/main/CONTRIBUTING.md', security: R + '/security/policy' };
     document.querySelectorAll('[data-repo]').forEach((el) => { el.hidden = (el.dataset.repo === 'public') !== !!site.repoPublic; });
     document.querySelectorAll('[data-href]').forEach((el) => { el.href = hrefs[el.dataset.href]; });
     $('clone-cmd').textContent = 'git clone ' + R;

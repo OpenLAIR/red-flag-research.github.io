@@ -86,6 +86,7 @@ footer{margin-top:88px;padding:0 0 48px}
 .credit{display:flex;align-items:center;gap:12px;text-decoration:none}
 .credit b{display:block;font-weight:500;color:var(--text)}
 .credit small{display:block;font-size:var(--s-body);color:var(--muted)}
+.credit a{text-decoration:none} .credit small a{color:var(--text-2)} .credit a:hover b,.credit small a:hover{color:var(--text)}
 
 @media (max-width:1040px){
   .foot{grid-template-columns:1fr 1fr}
@@ -142,7 +143,7 @@ footer{margin-top:0}
     <div class="lockup">
       <a class="brand" href="/red-flag-research.github.io/" aria-label="Red-flag Research home"><span class="tile"><svg class="mark wave" width="26" height="26" aria-hidden="true"><use href="#flagw"/></svg></span><span data-bind="productName">Red-flag Research</span></a>
       <span class="sep" aria-hidden="true"></span>
-      <p class="by"><span>by</span> <a class="org" data-href="orgUrl" href="https://openlair.github.io/"><span class="otile"><img src="/red-flag-research.github.io/icons/openlair-logo.png" width="24" height="24" alt=""></span><span>OpenLAIR</span></a><span aria-hidden="true">·</span><span data-bind="author">Ziqian Zhang</span></p>
+      <p class="by"><span>by</span> <a class="org" data-href="orgUrl" href="https://openlair.github.io/"><span class="otile"><img src="/red-flag-research.github.io/icons/openlair-logo.png" width="24" height="24" alt=""></span><span>OpenLAIR</span></a><span aria-hidden="true">·</span><a class="org" data-href="authorUrl" href="https://leozz04.github.io/" target="_blank" rel="noopener"><span data-bind="author">Ziqian Zhang</span></a></p>
     </div>
     <nav class="nav" aria-label="Site"><a class="nv" href="/red-flag-research.github.io/"><span aria-hidden="true">←</span><span class="long">Project home</span><span class="short">Home</span></a></nav>
   </div>
@@ -174,7 +175,7 @@ footer{margin-top:0}
       </div>
       <div>
         <p class="fh">A research project of</p>
-        <a class="credit" data-href="orgUrl" href="https://openlair.github.io/"><span class="otile lg"><img src="/red-flag-research.github.io/icons/openlair-logo.png" width="40" height="40" alt=""></span><span><b>OpenLAIR</b><small>By <span data-bind="author">Ziqian Zhang</span></small></span></a>
+        <div class="credit"><a data-href="orgUrl" href="https://openlair.github.io/" tabindex="-1" aria-hidden="true"><span class="otile lg"><img src="/red-flag-research.github.io/icons/openlair-logo.png" width="40" height="40" alt=""></span></a><span><a data-href="orgUrl" href="https://openlair.github.io/"><b>OpenLAIR</b></a><small>By <a data-href="authorUrl" href="https://leozz04.github.io/" target="_blank" rel="noopener" data-bind="author">Ziqian Zhang</a></small></span></div>
       </div>
     </div>
   </div>
