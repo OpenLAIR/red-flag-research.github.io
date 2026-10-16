@@ -6,6 +6,8 @@
 <title>Live · Red-flag Research</title>
 <meta name="description" content="Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027. Live, public screening for automated-research attacks on peer review: watch AI agents screen submissions one target–source pair at a time, with every Jev score and quoted evidence.">
 <meta property="og:site_name" content="Red-flag Research">
+<link rel="canonical" href="https://openlair.github.io/red-flag-research.github.io/live/">
+<meta property="og:url" content="https://openlair.github.io/red-flag-research.github.io/live/">
 <meta property="og:title" content="Live · Red-flag Research">
 <meta property="og:description" content="Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027. Live, public screening for automated-research attacks on peer review.">
 <meta property="og:type" content="website">
@@ -523,11 +525,11 @@ html.soon #flaggedBtn{color:var(--muted)!important;cursor:default;pointer-events
   <a class="fbk" id="feedback" href="../feedback.html?type=bug&amp;from=live" target="_blank" rel="noopener" title="Opens the feedback form with this session filled in"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"/><path d="M8 5.5v2M8 9.2v.1"/></svg>Report a problem</a>
 </header>
 <div class="soonbar" id="soonbar" role="group" aria-label="Stage 1 countdown">
-  <span class="sb-state"><span class="sb-dot" aria-hidden="true"></span><span data-cs-show="pending">Coming soon</span><span data-cs-show="zero">Starting now</span></span>
+  <span class="sb-state"><span class="sb-dot" aria-hidden="true"></span><span data-cs-show="pending">Coming soon</span><span data-cs-show="zero">Opening soon</span></span>
   <div class="sb-digits" role="timer" aria-label="Time until Stage 1 starts">
     <span class="sb-d"><b data-cs="d"><span>-</span><span>-</span></b><i>days</i></span><span class="sb-d"><b data-cs="h"><span>-</span><span>-</span></b><i>hours</i></span><span class="sb-d"><b data-cs="m"><span>-</span><span>-</span></b><i>minutes</i></span><span class="sb-d"><b data-cs="s"><span>-</span><span>-</span></b><i>seconds</i></span>
   </div>
-  <p class="sb-when">Stage 1 <span data-cs-show="pending">starts</span><span data-cs-show="zero">started</span> <time data-cs="when" datetime="2026-10-16T21:00:00-04:00">Fri, Oct 16 · 9:00 PM ET</time></p>
+  <p class="sb-when">Stage 1 <span data-cs-show="pending">starts</span><span data-cs-show="zero">planned for</span> <time data-cs="when" datetime="2026-10-16T21:00:00-04:00">Fri, Oct 16 · 9:00 PM ET</time></p>
   <a class="sb-link" href="../">About the project</a>
 </div>
 <div class="replay">
@@ -570,7 +572,7 @@ html.soon #flaggedBtn{color:var(--muted)!important;cursor:default;pointer-events
       <div class="mycalls"><div class="cells" id="mycalls"></div><div class="lg"><span style="--c:var(--qwen)">Qwen</span><span style="--c:var(--jev)">Jev</span><span style="--c:var(--arxiv)">search</span><span style="--c:var(--ocr)">OCR</span><span style="--c:var(--red)">failed</span><span class="note" id="mycallsTag" style="margin-left:auto"></span></div></div>
     </section>
     <section class="card chart" aria-label="Jev checkpoints">
-      <h3>Jev per claim <span class="tag">P(review recommended) at each checkpoint</span></h3>
+      <h3>Jev per claim <span class="tag">Model score for source review at each checkpoint</span></h3>
       <div id="chart"></div>
     </section>
     <section class="card" aria-label="Activity">
@@ -1162,7 +1164,7 @@ function renderVerdict(s, st) {
   const vbox = $('verdict'), W = Math.max(180, Math.round(vbox.clientWidth - 2 * (parseFloat(getComputedStyle(vbox).paddingLeft) || 16))) || 268, H = 62;  // drawn 1:1 so the checkpoint labels stay 13px
   const X = i => 22 + i * (W - 44) / (ser.length - 1), Y = v => 6 + (1 - v) * (H - 30);
   const pts = ser.map((x, i) => x.p ? [X(i), Y(x.p.YES_SUSPECTED || 0)] : null), on = pts.filter(Boolean);
-  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Jev P(review recommended) for the whole paper at each checkpoint"><line x1="22" x2="${W - 22}" y1="${Y(.5)}" y2="${Y(.5)}" stroke="#2b313a" stroke-dasharray="2 4"/>`;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Jev model score for source review for the whole paper at each checkpoint"><line x1="22" x2="${W - 22}" y1="${Y(.5)}" y2="${Y(.5)}" stroke="#2b313a" stroke-dasharray="2 4"/>`;
   if (on.length > 1) svg += `<polyline fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" points="${on.map(q => q.join(',')).join(' ')}"/>`;
   ser.forEach((x, i) => {
     svg += pts[i] ? `<circle cx="${pts[i][0]}" cy="${pts[i][1]}" r="${i === ser.indexOf(last) ? 4 : 2.6}" fill="${col}"/>` : `<circle cx="${X(i)}" cy="${Y(0)}" r="2" fill="none" stroke="#6b7380"/>`;
@@ -1314,7 +1316,7 @@ function renderChart(s, st) {
   if (!claims.length) { $('chart').innerHTML = '<p class="empty">Waiting for the first Jev checkpoint.</p>'; return; }
   const box = $('chart'), W = Math.max(240, box.clientWidth), H = Math.max(110, Math.round(W * Math.max(80, box.clientHeight - 24) / Math.max(200, box.clientWidth))), L = 42, B = 26, xs = i => L + i * (W - L - 24) / Math.max(1, order.length - 1), ys = v => 8 + (1 - v) * (H - B - 8);
   const colors = ['#57c7cf', '#ece8df', '#b3b9c2', '#6fa3a8', '#8a919c'];
-  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Jev P(review recommended) per claim at each checkpoint">`;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Jev model score for source review per claim at each checkpoint">`;
   [0, .5, 1].forEach(v => svg += `<line x1="${L}" x2="${W - 6}" y1="${ys(v)}" y2="${ys(v)}" stroke="#20252c"/><text x="2" y="${ys(v) + 4.5}" fill="#8a919c" font-size="13" font-family="IBM Plex Sans, sans-serif">${v * 100}%</text>`);
   order.forEach((id, i) => svg += `<text x="${xs(i)}" y="${H - 6}" fill="#8a919c" font-size="13" text-anchor="middle" font-family="IBM Plex Sans, sans-serif">${id === 'jev_final' ? 'final' : id.replace('jev_global_after_', '').replace('candidate_rerank', 'rerank')}</text>`);
   let lastVal = null, lastAt = null;
@@ -1740,7 +1742,7 @@ function soonVerdict() {
   const vbox = $('verdict'), labs = CKPTS.map(c => c[1]);
   const W = Math.max(180, Math.round(vbox.clientWidth - 2 * (parseFloat(getComputedStyle(vbox).paddingLeft) || 16))) || 268, H = 62;
   const X = i => 22 + i * (W - 44) / (labs.length - 1), Y = v => 6 + (1 - v) * (H - 30);
-  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Jev P(review recommended) for the whole paper at each checkpoint, no score yet"><line x1="22" x2="${W - 22}" y1="${Y(.5)}" y2="${Y(.5)}" stroke="#2b313a" stroke-dasharray="2 4"/>`;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Jev model score for source review for the whole paper at each checkpoint, no score yet"><line x1="22" x2="${W - 22}" y1="${Y(.5)}" y2="${Y(.5)}" stroke="#2b313a" stroke-dasharray="2 4"/>`;
   labs.forEach((l, i) => { svg += `<circle cx="${X(i)}" cy="${Y(0)}" r="2" fill="none" stroke="#6b7380"/><text x="${X(i)}" y="${H - 3}" text-anchor="middle" font-size="13" font-family="IBM Plex Sans, sans-serif" fill="#8a919c">${l}</text>`; });
   svg += '</svg>';
   setHTML(vbox, `<div class="vtop"><span class="big">—</span><span class="cap"><b>review</b>Jev, whole paper</span></div>${svg}<div class="vfoot"><span>No score yet</span><span class="res">not started</span></div>`);
@@ -1756,7 +1758,7 @@ function soonChart() {
   const order = SOON_S.stages.filter(x => /^jev_global_|^jev_final$/.test(x.id)).map(x => x.id), box = $('chart');
   const W = Math.max(240, box.clientWidth), H = Math.max(110, Math.round(W * Math.max(80, box.clientHeight - 24) / Math.max(200, box.clientWidth))), L = 42, B = 26;
   const xs = i => L + i * (W - L - 24) / Math.max(1, order.length - 1), ys = v => 8 + (1 - v) * (H - B - 8);
-  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Jev P(review recommended) per claim at each checkpoint, nothing yet">`;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Jev model score for source review per claim at each checkpoint, nothing yet">`;
   [0, .5, 1].forEach(v => svg += `<line x1="${L}" x2="${W - 6}" y1="${ys(v)}" y2="${ys(v)}" stroke="#20252c"/><text x="2" y="${ys(v) + 4.5}" fill="#8a919c" font-size="13" font-family="IBM Plex Sans, sans-serif">${v * 100}%</text>`);
   order.forEach((id, i) => svg += `<text x="${xs(i)}" y="${H - 6}" fill="#8a919c" font-size="13" text-anchor="middle" font-family="IBM Plex Sans, sans-serif">${id === 'jev_final' ? 'final' : id.replace('jev_global_after_', '').replace('candidate_rerank', 'rerank')}</text>`);
   setHTML(box, svg + '</svg>');
@@ -1812,7 +1814,7 @@ const soonNow = () => isNaN(SOON_NOW) ? Date.now() : SOON_NOW + (Date.now() - SO
    options  { now: () => ms          a clock to use instead of Date.now (for testing),
               timeZone: 'America/New_York', zoneLabel: 'ET'   how the start time is shown,
               onZero: () => {}       called once when the countdown reaches zero }
-   At zero the digits show 00, root gets data-cs-state="zero" (the CSS swaps "Coming soon" for "Starting now"). No reload, no redirect.
+   At zero the digits show 00, root gets data-cs-state="zero" (the CSS swaps "Coming soon" for "Opening soon"). No reload, no redirect.
              */
 function csCountdown(root, target, options) {
   var o = options || {};

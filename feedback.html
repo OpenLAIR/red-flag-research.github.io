@@ -154,6 +154,7 @@ textarea{min-height:168px;resize:vertical}
 /* OpenLAIR: show only the round chip mark of the logo (source 200px; mark at x0–98, y51–149), since the lettering is unreadable at tile size */
 .otile{position:relative;overflow:hidden}
 .otile img{position:absolute;left:0;top:-52%;width:204%;height:auto;max-width:none;object-fit:fill}
+.nojs{margin:0;padding:20px 24px;border-radius:var(--r-lg,12px);background:var(--panel,#13161b)}
 </style>
 </head>
 <body>
@@ -181,7 +182,7 @@ textarea{min-height:168px;resize:vertical}
     <div class="note rise" style="--d:160ms"><b>Nothing is sent from this page.</b> The button opens your own email app with the message filled in, addressed to <a data-mail href="mailto:red.flag.autoresearch@gmail.com"><span data-bind="contactEmail">red.flag.autoresearch@gmail.com</span></a>. You can edit it before sending. If no email app opens, copy the message and send it yourself.</div>
   </div>
 
-  <form id="f" class="rise" style="--d:120ms" novalidate>
+  <form id="f" class="rise" style="--d:120ms" novalidate hidden>
     <fieldset>
       <legend>What is it about?</legend>
       <div class="types" id="types">
@@ -211,6 +212,7 @@ textarea{min-height:168px;resize:vertical}
     </div>
     <div class="preview" id="preview" aria-live="polite"></div>
   </form>
+  <noscript><p class="nojs">This form needs JavaScript to write the email for you. You can also write to <a href="mailto:red.flag.autoresearch@gmail.com">red.flag.autoresearch@gmail.com</a> directly.</p></noscript>
 </main>
 
 <footer>
@@ -319,6 +321,8 @@ textarea{min-height:168px;resize:vertical}
   });
 
   $('desc').addEventListener('input', () => { if ($('desc').value.trim().length >= 10) $('descBox').classList.remove('invalid'); });
+  // The form stays hidden until its handlers are attached, so it can never submit itself without script.
+  $('f').hidden = false;
 })();
 </script>
 </body>

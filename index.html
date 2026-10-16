@@ -91,7 +91,7 @@
      "name": "What is paper laundering?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Paper laundering is rewriting earlier public work into a submission that looks new, without credit to the original. Language models make the rewriting cheap, and text-similarity checkers often miss it because the wording changes while claims, numbers and tables stay close to the original."
+      "text": "Paper laundering is rewriting earlier public work into a submission that looks new, without credit to the original. Language models make the rewriting cheap, and text-similarity checkers can miss it because the wording changes while claims, numbers and tables stay close to the original."
      }
     },
     {
@@ -932,7 +932,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
           <p class="mission" data-bind="mission">Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027. It checks each submission against earlier public papers and flags close matches that lack clear credit, so a person can compare the two side by side. A flag is a lead, not a verdict.</p>
           <p class="intro">Public: benchmark, evaluation tools and saved baseline outputs.</p>
         </div>
-        <a class="tile-fig t-b" href="#schedule" aria-label="9 public stages, see the schedule"><b id="f-stages">9</b><span>public stages <i class="go" aria-hidden="true">→</i></span><em><span id="f-per">5,000</span> papers per stage</em></a>
+        <a class="tile-fig t-b" href="#schedule" aria-label="9 public stages, see the schedule"><b id="f-stages">9</b><span>public stages <i class="go" aria-hidden="true">→</i></span><em>up to <span id="f-per">5,000</span> papers per stage</em></a>
         <div class="tile-fig t-c"><b id="f-lanes">5</b><span>concurrent sessions</span></div>
       </div>
     </div>
@@ -1096,7 +1096,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
       </div>
       <div class="faq">
         <details class="faq-item"><summary><h3>What is Red-flag Research?</h3></summary><p>Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027. It was started by Ziqian Zhang at OpenLAIR (Lehigh AI Research Lab) in October 2026.</p></details>
-        <details class="faq-item"><summary><h3>What is paper laundering?</h3></summary><p>Paper laundering is rewriting earlier public work into a submission that looks new, without credit to the original. Language models make the rewriting cheap, and text-similarity checkers often miss it because the wording changes while claims, numbers and tables stay close to the original.</p></details>
+        <details class="faq-item"><summary><h3>What is paper laundering?</h3></summary><p>Paper laundering is rewriting earlier public work into a submission that looks new, without credit to the original. Language models make the rewriting cheap, and text-similarity checkers can miss it because the wording changes while claims, numbers and tables stay close to the original.</p></details>
         <details class="faq-item"><summary><h3>Is Red-flag Research a plagiarism checker?</h3></summary><p>Not in the usual sense. Similarity checkers such as iThenticate look for copied wording. Red-flag Research compares claims, passages, numbers and tables with earlier public papers even after rewording, and it never decides whether anything is plagiarism. A person does.</p></details>
         <details class="faq-item"><summary><h3>What does “Source review recommended” mean?</h3></summary><p>It means the system found passages, numbers or tables that closely match an earlier public paper without a clear attribution, so a person should compare the two papers. It is not a finding of misconduct and has not been reviewed by the conference, the authors or any integrity committee.</p></details>
         <details class="faq-item"><summary><h3>Which papers does it screen, and when?</h3></summary><p>The first application screens all 43,013 ICLR 2027 submissions in nine public stages of up to 5,000 papers. Stage 1 starts on October 16, 2026 at 9 PM US Eastern, and the run aims to finish before ICLR 2027 decisions on December 16, 2026.</p></details>
@@ -1120,13 +1120,6 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
         </div>
         <a class="btn btn-ghost" data-href="repoUrl" href="#">Open on GitHub →</a>
         <div class="clone"><code><b>$</b><span id="clone-cmd">git clone https://github.com/OpenLAIR/red-flag-research</span></code><button class="copy" id="copy" type="button">Copy</button></div>
-      </div>
-      <div class="repo" data-repo="private">
-        <div>
-          <span class="path">The benchmark repository opens soon</span>
-          <p>This section will link to it on GitHub once it is public. Questions about the benchmark can go through the feedback form now.</p>
-        </div>
-        <a class="btn btn-ghost" href="feedback.html?type=benchmark">Ask about the benchmark</a>
       </div>
       <div class="repo repo-hf">
         <div>
