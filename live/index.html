@@ -683,11 +683,14 @@ function prep(s) {
   // The saved title-screen overlay only applies to the run whose saved label it was computed from.
   const overlay = (D.history.screen?.by_paper || {})[s.paper_id] || null;
   s.screen = overlay && (!s.screening || overlay.label_before === s.screening) ? overlay : null;
-  const runtimePre = (s.preprints || []).map(p => ({id: p.id, title: p.title, url: p.url, provider: (p.id || '').split('-')[0], date: null, p: null, similarity: p.similarity}));
-  const pre = new Set([...runtimePre.map(p => p.id), ...(s.screen?.matches || []).map(m => m.candidate_id)]);
-  s.archived = [...runtimePre, ...s.candidates.filter(c => pre.has(c.id) && !runtimePre.some(r => r.id === c.id))];
-  s.retained = s.candidates.filter(c => !pre.has(c.id));
-  s.candById = Object.fromEntries([...s.candidates, ...runtimePre].map(c => [c.id, c]));
+  // Double-blind review: the paper's own preprint would name its authors, so only the count is kept. Its title, link and id are never shown.
+  const preIds = new Set([...(s.preprints || []).map(p => p.id), ...(s.screen?.matches || []).map(m => m.candidate_id)].filter(Boolean));
+  const nPre = Math.max((s.preprints || []).length, (s.screen?.matches || []).length);
+  s.candidates = s.candidates.filter(c => !preIds.has(c.id));
+  s.archived = Array.from({length: nPre}, () => ({}));
+  s.retained = s.candidates;
+  s.candById = Object.fromEntries(s.candidates.map(c => [c.id, c]));
+  s.preprints = [];
   s.label = s.screening ? (s.screen?.label_after || s.screening) : null;
   s.totalTokens = s.calls.reduce((a, c) => a + (['qwen', 'jev'].includes(c.provider) ? c.tokens : 0), 0) || 1;
   s.ocrCalls = s.calls.filter(c => c.provider === 'ocr').length || 1;
@@ -765,7 +768,7 @@ function buildSteps(s) {
     steps.push({t: e.t, actor, title, quote, stage: e.stage, round: passTxt, partial});
     if (e.stage === 'autonomous_search' && s.archived.length) steps.push({t: e.t + 0.001, actor: 'preprint', stage: 'title_screen',
       title: `Title screen: ${s.archived.length} candidate archived as PREPRINT`, round: 'applied after this run',
-      quote: s.archived.map(c => `“${c.title}” · ${c.id}`).join('  |  ') + ` · similarity ≥ ${D.history.screen.threshold}; not reviewed further`});
+      quote: `same title as the submission (similarity ≥ ${D.history.screen?.threshold ?? 0.9}); not reviewed further`});
   }
   for (const c of callsBad) steps.push({t: c.t1, actor: 'bad', title: `A ${c.provider} request ended as ${c.status}`, quote: `${c.name}${c.http ? ' · HTTP ' + c.http : ''}`});
   steps.sort((a, b) => a.t - b.t);
