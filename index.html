@@ -122,7 +122,7 @@
      "name": "What is publicly available?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "The benchmark (20 anonymized ICLR 2027 cases with human labels), the evaluation tools and the saved baseline outputs are open at github.com/OpenLAIR/red-flag-research. The detection pipeline code is not released yet."
+      "text": "The benchmark (20 anonymized ICLR 2027 cases with human labels), the evaluation tools and the saved baseline outputs are open at github.com/OpenLAIR/red-flag-research and on Hugging Face (red-flag-research/iclr2027-source-review-benchmark). The detection pipeline code is not released yet."
      }
     },
     {
@@ -148,7 +148,10 @@
    "name": "Red-flag Research benchmark (ICLR 2027 diagnostic set)",
    "description": "An anonymized diagnostic set of 20 ICLR 2027 submissions with 34 target–source pairs, evidence locations and a human label for every case, for testing systems that check whether a paper's content matches earlier public work without clear attribution. Evaluation tools need only the Python standard library. Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027.",
    "url": "https://github.com/OpenLAIR/red-flag-research",
-   "sameAs": "https://github.com/OpenLAIR/red-flag-research",
+   "sameAs": [
+    "https://github.com/OpenLAIR/red-flag-research",
+    "https://huggingface.co/datasets/red-flag-research/iclr2027-source-review-benchmark"
+   ],
    "creator": {
     "@id": "https://openlair.github.io/#org"
    },
@@ -166,6 +169,11 @@
      "@type": "DataDownload",
      "encodingFormat": "application/zip",
      "contentUrl": "https://github.com/OpenLAIR/red-flag-research/archive/refs/heads/main.zip"
+    },
+    {
+     "@type": "DataDownload",
+     "encodingFormat": "text/html",
+     "contentUrl": "https://huggingface.co/datasets/red-flag-research/iclr2027-source-review-benchmark"
     }
    ],
    "isPartOf": {
@@ -378,6 +386,7 @@ h2{font:500 var(--s-h2)/1.02 var(--serif);letter-spacing:-.03em;margin:0;text-wr
 
 /* code */
 .repo{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center;background:var(--panel);border-radius:var(--r-lg);padding:32px}
+.repo-hf{margin-top:12px}
 .repo .path{display:flex;align-items:center;gap:10px;font:500 var(--s-lead)/1.3 var(--sans);color:var(--text);margin-bottom:6px}
 .repo p{margin:0;color:var(--text-2);max-width:64ch}
 .clone{grid-column:1/-1;display:flex;align-items:center;gap:12px;background:var(--inset);border-radius:var(--r-md);padding:12px 12px 12px 18px;overflow:hidden}
@@ -721,7 +730,7 @@ footer{margin-top:160px;background:var(--inset);padding:0 0 48px;overflow:hidden
         <details class="faq-item"><summary><h3>Is Red-flag Research a plagiarism checker?</h3></summary><p>Not in the usual sense. Similarity checkers such as iThenticate look for copied wording. Red-flag Research compares claims, passages, numbers and tables with earlier public papers even after rewording, and it never decides whether anything is plagiarism. A person does.</p></details>
         <details class="faq-item"><summary><h3>What does “Source review recommended” mean?</h3></summary><p>It means the system found passages, numbers or tables that closely match an earlier public paper without a clear attribution, so a person should compare the two papers. It is not a finding of misconduct and has not been reviewed by the conference, the authors or any integrity committee.</p></details>
         <details class="faq-item"><summary><h3>Which papers does it screen, and when?</h3></summary><p>The first application screens all 43,013 ICLR 2027 submissions in nine public stages of up to 5,000 papers. Stage 1 starts on October 16, 2026 at 9 PM US Eastern, and the run aims to finish before ICLR 2027 decisions on December 16, 2026.</p></details>
-        <details class="faq-item"><summary><h3>What is publicly available?</h3></summary><p>The benchmark (20 anonymized ICLR 2027 cases with human labels), the evaluation tools and the saved baseline outputs are open at github.com/OpenLAIR/red-flag-research. The detection pipeline code is not released yet.</p></details>
+        <details class="faq-item"><summary><h3>What is publicly available?</h3></summary><p>The benchmark (20 anonymized ICLR 2027 cases with human labels), the evaluation tools and the saved baseline outputs are open at github.com/OpenLAIR/red-flag-research and on Hugging Face (red-flag-research/iclr2027-source-review-benchmark). The detection pipeline code is not released yet.</p></details>
         <details class="faq-item"><summary><h3>Is Red-flag Research affiliated with ICLR?</h3></summary><p>No. It is an independent research project from OpenLAIR. It uses submission metadata that is public on OpenReview and does not host papers.</p></details>
         <details class="faq-item"><summary><h3>How do I get a result corrected?</h3></summary><p>Use the feedback form on the site or e-mail red.flag.autoresearch@gmail.com. The result comes off the live page and the public data while we check, and we correct it right away if it is wrong.</p></details>
       </div>
@@ -732,7 +741,7 @@ footer{margin-top:160px;background:var(--inset);padding:0 0 48px;overflow:hidden
     <div class="wrap">
       <div class="sec-head">
         <div><h2 id="code-h">The benchmark</h2></div>
-        <p>An anonymized benchmark for this task is released on GitHub, not on this site. Cases are anonymized before release.</p>
+        <p>An anonymized benchmark for this task is released on GitHub and as a Hugging Face dataset, not on this site. Cases are anonymized before release.</p>
       </div>
       <div class="repo" data-repo="public" hidden>
         <div>
@@ -748,6 +757,13 @@ footer{margin-top:160px;background:var(--inset);padding:0 0 48px;overflow:hidden
           <p>This section will link to it on GitHub once it is public. Questions about the benchmark can go through the feedback form now.</p>
         </div>
         <a class="btn btn-ghost" href="feedback.html?type=benchmark">Ask about the benchmark</a>
+      </div>
+      <div class="repo repo-hf">
+        <div>
+          <span class="path">huggingface.co/datasets/red-flag-research/iclr2027-source-review-benchmark</span>
+          <p>The same benchmark as a Hugging Face dataset, CC BY 4.0.</p>
+        </div>
+        <a class="btn btn-ghost" href="https://huggingface.co/datasets/red-flag-research/iclr2027-source-review-benchmark">Open on Hugging Face →</a>
       </div>
     </div>
   </section>
