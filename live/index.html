@@ -1224,7 +1224,7 @@ setFoot();
 
 const API = (new URLSearchParams(location.search).get('api') || D.api_base || 'https://spec-integrity-unified-valium.trycloudflare.com').replace(/\/+$/, '');
 const enc = encodeURIComponent, TERMINAL = new Set(['completed', 'failed', 'stopped', 'cancelled', 'canceled', 'delivered', 'error', 'aborted']);
-async function getJSON(path, ms = 10000) {
+async function getJSON(path, ms = 30000) {  // the quick tunnel takes up to ~9 s per request when several run at once
   const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), ms);
   try { const r = await fetch(API + path, {cache: 'no-store', signal: ctl.signal}); if (!r.ok) throw new Error(path + ' ' + r.status); return await r.json(); }
   finally { clearTimeout(timer); }
