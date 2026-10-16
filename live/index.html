@@ -807,7 +807,7 @@ function render() {
   $('elapsed').textContent = fmtDur(pos[focus]) + ' / ' + fmtDur(dur);
   $('scrub').value = Math.round(pos[focus] / dur * 1000);
   const liveN = S.filter(x => x.finished == null).length;
-  $('replayLabel').textContent = MODE === 'live' ? `Batch ${BATCH} · ${liveN} of ${S.length} sessions running · showing session #${s.rank}${userPickedAt ? '' : ' (most active)'}`
+  $('replayLabel').textContent = MODE === 'live' ? `${BATCH === 'iclr27-live' ? 'Stage 1' : 'Batch ' + BATCH} · ${liveN} of ${S.length} sessions running · showing session #${s.rank}${userPickedAt ? '' : ' (most active)'}`
     : `Session #${s.rank} · ${s.session}`;
   document.body.classList.toggle('live', MODE === 'live');
   document.body.classList.toggle('extra', MODE === 'live' && !!s.extra);
@@ -1406,7 +1406,9 @@ function notePairs(x) {
 // Preferred source: the backend keeps the 10 most suspicious pairs of the batch and updates them as papers finish
 // (GET /api/top-pairs). Until that answers, the page builds the same list from the runs it has read itself.
 let TOP_PAIRS = null, topPairsAt = 0, topScanned = 0;
-const batchPrefix = () => (S[0]?.run_id || '').replace(/-s\d+-[A-Za-z0-9_-]+$|-r\d+$/, '-');
+// The public list holds only the current stage's runs (live and kept rehearsal runs), so ask for the whole public set;
+// other run-id families (saved batches) keep their own prefix.
+const batchPrefix = () => BATCH === 'iclr27-live' ? 'public-demo-' : (S[0]?.run_id || '').replace(/-s\d+-[A-Za-z0-9_-]+$|-r\d+$/, '-');
 async function refreshTopPairs() {
   if (!etBoard() || Date.now() - topPairsAt < 30000) return;
   topPairsAt = Date.now();
@@ -1613,7 +1615,12 @@ function settle(x) {
   x.screening = done ? (x.result?.screening || x.final?.status || null) : null;
 }
 // Run ids: public-demo-<batch>-r<rank> (saved batches) or public-demo-<batch>-s<rank>-<id> (scheduler lanes, e.g. the rehearsal).
+// Stage 1 = the rehearsal runs kept as results plus the live runs: one batch on the page (D backend, 2026-10-16).
+const BATCH_ALIAS = {'rehearsal-100': 'iclr27-live'};
 function runKey(id) {
+  const k = runKey0(id); k.key = BATCH_ALIAS[k.key] || k.key; return k;
+}
+function runKey0(id) {
   const m = id.match(/^public-demo-(.+)-r(\d+)$/) || id.match(/^public-demo-(.+?)-s(\d+)-[A-Za-z0-9_-]+$/);
   if (m) return {key: m[1], rank: +m[2], lane: /-s\d+-/.test(id) && !/-r\d+$/.test(id)};
   // Other scheduler ids that end in the OpenReview id (…-<paper id>[-aN]) form one batch per prefix.
