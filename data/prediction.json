@@ -12,6 +12,7 @@
   "poll": {
     "id": "red-flags-final",
     "path": "/api/poll",
+    "historyPath": "/api/poll/history",
     "enabled": true,
     "question": "How many submissions will end with a red flag?",
     "choices": [

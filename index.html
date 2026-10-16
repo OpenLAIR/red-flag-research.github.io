@@ -146,8 +146,9 @@
   },
   {
    "@type": "Dataset",
-   "name": "Red-flag Research benchmark (ICLR 2027 diagnostic set)",
-   "description": "An anonymized diagnostic set of 20 ICLR 2027 submissions with 34 target–source pairs, evidence locations and a human label for every case, for testing systems that check whether a paper's content matches earlier public work without clear attribution. Evaluation tools need only the Python standard library. Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027.",
+   "name": "Red-flag Research Source-Review Benchmark (ICLR 2027 diagnostic set)",
+   "version": "0.3.0",
+   "description": "A diagnostic set of 20 anonymized ICLR 2027 target papers with 34 target–source pairs, a human label for every target (16 No source finding, 2 Same paper (preprint), 2 Source review recommended), evidence locations, evaluation tools and saved baseline outputs, for testing systems that check whether a paper's content matches earlier public work without clear attribution. Limitations: one annotator, two positives, and model-influenced selection; it does not measure how common source reuse is. Version 0.3.0 (commit 4803daa). From Red-flag Research, a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027.",
    "url": "https://github.com/OpenLAIR/red-flag-research",
    "sameAs": [
     "https://github.com/OpenLAIR/red-flag-research",
@@ -282,6 +283,7 @@ a{color:inherit}
 .nv{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 12px;border-radius:var(--r-chip);background:var(--panel-2);color:var(--text);font:500 var(--s-sm)/1 var(--sans);text-decoration:none;white-space:nowrap;cursor:pointer;list-style:none;transition:background-color var(--t-hover) ease,transform var(--t-press) var(--ease-out)}
 .nv::-webkit-details-marker{display:none}
 .nv:hover{background:var(--step)}
+.nv[aria-current="true"]{background:var(--step)}
 .nv:active{transform:scale(.97)}
 .cnt{display:inline-block;min-width:22px;padding:3px 6px;border-radius:6px;background:var(--bg);color:var(--text);font:600 var(--s-sm)/1.1 var(--sans);text-align:center;font-variant-numeric:tabular-nums}
 .nv.status{background:var(--teal);color:var(--teal-t)}
@@ -355,6 +357,7 @@ a{color:inherit}
 .tile-fig em span{font-size:inherit;margin:0}
 /* the two figure tiles are links: 43,013 opens the submissions on OpenReview, 9 stages jumps to the schedule */
 a.tile-fig{text-decoration:none;color:inherit;transition:background .2s var(--ease),transform .2s var(--ease)}
+a.t-a{color:var(--cyan-ink)}
 a.tile-fig .go{font-style:normal;display:inline-block;margin-left:4px;transition:transform .2s var(--ease)}
 a.tile-fig:hover .go{transform:translate(2px,-2px)}
 a.t-b:hover .go{transform:translateX(3px)}
@@ -501,6 +504,13 @@ h2{font:600 var(--s-h2)/1.02 var(--sans);letter-spacing:-.035em;margin:0;text-wr
 /* code */
 .repo{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center;background:var(--card);border-radius:var(--r-lg);padding:28px 32px}
 .repo-hf{margin-top:12px}
+/* benchmark facts: one neutral panel, four short definitions (facts checked against the public v0.3.0 files) */
+.bfacts{margin-top:12px;background:var(--panel);border-radius:var(--r-lg);padding:28px 32px}
+.bfacts h3{font:500 var(--s-h3)/1.2 var(--serif);letter-spacing:-.015em;margin:0 0 18px}
+.bfacts dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 32px;margin:0}
+.bfacts dt{font-weight:500;color:var(--text);margin:0 0 4px}
+.bfacts dd{margin:0;color:var(--text-2)}
+@media (max-width:720px){.bfacts{padding:22px 20px}.bfacts dl{grid-template-columns:1fr}}
 .repo .path{display:flex;align-items:center;gap:10px;font:600 var(--s-lead)/1.3 var(--sans);color:var(--text);margin-bottom:6px}
 .repo p{margin:0;color:var(--text-2);max-width:64ch}
 .clone{grid-column:1/-1;display:flex;align-items:center;gap:12px;background:var(--inset-s);border-radius:var(--r-md);padding:12px 12px 12px 18px;overflow:hidden}
@@ -594,6 +604,28 @@ code{font:var(--s-sm)/1.4 var(--code);color:var(--text)}
 .poll .choice[aria-pressed="true"] .bar i{background:var(--paper-acc)}
 .poll .choice:focus-visible{outline:2px solid var(--paper-acc);outline-offset:2px}
 .poll-status button{background:none;border:0;padding:0;font:inherit;color:var(--acc);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+/* reveal after voting: until you pick (or the poll closes) a row is just its range; shares, bars and the "same as you" line appear after */
+.choice.noshare{grid-template-columns:minmax(0,1fr)}
+.poll-same{margin:14px 0 0;font:500 var(--s-lead)/1.3 var(--serif);color:var(--acc)}
+.poll-same:empty{display:none}
+.poll-result{grid-column:1/-1;margin-top:8px}
+.poll-result .k{font-size:var(--s-sm);color:var(--acc);font-weight:500;margin:0 0 6px}
+
+/* prediction charts: inline SVG painted at the width of its box, so 13px type stays 13px on a phone */
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:12px;margin-top:12px}
+.ccard{margin:0;min-width:0;background:var(--card);border-radius:var(--r-lg);padding:26px 32px}
+.ccard .k{font-size:var(--s-sm);color:var(--text-2);margin:0 0 12px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font:400 13px/1 var(--sans);fill:var(--muted)}
+.chart .tnum{font-variant-numeric:tabular-nums}
+.ckey{display:flex;flex-wrap:wrap;gap:6px 18px;margin:14px 0 0;font-size:var(--s-sm);color:var(--text-2)}
+.ckey span{display:inline-flex;align-items:center;gap:8px}
+.ckey i{display:block;width:14px;height:8px;border-radius:2px;flex:none}
+.ckey i.ln{height:3px;border-radius:2px}
+.cnote{margin:12px 0 0;font-size:var(--s-sm);color:var(--muted);max-width:62ch}
+.lane{margin:0 0 6px}
+.lane p{margin:0 0 2px;font-size:var(--s-sm);color:var(--text-2)}
+.lane p b{font-weight:500;color:var(--text)}
 
 /* roadmap */
 .road{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start}
@@ -761,7 +793,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
   .stat{min-width:0}
   .steps{font-size:var(--s-body)}
   .window-body{padding:12px}
-  .panel,.repo,.ways-main,.define article,.pcard,.road .col,.poll{padding:20px}
+  .panel,.repo,.ways-main,.define article,.pcard,.ccard,.road .col,.poll{padding:20px}
   .faq-item summary{padding:18px 20px}
   .faq-item p{padding:0 20px 20px}
   .road{grid-template-columns:1fr}
@@ -807,20 +839,18 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
       <p class="by"><span class="by-org"><span class="by-w">by</span> <a class="org-logo" data-href="orgUrl" href="https://openlair.github.io/" tabindex="-1" aria-hidden="true"><img src="icons/openlair-logo.png" alt="" width="28" height="28"></a><a data-href="orgUrl" href="https://openlair.github.io/" data-bind="orgName">OpenLAIR</a></span><span class="by-dot" aria-hidden="true"> · </span><span data-bind="author">Ziqian Zhang</span></p>
     </div>
     <nav class="nav" aria-label="Sections">
-      <a class="nv wide" href="#redflag">Red flags</a>
       <a class="nv wide" href="#schedule">Schedule <b class="cnt" data-n-stages>9</b></a>
       <a class="nv wide" href="#prediction">Prediction</a>
       <a class="nv status" href="#live" id="nav-status"><span class="dot" data-live-dot></span><span class="st"><span class="st-name">Live</span><span class="st-l" id="st-l">Screening status</span><span class="st-t" id="st-t"></span></span></a>
-      <a class="nv wide" href="#about">About</a>
+      <a class="nv wide" href="#code">Benchmark</a>
       <a class="nv wide" href="#roadmap">Roadmap</a>
       <a class="nv wide" href="#contribute">Contribute</a>
       <details class="menu" id="menu">
         <summary class="nv" aria-label="Menu"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 5h12M3 9h12M3 13h12"/></svg><span class="m-txt">Menu</span></summary>
         <div class="menu-pop">
-          <a class="nv" href="#redflag">Red flags</a>
           <a class="nv" href="#schedule">Schedule <b class="cnt" data-n-stages>9</b></a>
           <a class="nv" href="#prediction">Prediction</a>
-          <a class="nv" href="#about">About</a>
+          <a class="nv" href="#code">Benchmark</a>
           <a class="nv" href="#roadmap">Roadmap</a>
           <a class="nv" href="#contribute">Contribute</a>
         </div>
@@ -982,7 +1012,13 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
         </div>
         <div>
           <div class="poll-choices" id="poll-choices" role="group" aria-label="Prediction ranges"></div>
+          <p class="poll-same" id="poll-same" aria-live="polite"></p>
           <p class="poll-status" id="poll-status" role="status"></p>
+        </div>
+        <div class="poll-result chart" id="c-res" hidden>
+          <p class="k">After the close</p>
+          <div id="c-res-svg"></div>
+          <p class="cnote" id="c-res-note"></p>
         </div>
       </div>
       <div class="predict">
@@ -1001,6 +1037,20 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
           <p class="prange" id="p-live-note"></p>
           <p class="pmethod">Counted from the public live data, starting when Stage 1 starts. A flag can change after human review or a correction, so the count can go down as well as up.</p>
         </div>
+      </div>
+      <div class="charts" id="charts" hidden>
+        <figure class="ccard chart" id="c-vs" hidden>
+          <p class="k">Running count and the crowd</p>
+          <div id="c-vs-svg"></div>
+          <div class="ckey" id="c-vs-key"></div>
+          <p class="cnote" id="c-vs-note"></p>
+        </figure>
+        <figure class="ccard chart" id="c-hist" hidden>
+          <p class="k">How predictions changed</p>
+          <div id="c-hist-svg"></div>
+          <div class="ckey" id="c-hist-key"></div>
+          <p class="cnote" id="c-hist-note"></p>
+        </figure>
       </div>
     </div>
   </section>
@@ -1088,25 +1138,6 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
     </div>
   </section>
 
-  <section class="block field" id="faq" aria-labelledby="faq-h">
-    <div class="wrap">
-      <div class="sec-head">
-        <div><h2 id="faq-h">Questions</h2></div>
-        <p>Short answers about what the project does, what is public, and how to get a result corrected.</p>
-      </div>
-      <div class="faq">
-        <details class="faq-item"><summary><h3>What is Red-flag Research?</h3></summary><p>Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027. It was started by Ziqian Zhang at OpenLAIR (Lehigh AI Research Lab) in October 2026.</p></details>
-        <details class="faq-item"><summary><h3>What is paper laundering?</h3></summary><p>Paper laundering is rewriting earlier public work into a submission that looks new, without credit to the original. Language models make the rewriting cheap, and text-similarity checkers can miss it because the wording changes while claims, numbers and tables stay close to the original.</p></details>
-        <details class="faq-item"><summary><h3>Is Red-flag Research a plagiarism checker?</h3></summary><p>Not in the usual sense. Similarity checkers such as iThenticate look for copied wording. Red-flag Research compares claims, passages, numbers and tables with earlier public papers even after rewording, and it never decides whether anything is plagiarism. A person does.</p></details>
-        <details class="faq-item"><summary><h3>What does “Source review recommended” mean?</h3></summary><p>It means the system found passages, numbers or tables that closely match an earlier public paper without a clear attribution, so a person should compare the two papers. It is not a finding of misconduct and has not been reviewed by the conference, the authors or any integrity committee.</p></details>
-        <details class="faq-item"><summary><h3>Which papers does it screen, and when?</h3></summary><p>The first application screens all 43,013 ICLR 2027 submissions in nine public stages of up to 5,000 papers. Stage 1 starts on October 16, 2026 at 9 PM US Eastern, and the run aims to finish before ICLR 2027 decisions on December 16, 2026.</p></details>
-        <details class="faq-item"><summary><h3>What is publicly available?</h3></summary><p>The benchmark (20 anonymized ICLR 2027 cases with human labels), the evaluation tools and the saved baseline outputs are public at github.com/OpenLAIR/red-flag-research and on Hugging Face (red-flag-research/iclr2027-source-review-benchmark).</p></details>
-        <details class="faq-item"><summary><h3>Is Red-flag Research affiliated with ICLR?</h3></summary><p>No. It is an independent research project from OpenLAIR. It uses submission metadata that is public on OpenReview and does not host papers.</p></details>
-        <details class="faq-item"><summary><h3>How do I get a result corrected?</h3></summary><p>Use the feedback form on the site or e-mail red.flag.autoresearch@gmail.com. The result comes off the live page and the public data while we check, and we correct it right away if it is wrong.</p></details>
-      </div>
-    </div>
-  </section>
-
   <section class="block field" id="code" aria-labelledby="code-h">
     <div class="wrap">
       <div class="sec-head stack">
@@ -1128,6 +1159,15 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
         </div>
         <a class="btn btn-ghost" href="https://huggingface.co/datasets/red-flag-research/iclr2027-source-review-benchmark">Open on Hugging Face →</a>
       </div>
+      <div class="bfacts" id="benchmark-facts" aria-labelledby="benchmark-facts-title">
+        <h3 id="benchmark-facts-title">Red-flag Research Source-Review Benchmark (ICLR 2027 diagnostic set)</h3>
+        <dl>
+          <div><dt>What is in it</dt><dd>20 anonymized ICLR 2027 target papers, 34 target–source pairs, a human label for every target, evidence locations, evaluation tools and saved baseline outputs.</dd></div>
+          <div><dt>Labels</dt><dd>16 No source finding, 2 Same paper (preprint), 2 Source review recommended. Labels apply to target papers, not to each pair, and these cases are separate from the 43,013-submission public screening.</dd></div>
+          <div><dt>Limitations</dt><dd>One annotator, two positives, and model-influenced selection. The set does not measure how common source reuse is or how accurate a detector is in general.</dd></div>
+          <div><dt>Version and licenses</dt><dd>Version 0.3.0 (commit 4803daa). Annotations and labels CC BY 4.0; evaluation tools Apache-2.0; source papers keep their own licenses. Labels are leads for human review, not verdicts.</dd></div>
+        </dl>
+      </div>
     </div>
   </section>
 
@@ -1138,6 +1178,25 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
         <p>Features we plan to add to make the screening more useful and easier to check. Plans can change; this list is updated as they do.</p>
       </div>
       <div class="road" id="road"></div>
+    </div>
+  </section>
+
+  <section class="block field" id="faq" aria-labelledby="faq-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><h2 id="faq-h">Questions</h2></div>
+        <p>Short answers about what the project does, what is public, and how to get a result corrected.</p>
+      </div>
+      <div class="faq">
+        <details class="faq-item"><summary><h3>What is Red-flag Research?</h3></summary><p>Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027. It was started by Ziqian Zhang at OpenLAIR (Lehigh AI Research Lab) in October 2026.</p></details>
+        <details class="faq-item"><summary><h3>What is paper laundering?</h3></summary><p>Paper laundering is rewriting earlier public work into a submission that looks new, without credit to the original. Language models make the rewriting cheap, and text-similarity checkers can miss it because the wording changes while claims, numbers and tables stay close to the original.</p></details>
+        <details class="faq-item"><summary><h3>Is Red-flag Research a plagiarism checker?</h3></summary><p>Not in the usual sense. Similarity checkers such as iThenticate look for copied wording. Red-flag Research compares claims, passages, numbers and tables with earlier public papers even after rewording, and it never decides whether anything is plagiarism. A person does.</p></details>
+        <details class="faq-item"><summary><h3>What does “Source review recommended” mean?</h3></summary><p>It means the system found passages, numbers or tables that closely match an earlier public paper without a clear attribution, so a person should compare the two papers. It is not a finding of misconduct and has not been reviewed by the conference, the authors or any integrity committee.</p></details>
+        <details class="faq-item"><summary><h3>Which papers does it screen, and when?</h3></summary><p>The first application screens all 43,013 ICLR 2027 submissions in nine public stages of up to 5,000 papers. Stage 1 starts on October 16, 2026 at 9 PM US Eastern, and the run aims to finish before ICLR 2027 decisions on December 16, 2026.</p></details>
+        <details class="faq-item"><summary><h3>What is publicly available?</h3></summary><p>The benchmark (20 anonymized ICLR 2027 cases with human labels), the evaluation tools and the saved baseline outputs are public at github.com/OpenLAIR/red-flag-research and on Hugging Face (red-flag-research/iclr2027-source-review-benchmark).</p></details>
+        <details class="faq-item"><summary><h3>Is Red-flag Research affiliated with ICLR?</h3></summary><p>No. It is an independent research project from OpenLAIR. It uses submission metadata that is public on OpenReview and does not host papers.</p></details>
+        <details class="faq-item"><summary><h3>How do I get a result corrected?</h3></summary><p>Use the feedback form on the site or e-mail red.flag.autoresearch@gmail.com. The result comes off the live page and the public data while we check, and we correct it right away if it is wrong.</p></details>
+      </div>
     </div>
   </section>
 
@@ -1191,6 +1250,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
           <li><a data-href="liveUrl" href="./live/">Live page</a></li>
           <li><a href="#schedule">Schedule</a></li>
           <li><a href="#updates">Updates</a></li>
+          <li><a href="#code">Benchmark</a></li>
           <li data-repo="public" hidden><a data-href="repoUrl" href="#">Benchmark on GitHub</a></li>
           <li><a href="#contribute">Contribute</a></li>
         </ul>
@@ -1273,7 +1333,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
     return stages.map((st) => {
       let status = 'upcoming';
       if (st.endActual) status = 'done';
-      // Running only once a verified start is recorded (actualStart in schedule.json); a passed planned start alone is not "live".
+      // A stage only counts as live once schedule.json has its actualStart.
       else if (prevDone && st.startActual && t >= st.start) status = 'running';
       prevDone = st.endActual;
       return { ...st, status };
@@ -1450,12 +1510,15 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
     }
     // Running count: only points after the schedule start belong to the screening itself.
     const t0 = Date.parse(s.start) / 1000;
-    let live = null;
+    let live = null, series = null, proj = null;
     if (site.apiBase && now() / 1000 > t0) {
       try {
         const res = await fetch(site.apiBase.replace(/\/$/, '') + '/api/progress', { cache: 'no-store' });
         const pts = res.ok ? ((await res.json()).points || []).filter((p) => p.t >= t0) : [];
-        if (res.ok) live = { checked: pts.length, flagged: pts.filter((p) => p.label === 'YES_SUSPECTED').length };
+        if (res.ok) {
+          live = { checked: pts.length, flagged: pts.filter((p) => p.label === 'YES_SUSPECTED').length };
+          series = cumulativeSeries(pts);
+        }
       } catch { /* the live API can be down; the card says so */ }
     }
     if (!live) {
@@ -1471,6 +1534,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
         const point = Math.round(live.flagged / live.checked * N);
         $('p-live-note').textContent = `screened so far were flagged. At this rate: about ${n(point)} (95% range ${n(Math.round(lo * N))}–${n(Math.round(hi * N))}).`;
         marks.push(point); bar.push((pct) => `<em style="left:${pct(point)}"></em>`);
+        proj = { point, lo: Math.round(lo * N), hi: Math.round(hi * N) };
       } else {
         $('p-live-note').textContent = `screened so far were flagged. A projection appears after ${n(pr.minLiveSample)} papers.`;
       }
@@ -1481,6 +1545,179 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
     const pct = (x) => (Math.min(x, max) / max * 100).toFixed(2) + '%';
     $('p-axis-max').textContent = n(max) + (max < N ? ' (of ' + n(N) + ')' : '');
     $('p-bar').innerHTML = bar.map((f) => f(pct)).join('');
+    chart.run = live && live.checked ? { checked: live.checked, flagged: live.flagged, series, proj, min: pr.minLiveSample } : null;
+    refreshCharts();
+  }
+
+  // ---- Charts. Inline SVG painted at the width of its box (1 unit = 1 CSS px), so type stays 13px on a phone. ----
+  // chart.run: the running count (from renderPrediction); chart.poll: the poll as last drawn; chart.hist: poll history, or null.
+  const chart = { run: null, poll: null, hist: null, sched: null };
+  const niceStep = (rough) => { const e = Math.pow(10, Math.floor(Math.log10(rough))), m = rough / e; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * e; };
+  const binOf = (id, N) => { const m = id.match(/^(\d+)(?:-(\d+)|\+)$/); return m ? [+m[1], m[2] ? +m[2] : N] : null; };
+
+  function paint(id, build) {
+    const el = $(id);
+    el._build = build;
+    const w = Math.floor(el.clientWidth);
+    if (!w) return;
+    el._w = w;
+    el.innerHTML = build(w);
+  }
+  if ('ResizeObserver' in window) {
+    const ro = new ResizeObserver((es) => es.forEach(({ target: el }) => {
+      const w = Math.floor(el.clientWidth);
+      if (w && w !== el._w && el._build) { el._w = w; el.innerHTML = el._build(w); }
+    }));
+    ['c-vs-svg', 'c-hist-svg', 'c-res-svg'].forEach((id) => ro.observe($(id)));
+  }
+
+  // Cumulative flagged count against papers finished, thinned to at most ~160 points.
+  function cumulativeSeries(pts) {
+    const sorted = [...pts].sort((a, b) => a.t - b.t), out = [[0, 0]], stride = Math.max(1, Math.ceil(sorted.length / 160));
+    let f = 0;
+    sorted.forEach((p, i) => { if (p.label === 'YES_SUSPECTED') f++; if ((i + 1) % stride === 0 || i === sorted.length - 1) out.push([i + 1, f]); });
+    return out;
+  }
+
+  const AXIS_TICKS = (N) => [0, 10000, 20000, 30000].concat(N);
+  function xLabels(X, w, N, y) {
+    return AXIS_TICKS(N).map((v, i, a) => {
+      const last = i === a.length - 1;
+      return `<text class="tnum" x="${last ? w - 2 : X(v)}" y="${y}" text-anchor="${i === 0 ? 'start' : last ? 'end' : 'middle'}">${n(v)}</text>`;
+    }).join('');
+  }
+
+  // Actual cumulative count and the projection to every submission, with the crowd's most-picked range as a band.
+  function vsSVG(w, d) {
+    const { N, run, band, stageEnds } = d;
+    const h = w < 520 ? 230 : 270, L = 56, R = 14, T = 10, B = 40;
+    const tops = [run.flagged, run.proj ? run.proj.hi : 0, ...band.map(([lo, hi]) => (hi >= N ? lo * 1.3 : hi))];
+    const top = Math.max(...tops, 1) * 1.05, step = niceStep(top / 4), yMax = step * Math.ceil(top / step);
+    const X = (v) => L + v / N * (w - L - R), Y = (v) => T + (1 - Math.min(v, yMax) / yMax) * (h - T - B);
+    let g = band.map(([lo, hi]) => { const y1 = Y(hi >= N ? yMax : hi), y2 = Y(lo); return `<rect x="${L}" y="${y1.toFixed(1)}" width="${w - L - R}" height="${Math.max(3, y2 - y1).toFixed(1)}" fill="var(--paper)" fill-opacity=".16"/>`; }).join('');
+    for (let v = 0; v <= yMax + 1e-9; v += step) g += `<text class="tnum" x="${L - 10}" y="${(Y(v) + 4).toFixed(1)}" text-anchor="end">${n(Math.round(v))}</text>`;
+    g += xLabels(X, w, N, h - 8);
+    g += stageEnds.map((v) => `<rect x="${(X(v) - 1).toFixed(1)}" y="${h - B + 6}" width="2" height="6" rx="1" fill="var(--muted)"/>`).join('');
+    const last = run.series[run.series.length - 1];
+    if (run.proj && run.checked < N) {
+      const { point, lo, hi } = run.proj;
+      g += `<rect x="${(X(N) - 3).toFixed(1)}" y="${Y(hi).toFixed(1)}" width="6" height="${Math.max(6, Y(lo) - Y(hi)).toFixed(1)}" rx="3" fill="var(--cyan)" fill-opacity=".35"/>`;
+      g += `<line x1="${X(last[0]).toFixed(1)}" y1="${Y(last[1]).toFixed(1)}" x2="${X(N).toFixed(1)}" y2="${Y(point).toFixed(1)}" stroke="var(--cyan)" stroke-width="2.5" stroke-dasharray="7 6" stroke-linecap="round"/>`;
+      g += `<circle cx="${X(N).toFixed(1)}" cy="${Y(point).toFixed(1)}" r="4.5" fill="var(--cyan)"/>`;
+    }
+    g += `<path d="${run.series.map(([c, f], i) => (i ? 'L' : 'M') + X(c).toFixed(1) + ' ' + Y(f).toFixed(1)).join('')}" fill="none" stroke="var(--wine-hot)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+    g += `<circle cx="${X(last[0]).toFixed(1)}" cy="${Y(last[1]).toFixed(1)}" r="4.5" fill="var(--wine-hot)"/>`;
+    return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="${esc(d.alt)}">${g}</svg>`;
+  }
+
+  // Share of predictions in each range over time, stacked to 100%.
+  const RAMP = ['#57c7cf', '#2f8f98', '#8a919c', '#c4605a', '#ff8a7f'];
+  function histSVG(w, d) {
+    const { pts, ids, fmtTime } = d;
+    const h = w < 520 ? 200 : 230, L = 44, R = 8, T = 8, B = 30;
+    const t0 = pts[0].t, t1 = pts[pts.length - 1].t;
+    const X = (t) => L + (t - t0) / (t1 - t0) * (w - L - R), Y = (p) => T + (1 - p) * (h - T - B);
+    const cum = pts.map((p) => { let a = 0; return [0, ...ids.map((id) => (a += (p.counts[id] || 0) / p.total))]; });
+    let g = '';
+    for (let i = 0; i < ids.length; i++) {
+      const top = pts.map((p, j) => `${X(p.t).toFixed(1)} ${Y(cum[j][i + 1]).toFixed(1)}`);
+      const bot = pts.map((p, j) => `${X(p.t).toFixed(1)} ${Y(cum[j][i]).toFixed(1)}`).reverse();
+      g += `<path d="M${top.join('L')}L${bot.join('L')}Z" fill="${RAMP[i % RAMP.length]}" stroke="var(--card)" stroke-width="2" stroke-linejoin="round"/>`;
+    }
+    [0, .5, 1].forEach((p) => { g += `<text class="tnum" x="${L - 8}" y="${(Y(p) + 4).toFixed(1)}" text-anchor="end">${Math.round(p * 100)}%</text>`; });
+    const mid = t0 + (t1 - t0) / 2;
+    g += `<text x="${L}" y="${h - 8}" text-anchor="start">${esc(fmtTime(t0))}</text><text x="${((L + w - R) / 2).toFixed(1)}" y="${h - 8}" text-anchor="middle">${esc(fmtTime(mid))}</text><text x="${w - R}" y="${h - 8}" text-anchor="end">${esc(fmtTime(t1))}</text>`;
+    return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="${esc(d.alt)}">${g}</svg>`;
+  }
+
+  // One lane per marker on a shared scale. The scale is zoomed to the values (0 to a round number above the largest),
+  // since ranges of a few hundred papers would be specks on 0 to N; an open range like 5,000+ runs to the right edge.
+  function resMax(N, lanes) {
+    const vals = lanes.flatMap((l) => [l.point, l.lo, l.hi]).filter((v) => v != null && v < N);
+    const top = Math.max(2000, ...vals) * 1.25;
+    const step = top > 20000 ? 10000 : top > 5000 ? 2000 : 500;
+    return Math.min(N, Math.ceil(top / step) * step);
+  }
+  function resHTML(w, d) {
+    const { lanes } = d, N = d.M;
+    const X = (v) => 8 + Math.min(v, N) / N * (w - 16);
+    const track = (l) => {
+      const y = 12;
+      let g = `<rect x="8" y="${y - 5}" width="${w - 16}" height="10" rx="5" fill="var(--paper-3)"/>`;
+      if (l.lo != null) {
+        const x1 = X(l.lo), x2 = X(l.hi), wd = Math.max(8, x2 - x1);
+        g += `<rect x="${Math.min(x1, w - 8 - wd).toFixed(1)}" y="${y - 5}" width="${wd.toFixed(1)}" height="10" rx="5" fill="${l.color}" fill-opacity="${l.point != null ? .35 : 1}"/>`;
+      }
+      if (l.point != null) g += `<circle cx="${X(l.point).toFixed(1)}" cy="${y}" r="8" fill="${l.color}"/>`;
+      return `<svg viewBox="0 0 ${w} 24" width="${w}" height="24" aria-hidden="true">${g}</svg>`;
+    };
+    const axis = `<svg viewBox="0 0 ${w} 20" width="${w}" height="20" aria-hidden="true">${xLabels(X, w - 6, N, 15)}</svg>`;
+    return lanes.map((l) => `<div class="lane"><p><b>${esc(l.name)}</b> ${esc(l.value)}</p>${track(l)}</div>`).join('') + axis;
+  }
+
+  function refreshCharts() {
+    const S = chart.sched, R = chart.run, P = chart.poll;
+    if (!S) return;
+    const N = S.totalPapers;
+    const revealed = !!(P && P.revealed);
+
+    // 2. Running count against the crowd's range: needs at least one finished paper after the start.
+    let show2 = !!(R && R.checked >= 1 && R.series);
+    if (show2) {
+      let ids = [], band = [];
+      if (revealed && P.state.total) {
+        const top = Math.max(...P.cfg.choices.map((c) => P.state.counts[c.id] || 0));
+        ids = P.cfg.choices.filter((c) => top > 0 && (P.state.counts[c.id] || 0) === top);
+        band = ids.map((c) => binOf(c.id, N)).filter(Boolean);
+      }
+      const stageEnds = []; S.stages.reduce((a, st) => { a += st.papers; if (a < N) stageEnds.push(a); return a; }, 0);
+      const proj = R.proj && R.checked < N ? R.proj : null;
+      const alt = `Line chart of papers screened against flagged papers. ${n(R.flagged)} of ${n(R.checked)} screened so far are flagged.` + (proj ? ` At this rate about ${n(proj.point)} of ${n(N)}.` : '') + (ids.length ? ` The crowd's most-picked range is ${ids.map((c) => c.label).join(' and ')}.` : '');
+      $('charts').hidden = false; $('c-vs').hidden = false;
+      paint('c-vs-svg', (w) => vsSVG(w, { N, run: { ...R, proj }, band, stageEnds, alt }));
+      $('c-vs-key').innerHTML = `<span><i class="ln" style="background:var(--wine-hot)"></i>Flagged so far: ${n(R.flagged)} of ${n(R.checked)} screened</span>`
+        + (proj ? `<span><i class="ln" style="background:var(--cyan)"></i>At this rate: about ${n(proj.point)} of ${n(N)}</span>` : '')
+        + (ids.length ? `<span><i style="background:var(--paper);opacity:.5"></i>Crowd's most-picked range: ${esc(ids.map((c) => c.label).join(', '))}</span>` : '');
+      $('c-vs-note').textContent = (ids.length ? '' : (P && P.live ? "The crowd's most-picked range shows here once you pick, so it does not sway your choice. " : '')) + 'Horizontal axis: papers screened, in the order they finish; tick marks are stage ends. ' + (proj ? 'The cyan bar at the right is the 95% range for the projection.' : R.checked < (R.min || 300) ? 'A projection appears after ' + n(R.min || 300) + ' papers.' : '');
+    } else {
+      $('c-vs').hidden = true;
+    }
+
+    // 3. Predictions over time: only once revealed, and only with at least two history points.
+    const hp = chart.hist;
+    const show3 = !!(revealed && hp && hp.length >= 2);
+    if (show3) {
+      const ids = P.cfg.choices.map((c) => c.id);
+      const span = hp[hp.length - 1].t - hp[0].t;
+      const f = new Intl.DateTimeFormat('en-US', { timeZone: S.displayTimeZone, month: 'short', day: 'numeric', ...(span < 36 * H ? { hour: 'numeric', minute: '2-digit' } : {}) });
+      const lastP = hp[hp.length - 1];
+      const alt = 'Stacked area chart of the share of predictions in each range over time. ' + P.cfg.choices.map((c) => `${c.label}: ${Math.round((lastP.counts[c.id] || 0) / lastP.total * 100)}%`).join(', ') + ' at the latest point.';
+      $('charts').hidden = false; $('c-hist').hidden = false;
+      paint('c-hist-svg', (w) => histSVG(w, { pts: hp, ids, fmtTime: (t) => f.format(t), alt }));
+      $('c-hist-key').innerHTML = P.cfg.choices.map((c, i) => `<span><i style="background:${RAMP[i % RAMP.length]}"></i>${esc(c.label)} · ${Math.round((lastP.counts[c.id] || 0) / lastP.total * 100)}%</span>`).join('');
+      $('c-hist-note').textContent = `Share of all predictions in each range at each point in time; the last point is the latest count (${n(lastP.total)} predictions). Picks that were taken back are not counted.`;
+    } else {
+      $('c-hist').hidden = true;
+    }
+    $('charts').hidden = $('c-vs').hidden && $('c-hist').hidden;
+
+    // 4. After the close: the crowd's middle range, our rehearsal estimate and the final count on one axis.
+    const lanes = [];
+    if (P && P.closed && P.state.total) {
+      const half = P.state.total / 2; let a = 0, mid = null;
+      for (const c of P.cfg.choices) { a += P.state.counts[c.id] || 0; if (mid == null && a >= half) mid = c; }
+      const b = mid && binOf(mid.id, N);
+      if (b) lanes.push({ name: "Crowd's middle range", value: mid.label, lo: b[0], hi: b[1], color: 'var(--paper-acc)' });
+    }
+    if (P && P.closed && P.est) lanes.push({ name: 'Our rehearsal estimate', value: `about ${n(P.est.point)} (95% range ${n(P.est.lo)}–${n(P.est.hi)})`, lo: P.est.lo, hi: P.est.hi, point: P.est.point, color: 'var(--paper-ink-3)' });
+    if (P && P.closed && R && S.stages.every((st) => st.actualEnd)) lanes.push({ name: 'Final count', value: `${n(R.flagged)} of ${n(N)}`, point: R.flagged, color: 'var(--field-red)' });
+    const show4 = lanes.length >= 2;
+    $('c-res').hidden = !show4;
+    if (show4) {
+      const M = resMax(N, lanes);
+      paint('c-res-svg', (w) => resHTML(w, { M, lanes }));
+      $('c-res-note').textContent = `Papers flagged as Source review recommended, on a scale of 0 to ${n(M)}${M < N ? ` (of ${n(N)} submissions)` : ''}. The poll closed with ${n(P.state.total)} predictions.`;
+    }
   }
 
   // Visitor prediction poll. Served by the vote service behind the live API; stays read-only ("Opens soon") until enabled.
@@ -1502,32 +1739,65 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
     $('poll-q').textContent = cfg.question;
     // Our own estimate, when the rehearsal has produced one, is marked on its range.
     const r = pr.rehearsal || {};
-    const ours = r.papers && r.flagged != null ? Math.round(r.flagged / r.papers * N) : null;
+    const est = r.papers && r.flagged != null ? (([lo, hi]) => ({ point: Math.round(r.flagged / r.papers * N), lo: Math.round(lo * N), hi: Math.round(hi * N) }))(wilson(r.flagged, r.papers)) : null;
+    const ours = est ? est.point : null;
     const inBin = (id, x) => { const m = id.match(/^(\d+)(?:-(\d+)|\+)$/); return m && x >= +m[1] && (m[2] ? x < +m[2] : true); };
     const fmtD = new Intl.DateTimeFormat('en-US', { timeZone: s.displayTimeZone, month: 'short', day: 'numeric' });
     const url = site.apiBase ? site.apiBase.replace(/\/$/, '') + cfg.path : null;
     let state = { counts: {}, total: 0, mine: null, open: false };
     let live = false;
+    let wasRevealed = false;
+
+    // Shares stay hidden until you have picked or the poll has closed, so the crowd does not sway your pick.
+    const isClosed = () => live && (!state.open || (cfg.closesAt && now() >= Date.parse(cfg.closesAt)));
+    const isRevealed = () => live && (isClosed() || state.mine != null);
 
     function draw(msg) {
       const total = state.total || 0;
+      const revealed = isRevealed();
+      const grow = revealed && !wasRevealed; // bars grow from zero the moment they appear
+      wasRevealed = revealed;
       $('poll-choices').innerHTML = cfg.choices.map((c) => {
         const k = state.counts[c.id] || 0, share = total ? Math.round(k / total * 100) : 0;
         const mine = state.mine === c.id;
         const tag = ours != null && inBin(c.id, ours) ? '<small>Our estimate</small>' : '';
-        return `<button type="button" class="choice" data-id="${esc(c.id)}" aria-pressed="${mine}" ${live && state.open ? '' : 'disabled'}>
-          <span class="lab">${esc(c.label)}${tag}</span><span class="bar"><i style="width:${share}%"></i></span><span class="pc">${total ? share + '%' : '—'}</span></button>`;
+        return `<button type="button" class="choice${revealed ? '' : ' noshare'}" data-id="${esc(c.id)}" aria-pressed="${mine}" ${live && !isClosed() ? '' : 'disabled'}>
+          <span class="lab">${esc(c.label)}${tag}</span>${revealed ? `<span class="bar"><i data-w="${share}" style="width:${grow ? 0 : share}%"></i></span><span class="pc">${total ? share + '%' : '—'}</span>` : ''}</button>`;
       }).join('');
+      if (grow) requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('#poll-choices .bar i').forEach((i) => { i.style.width = i.dataset.w + '%'; })));
+      const mineC = cfg.choices.find((c) => c.id === state.mine);
+      const mk = mineC ? state.counts[mineC.id] || 0 : 0, ms = total ? Math.round(mk / total * 100) : 0;
+      $('poll-same').textContent = revealed && mineC && total ? (total === 1 ? 'Yours is the only prediction so far.' : `${mk > 0 && ms < 1 ? 'Under 1' : ms}% picked the same range as you.`) : '';
       $('poll-status').innerHTML = msg;
       document.querySelectorAll('#poll-choices .choice').forEach((b) => b.addEventListener('click', () => pick(b.dataset.id)));
       const w = $('poll-withdraw'); if (w) w.addEventListener('click', () => pick(null));
+      chart.poll = { cfg, state, live, closed: isClosed(), revealed, est };
+      refreshCharts();
+    }
+    // History for the "predictions over time" chart: feature-detected, and only asked for once the shares are visible.
+    async function loadHistory() {
+      chart.hist = null;
+      if (!cfg.historyPath || !site.apiBase || !isRevealed()) return;
+      try {
+        const res = await fetch(`${site.apiBase.replace(/\/$/, '')}${cfg.historyPath}?poll_id=${encodeURIComponent(cfg.id)}`, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+        if (!res.ok) return;
+        const pts = ((await res.json()).points || []).map((p) => ({ t: Date.parse(p.t), counts: p.counts || {}, total: Number(p.total) }))
+          .filter((p) => Number.isFinite(p.t) && p.total > 0 && typeof p.counts === 'object').sort((a, b) => a.t - b.t);
+        // History can lag the poll by up to an hour: the latest count always comes from the poll itself.
+        if (pts.length && state.total > 0 && now() > pts[pts.length - 1].t) pts.push({ t: now(), counts: state.counts, total: state.total });
+        chart.hist = pts.length >= 2 ? pts : null;
+      } catch { chart.hist = null; }
+    }
+    async function settle(msg) {
+      draw(msg);
+      if (isRevealed() && cfg.historyPath) { await loadHistory(); refreshCharts(); }
     }
     function summary() {
       const n0 = state.total || 0;
       const close = cfg.closesAt ? fmtD.format(Date.parse(cfg.closesAt)) : null;
-      if (!state.open) return `Closed${close ? ' on ' + close : ''}. ${n(n0)} predictions.`;
+      if (isClosed()) return `Closed${close ? ' on ' + close : ''}. ${n(n0)} predictions.`;
       const mine = cfg.choices.find((c) => c.id === state.mine);
-      return `${n(n0)} prediction${n0 === 1 ? '' : 's'} so far${close ? ' · closes ' + close : ''}.` + (mine ? ` Your pick: ${esc(mine.label)} · <button type="button" id="poll-withdraw">take it back</button>` : '');
+      return `${n(n0)} prediction${n0 === 1 ? '' : 's'} so far${close ? ' · closes ' + close : ''}.` + (!mine ? ' Shares appear after you pick.' : '') + (mine ? ` Your pick: ${esc(mine.label)} · <button type="button" id="poll-withdraw">take it back</button>` : '');
     }
     async function call(method, body) {
       const v = voterId(method === 'POST');
@@ -1546,7 +1816,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
       if (id !== null && id === prev) id = null; // a second click on your pick takes it back
       try {
         state = await call('POST', { poll_id: cfg.id, choice: id });
-        draw(summary());
+        await settle(summary());
       } catch (e) {
         draw(errors[e.message] || 'Could not save your pick. Please try again.');
       }
@@ -1556,7 +1826,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
     try {
       state = await call('GET');
       live = true;
-      draw(summary());
+      await settle(summary());
     } catch {
       draw('The poll is not available right now.');
     }
@@ -1580,6 +1850,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
       const live = withStatus(stages, t);
       const running = live.find((x) => x.status === 'running');
       const next = live.find((x) => x.status === 'upcoming');
+      const pending = !running && next && t >= next.start;
       const tz = s.displayTimeZoneLabel;
       let target, label, isLive = false;
       let elapsed = null;
@@ -1593,7 +1864,6 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
         target = running.end;
         label = `until Stage ${running.id} of ${total} ends · est. <b>${fmt.est(running.end)} ${tz}</b>`;
       } else if (next && t >= next.start) {
-        // Planned start has passed but no verified start yet.
         target = t;
         label = `Stage ${next.id} is getting ready · the live page opens soon`;
       } else if (next) {
@@ -1610,12 +1880,11 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
       $('d-d').textContent = pad(dd); $('d-h').textContent = pad(hh); $('d-m').textContent = pad(mm); $('d-s').textContent = pad(ss);
       $('count-label').innerHTML = label;
       // Header status chip: the same countdown, in two parts so a phone can stack them.
-      const pending = !running && next && t >= next.start;
-      const nl = elapsed != null ? `Stage ${running.id} running for` : (running ? `Stage ${running.id} ends in` : (pending ? `Stage ${next.id} starting soon` : (next ? `Stage ${next.id} starts in` : 'All stages complete')));
+      const nl = elapsed != null ? `Stage ${running.id} running for` : (running ? `Stage ${running.id} ends in` : (pending ? `Stage ${next.id} starting soon` : next ? `Stage ${next.id} starts in` : 'All stages complete'));
       $('st-l').textContent = nl;
       $('st-t').textContent = (running || (next && !pending)) ? `${dd}d ${pad(hh)}:${pad(mm)}:${pad(ss)}` : '';
       document.querySelectorAll('[data-live-dot]').forEach((el) => el.classList.toggle('is-live', isLive));
-      $('live-status').textContent = isLive ? `Live now · Stage ${running.id} of ${total}` : (next ? (pending ? 'Live page opens soon' : `Live page opens when Stage ${next.id} starts`) : 'Screening complete · replays available');
+      $('live-status').textContent = isLive ? `Live now · Stage ${running.id} of ${total}` : (pending ? 'Live page opens soon' : next ? `Live page opens when Stage ${next.id} starts` : 'Screening complete · replays available');
       $('win-pill').textContent = isLive ? 'Live' : (next ? 'Soon' : 'Replay');
       return { live, t };
     };
@@ -1628,6 +1897,20 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') menu.open = false; });
     document.addEventListener('click', (e) => { if (menu.open && !menu.contains(e.target)) menu.open = false; });
   }
+
+  // The nav link of the section under the header is marked, in the bar and in the menu.
+  const spyIds = ['schedule', 'prediction', 'code', 'roadmap', 'contribute'];
+  let spyTick = false;
+  const spy = () => {
+    spyTick = false;
+    const line = 120; // just below the sticky header
+    let cur = null;
+    spyIds.forEach((id) => { const el = $(id); if (el && el.getBoundingClientRect().top <= line && el.getBoundingClientRect().bottom > line) cur = id; });
+    spyIds.forEach((id) => document.querySelectorAll(`.nav a.nv[href="#${id}"]`).forEach((a) => { if (id === cur) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); }));
+  };
+  addEventListener('scroll', () => { if (!spyTick) { spyTick = true; requestAnimationFrame(spy); } }, { passive: true });
+  addEventListener('resize', spy);
+  spy();
 
   Promise.all([load('data/site.json'), load('data/schedule.json'), load('data/updates.json')]).then(([site, s, up]) => {
     bindSite(site);
@@ -1648,6 +1931,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
     // "Updated" follows the newest real update card (template cards are layout previews).
     const latest = up.updates.filter((u) => !u.template).map((u) => u.date).sort().at(-1);
     if (latest) $('updated').textContent = 'Updated ' + latest;
+    chart.sched = s;
     renderPrediction(site, s);
     load('data/prediction.json').then((pr) => renderPoll(site, pr, s)).catch(() => {});
     renderRoadmap();
