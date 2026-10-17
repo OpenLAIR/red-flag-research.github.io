@@ -1777,7 +1777,8 @@ async function getJSON(path, ms = 30000) {
   if (SNAPMODE) return snapshotJSON(mapping);
   try { return await liveJSON(path, ms); }
   catch (err) {
-    if (!SNAP || !mapping || !(err.status >= 500 || err.name === 'AbortError' || err instanceof TypeError)) throw err;
+    // Only the run list and progress switch to the snapshot: one slow paper (or the 8 s top-pairs call) must not flip the whole page.
+    if (!SNAP || !mapping || !['runs.json', 'progress.json'].includes(mapping.file) || !(err.status >= 500 || err.name === 'AbortError' || err instanceof TypeError)) throw err;
     try { return await snapshotJSON(mapping); } catch (snapErr) { throw err; }
   }
 }
