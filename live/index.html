@@ -658,6 +658,7 @@ const labelText = k => LABEL[k] || (k ? String(k).replace(/_/g, ' ').toLowerCase
 // Held results (user decision 2026-10-16): a Stage 1 paper the system would flag stays "Under review" until a person releases it.
 // The backend sends a needs-human-review value; the page then shows no flag, no score and no evidence for that finished paper.
 PUBLIC_LABEL.HELD = PUBLIC_LABEL.NEEDS_HUMAN_REVIEW = 'Needs human review';
+PUBLIC_LABEL.INCONCLUSIVE = 'Inconclusive';  // backend class: an escalated pair and no flag
 const HELD_RE = /^(HELD|UNDER_REVIEW|NEEDS_HUMAN_REVIEW|HUMAN_REVIEW|needs-human-review|under-review)$/;
 // Note on every result a person has not reviewed yet (short wording chosen by the user, 2026-10-16).
 const HELD_NOTE = 'Automated screening, not yet reviewed by a person. This is not a finding of misconduct.';
