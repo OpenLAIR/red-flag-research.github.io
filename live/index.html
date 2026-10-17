@@ -1217,9 +1217,11 @@ function progressRange() {
 }
 function renderProgress() {
   const R = progressRange(); if (!R) { setHTML($('prog'), '<p class="empty">No progress data yet.</p>'); return; }
-  const box = $('prog'), W = Math.max(240, box.clientWidth - 20), H = Math.max(104, Math.min(220, Math.floor((box.clientHeight - 8) / 2) - 58));
+  // A third chart, needs human review, appears once the backend reports held papers (under_review on each point).
+  const held = R.pts.some(p => p.under_review != null), np = held ? 3 : 2;
+  const box = $('prog'), W = Math.max(240, box.clientWidth - 20), H = Math.max(held ? 72 : 104, Math.min(220, Math.floor((box.clientHeight - 8) / np) - 58));
   PGEOM = {W, H};
-  const {pts, t0, t1} = R, L = 32, Rp = 8, T = 10, B = 22, X = t => L + (t - t0) / (t1 - t0) * (W - L - Rp);
+  const {t0, t1} = R, pts = R.pts.map(p => ({...p, under_review: p.under_review ?? 0})), L = 32, Rp = 8, T = 10, B = 22, X = t => L + (t - t0) / (t1 - t0) * (W - L - Rp);
   const at = t => { let p = null; for (const q of pts) { if (q.t <= t) p = q; else break; } return p; };
   const hp = PHOVER != null ? at(PHOVER) : null, last = pts[pts.length - 1];
   const fmtD = t => new Date(t * 1000).toLocaleString('en-US', {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/New_York'});
@@ -1241,7 +1243,7 @@ function renderProgress() {
     const extra = key === 'suspected' ? (() => { const q = [...pts].reverse().find(p => p.label === 'YES_SUSPECTED' && (!hp || p.t <= PHOVER)); return q ? `<div class="note" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:2px 0 6px">newest: ${esc(paperMeta(q.paper_id).title)}</div>` : ''; })() : '';
     return `<div class="pp" style="--c:${color}"><div class="ph"><b>${v}</b>${name}<span class="d">${right}</span></div>${g}${extra}</div>`;
   };
-  setHTML($('prog'), panel('checked', 'papers checked', '#57c7cf', 10) + panel('suspected', 'review recommended', '#ff8a7f', 5));
+  setHTML($('prog'), panel('checked', 'papers checked', '#57c7cf', 10) + panel('suspected', 'review recommended', '#ff8a7f', 5) + (held ? panel('under_review', 'needs human review', '#e8b44c', 5) : ''));
 }
 document.addEventListener('mousemove', e => {
   const svg = e.target.closest && e.target.closest('svg[data-prog]'), R = progressRange();

@@ -1651,7 +1651,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
         const pts = res.ok ? ((await res.json()).points || []) : [];
         if (res.ok) {
           const last = pts[pts.length - 1];  // the same totals the live page's header shows
-          live = last ? { checked: last.checked, flagged: last.suspected } : { checked: 0, flagged: 0 };
+          live = last ? { checked: last.checked, flagged: last.suspected, held: last.under_review || 0 } : { checked: 0, flagged: 0, held: 0 };
           series = cumulativeSeries(pts);
         }
       } catch { /* the live API can be down; the card says so */ }
@@ -1664,14 +1664,15 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
       $('p-live').classList.add('pending');
     } else {
       $('p-live').textContent = `${n(live.flagged)} of ${n(live.checked)}`;
+      const heldNote = live.held ? ` ${n(live.held)} more ${live.held === 1 ? 'needs' : 'need'} human review: a model flagged a close match that a person has not checked yet.` : '';
       if (live.checked >= pr.minLiveSample) {
         const [lo, hi] = wilson(live.flagged, live.checked);
         const point = Math.round(live.flagged / live.checked * N);
-        $('p-live-note').textContent = `screened so far were flagged. At this rate: about ${n(point)} (95% range ${n(Math.round(lo * N))}–${n(Math.round(hi * N))}).`;
+        $('p-live-note').textContent = `screened so far were flagged. At this rate: about ${n(point)} (95% range ${n(Math.round(lo * N))}–${n(Math.round(hi * N))}).${heldNote}`;
         marks.push(point); bar.push((pct) => `<em style="left:${pct(point)}"></em>`);
         proj = { point, lo: Math.round(lo * N), hi: Math.round(hi * N) };
       } else {
-        $('p-live-note').textContent = `screened so far were flagged. A projection appears after ${n(pr.minLiveSample)} papers.`;
+        $('p-live-note').textContent = `screened so far were flagged. A projection appears after ${n(pr.minLiveSample)} papers.${heldNote}`;
       }
     }
     const top = marks.length ? Math.max(...marks) * 1.5 : N;
