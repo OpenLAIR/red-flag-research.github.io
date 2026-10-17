@@ -701,7 +701,11 @@ function prep(s) {
   // A held run comes without its review data (the backend drops those keys), so every reader gets an empty default.
   s.io = {low: [], low_unresolved: [], trajectories: [], gate: {}, pair_writeups: [], gated_reviews: [], dates: {}, fulltext: [], ...(s.io || {})};
   s.held = s.under_review === true || [s.label, s.final?.category, s.final?.status, s.result?.screening].some(v => HELD_RE.test(v || ''));
-  if (s.held) { s.label = 'HELD'; s.final = {findings: [], unknowns: []}; }
+  if (s.held) {
+    s.label = 'HELD'; s.final = {findings: [], unknowns: []};
+    // Scores stay public for a held paper; which sources it was compared with does not, until a person releases the result.
+    s.candidates.forEach((c, i) => { c.title = `Source ${i + 1}`; c.url = ''; c.abstract = ''; });
+  }
   s.totalTokens = s.calls.reduce((a, c) => a + (['qwen', 'jev'].includes(c.provider) ? c.tokens : 0), 0) || 1;
   s.ocrCalls = s.calls.filter(c => c.provider === 'ocr').length || 1;
   s.steps = buildSteps(s);
@@ -757,7 +761,6 @@ function buildSteps(s) {
     else if (e.stage === 'jev_candidate_rerank' && s.retained[0]) { title = `Jev ranked ${s.candidates.length} candidates`; quote = `Top non-preprint: “${s.retained[0].title}” — specific ${pct(s.retained[0].p?.SPECIFIC)}, related ${pct(s.retained[0].p?.RELATED)}`; }
     else if (e.stage === 'jev_section_ranking' && ds.length) { const b = ds.reduce((a, d) => (d.p?.SPECIFIC || 0) > (a.p?.SPECIFIC || 0) ? d : a); title = `Jev ranked ${ds.length} source sections across claims`; quote = `Most specific: ${scopeLabel(s, b)} — specific ${pct(b.p?.SPECIFIC)}`; }
     else if (/^probe_/.test(e.stage) && ds.length) { const b = ds.reduce((a, d) => (d.p?.SPECIFIC || 0) > (a.p?.SPECIFIC || 0) ? d : a); title = `${st.label}: ${ds.length} questions answered`; quote = `Highest: ${scopeLabel(s, b)} — specific ${pct(b.p?.SPECIFIC)}`; }
-    else if (/^jev_global_/.test(e.stage) && ds.length && s.held) { title = st.label; quote = ''; }
     else if (/^jev_global_/.test(e.stage) && ds.length) { title = st.label; quote = ds.map(d => `${scopeLabel(s, d)}: review ${pct(d.p?.YES_SUSPECTED)}, inconclusive ${pct(d.p?.UNRESOLVED)}`).join('  ·  '); }
     else if (e.stage === 'xhigh_final') { actor = 'qwen'; title = `Qwen final review: ${labelText(s.final.status)}`; quote = s.final.conclusion ? `“${s.final.conclusion}”` : ''; }
     else if (e.stage === 'jev_final' && s.jev_final.p) { title = `Jev final: ${labelText(s.jev_final.label)}`; quote = PAPER_CATS.map(([k, , n]) => `${n} ${pct(s.jev_final.p[k])}`).join(' · '); }
@@ -887,13 +890,13 @@ function render() {
 function jevRows(s, ds, n = 3, snip = false) {
   const key = p => p ? ('SPECIFIC' in p ? (p.SPECIFIC || 0) + 0.5 * (p.RELATED || 0) : (p.YES_SUSPECTED || 0)) : 0;
   const sorted = [...ds].sort((a, b) => key(b.p) - key(a.p)).slice(0, n);
-  return sorted.map(d => `<div class="drow2" title="${esc(d.q)}"><div class="lbl">${esc(readable(s, d))}</div><div class="bl">${distBar(d.p)}<span class="top1">${topCat(d.p)}</span></div>${snip && d.scope?.material_id && s.materials[d.scope.material_id] ? `<div class="snip">“${esc(trunc(s.materials[d.scope.material_id].text, 180))}”</div>` : ''}</div>`).join('');
+  return sorted.map(d => `<div class="drow2" title="${s.held ? '' : esc(d.q)}"><div class="lbl">${esc(readable(s, d))}</div><div class="bl">${distBar(d.p)}<span class="top1">${topCat(d.p)}</span></div>${snip && d.scope?.material_id && s.materials[d.scope.material_id] ? `<div class="snip">“${esc(trunc(s.materials[d.scope.material_id].text, 180))}”</div>` : ''}</div>`).join('');
 }
 const IOL = (k, v) => `<div class="iol"><b>${k}</b>${v}</div>`;
 const link = (url, t) => `<a href="${url}" target="_blank" rel="noopener">${esc(t)} ↗</a>`;
 function stageIO(s, st, x) {
   const io = s.io, ds = st.dist[x.id] || [], id = x.id;
-  if (heldDone(s, st) && /^(jev_|et_|gpr|xhigh|claim_tree|probe_|exact_span|low_|scope_|final_|outer_)/.test(id)) return IOL('out', esc(HELD_NOTE));
+  if (heldDone(s, st) && /^(et_|gpr|xhigh|claim_tree|probe_|exact_span|low_|scope_|final_|outer_|jev_section|autonomous_search|official_dates|candidate_fulltext)/.test(id)) return IOL('out', esc(HELD_NOTE));
   if (id === 'pdf_target') return IOL('in', s.openreview ? `Target PDF from ${link(s.openreview, 'OpenReview ' + s.paper_id)}` : 'Target PDF supplied for this case (no OpenReview page)') + IOL('out', `${io.pdf_pages ?? '?'} pages, file hash checked`);
   if (id === 'target_materials') return IOL('out', `${io.pdf_pages ?? '?'} pages turned into text (${esc(io.ocr_coverage || '')})`) + (io.first_page ? `<div class="ex"><div class="h">Page 1</div><div class="snip">“${esc(trunc(io.first_page, 220))}”</div></div>` : '');
   if (id === 'intake') return IOL('in', 'Full target text') + IOL('out', `${s.claims.length} core claims, each with technical checks`) + s.claims.map(c => `<div class="ex"><div class="h"><b>${esc(c.id)}</b> ${esc(trunc(c.text, 190))}</div>${c.checks[0] ? `<div class="snip">Check (${esc(c.checks[0].dim)}): ${esc(trunc(c.checks[0].q, 150))}</div>` : ''}</div>`).join('');
@@ -1278,12 +1281,8 @@ function paperSeries(s, st) {
   });
 }
 function renderVerdict(s, st) {
-  if (heldDone(s, st)) {
-    setHTML($('verdict'), `<div class="vtop"><span class="big held">Under review</span></div><p class="vheld">${HELD_NOTE}</p><div class="vfoot"><span></span><span class="res HELD">Under review</span></div>`);
-    return;
-  }
   const ser = paperSeries(s, st), last = [...ser].reverse().find(x => x.p), p = last?.p, y = p ? (p.YES_SUSPECTED || 0) : null;
-  const col = y == null ? 'var(--muted)' : y >= .5 ? 'var(--wine-hot)' : y >= .25 ? '#ffb8b0' : 'var(--text)';
+  const held = heldDone(s, st), col = y == null ? 'var(--muted)' : held ? 'var(--text)' : y >= .5 ? 'var(--wine-hot)' : y >= .25 ? '#ffb8b0' : 'var(--text)';
   const vbox = $('verdict'), W = Math.max(180, Math.round(vbox.clientWidth - 2 * (parseFloat(getComputedStyle(vbox).paddingLeft) || 16))) || 268, H = 62;  // drawn 1:1 so the checkpoint labels stay 13px
   const X = i => 22 + i * (W - 44) / (ser.length - 1), Y = v => 6 + (1 - v) * (H - 30);
   const pts = ser.map((x, i) => x.p ? [X(i), Y(x.p.YES_SUSPECTED || 0)] : null), on = pts.filter(Boolean);
@@ -1301,6 +1300,11 @@ function renderVerdict(s, st) {
     // No source ranked yet: the probability means little without a candidate, so show the same searching state as the duel.
     setHTML($('verdict'), `<div class="vwait"><span class="spin"></span><div><b>Scoring after the source is found</b><span>${st.started ? (st.status.intake === 'done' ? 'Searching for candidate sources' : 'Reading the target') : 'Queued'}<span class="dots"><i>.</i><i>.</i><i>.</i></span></span></div></div>
       ${svg}<div class="vfoot"><span>${p ? `early read: review ${pct(y)}` : 'No score yet'}</span>${st.started ? '<span class="res run">running</span>' : '<span class="res">queued</span>'}</div>`);
+    return;
+  }
+  if (held) {
+    setHTML($('verdict'), `<div class="vtop"><span class="big" style="color:var(--text)">${y == null ? '—' : pct(y)}</span><span class="cap"><b>review</b>Jev, ${last?.pair ? 'strongest pair' : 'whole paper'}</span></div>${svg}
+    <p class="vheld">${HELD_NOTE}</p><div class="vfoot"><span></span><span class="res HELD">Under review</span></div>`);
     return;
   }
   if (isET(s)) {
@@ -1403,10 +1407,10 @@ function renderFlow(s, st) {
   }
   for (const n of s.stages) {
     const p = pos[n.id]; if (!p) continue;
-    const stc = st.status[n.id] || '', ds = heldDone(s, st) ? [] : st.dist[n.id] || [], last = ds[ds.length - 1];
+    const stc = st.status[n.id] || '', ds = st.dist[n.id] || [], last = ds[ds.length - 1];
     let bar = '';
     if (last && last.p) { let ox = 12; const bw = W - 24; for (const [k, c] of catsFor(last.p)) { const w = (last.p[k] || 0) * bw; if (w > 0) bar += `<rect x="${ox}" y="${H - 14}" width="${w}" height="6" style="fill:${c}"/>`; ox += w; } }
-    const hot = last && last.p && ['YES_SUSPECTED', 'SPECIFIC'].includes(topKey(last.p)) ? ' hot' : '';  // flagged outcomes draw in wine
+    const hot = !heldDone(s, st) && last && last.p && ['YES_SUSPECTED', 'SPECIFIC'].includes(topKey(last.p)) ? ' hot' : '';  // flagged outcomes draw in wine
     g += `<g class="fn ${stc}${hot}${openStage === n.id ? ' sel' : ''}" data-stage="${n.id}" transform="translate(${p.x},${p.y})"><title>${esc(PLAIN[n.id] || n.purpose || n.label)}${stc === 'skip' ? ' Not needed for this paper.' : ''}</title>
       <rect class="box" width="${W}" height="${H}" rx="9"/><rect class="bar" width="4" height="${H - 16}" x="0" y="8" rx="2"/>
       <text class="fl" x="12" y="24">${esc(trunc(n.label, 21))}</text>
@@ -1445,7 +1449,6 @@ function renderBudget(s, st, states) {
 }
 
 function renderChart(s, st) {
-  if (heldDone(s, st)) { $('chart').innerHTML = `<p class="empty">${HELD_NOTE}</p>`; return; }
   const order = s.stages.filter(x => /^jev_global_|^jev_final$/.test(x.id)).map(x => x.id);
   const claims = [...new Set(order.flatMap(id => (st.dist[id] || []).map(d => id === 'jev_final' ? 'paper' : scopeLabel(s, d))))];
   if (!claims.length) { $('chart').innerHTML = '<p class="empty">Waiting for the first Jev checkpoint.</p>'; return; }
