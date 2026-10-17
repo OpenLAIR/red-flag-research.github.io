@@ -633,7 +633,7 @@ body.waiting .livewait{display:block} body.waiting main,body.waiting .replay,bod
   <h3>Think a result is wrong?</h3>
   <p>If you are an author and believe a result about your paper is wrong, use the <a class="mail" href="../feedback.html?type=correction&amp;from=live" target="_blank" rel="noopener">feedback form</a> or email <a class="mail" id="contactMail" href="mailto:red.flag.autoresearch@gmail.com">red.flag.autoresearch@gmail.com</a>. We will correct it right away, and we take the result off the live page and the public data while we check.</p>
   <p class="ab-paper" id="aboutPaper" hidden></p>
-  <dl class="ab-labels"><dt>Source review recommended</dt><dd>Closely matching passages without clear attribution; a person should compare the papers.</dd><dt>No source finding</dt><dd>Nothing found in the sources checked. This does not mean the paper is cleared.</dd><dt>Inconclusive</dt><dd>Not enough evidence to reach a result.</dd><dt>Same paper (preprint)</dt><dd>The candidate is this paper's own preprint.</dd></dl>
+  <dl class="ab-labels"><dt>Source review recommended</dt><dd>Closely matching passages without clear attribution; a person should compare the papers.</dd><dt>No source finding</dt><dd>Nothing found in the sources checked. This does not mean the paper has no issues.</dd><dt>Inconclusive</dt><dd>A pair was sent to a person, and there is no flag yet.</dd><dt>Same paper (preprint)</dt><dd>The candidate is this paper's own preprint.</dd></dl>
 </dialog>
 
 <script>if (!SOON) document.write('<script src="data.js"><\/script>');</script>
@@ -649,7 +649,7 @@ const feedbackLink = q => FEEDBACK_URL + '?' + new URLSearchParams(Object.fromEn
 const CONTACT_EMAIL = 'red.flag.autoresearch@gmail.com';
 const $ = id => document.getElementById(id);
 // Model text can quote internal label names; every string shown goes through esc, so map them to the public wording here.
-const PUBLIC_LABEL = {YES_SUSPECTED: 'Source review recommended', NO_SUPPORTED: 'No source finding', UNRESOLVED: 'Inconclusive', PREPRINT: 'Same paper (preprint)'};
+const PUBLIC_LABEL = {YES_SUSPECTED: 'Source review recommended', NO_SUPPORTED: 'No source finding', UNRESOLVED: 'No source finding', PREPRINT: 'Same paper (preprint)'};
 const esc = s => String(s ?? '').replace(/\b(YES_SUSPECTED|NO_SUPPORTED|UNRESOLVED)\b/g, k => PUBLIC_LABEL[k]).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const pct = v => v == null ? '—' : Math.round(v * 100) + '%';
 // Public wording (decided 2026-10-15). Internal labels stay in data and code only.
