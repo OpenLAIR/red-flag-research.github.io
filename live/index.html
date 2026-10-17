@@ -831,7 +831,7 @@ function render() {
   T = S[focus].started + pos[focus];
   const states = S.map((x, i) => stateAt(x, x.started + pos[i]));
   const s = S[focus], st = states[focus], dur = durOf(s);
-  $('clock').textContent = fmtT(T) + ' ET';
+  $('clock').textContent = fmtT(document.body.classList.contains('waiting') ? Date.now() / 1000 : T) + ' ET';  // while live data loads, the real time, not the saved replay's
   $('elapsed').textContent = fmtDur(pos[focus]) + ' / ' + fmtDur(dur);
   $('scrub').value = Math.round(pos[focus] / dur * 1000);
   const liveN = S.filter(x => x.finished == null).length;
