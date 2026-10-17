@@ -280,8 +280,8 @@ body.extra .replay #play,body.extra .replay #scrub,body.extra .replay [data-spee
 .rvote{display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;margin-top:0.5rem} .rvote > span{margin-right:0.4rem;color:var(--text-2);font-size:var(--fs-sm)}
 .rvote .vbtn.mine{background:var(--teal);color:var(--cyan)} .rvote-note{flex:1 0 100%;font-size:var(--fs-sm);color:var(--text-2)}
 /* ---- progress charts (rail) ---- */
-.prog{display:flex;flex-direction:column;gap:0.5rem}
-.pp{position:relative;border-radius:var(--r-md);background:var(--bg);padding:0.625rem 0.75rem 0.25rem}
+.prog{display:flex;flex-direction:column;gap:0.375rem}
+.pp{position:relative;border-radius:var(--r-md);background:var(--bg);padding:0.5rem 0.625rem 0.25rem}
 .pp .ph{display:flex;align-items:baseline;gap:0.5rem;font-size:var(--fs-sm);color:var(--text-2);white-space:nowrap;min-width:0}
 .pp .ph b{font:600 1.5rem/1 var(--sans);color:var(--c)} .pp .pgo{flex:none;padding:0 0.375rem;border-radius:0.375rem;color:var(--text-2);text-decoration:none;font-size:var(--fs-body)} .pp .pgo:hover{color:var(--text);background:var(--step)}
 a.chip{text-decoration:none} a.chip:hover{filter:brightness(1.15)} .pp .ph .d{margin-left:auto;font-size:var(--fs-sm);color:var(--muted);overflow:hidden;text-overflow:ellipsis}
@@ -405,7 +405,7 @@ body.reportmode #stageView,body.reportmode #flowView,body.reportmode #flaggedVie
   .bottom{min-height:0} .bottom .card{min-height:0;overflow:hidden}
   #chart svg{flex:1;min-height:3.75rem;height:auto}
   .bottom .kpi{font-size:1.75rem} .bottom .kpis{gap:0.375rem} .budgetbody{overflow:hidden} .gaugewrap svg{max-width:none;height:100%;max-height:100%}
-  .rail{min-height:0;display:grid;grid-template-rows:minmax(0,1.6fr) minmax(0,1fr)}  /* Progress holds three charts; the board scrolls */
+  .rail{min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr)}  /* Progress is as tall as its charts; the board takes the rest and scrolls */
   .rail .card:first-child{min-height:0;overflow:hidden} #prog{flex:1;min-height:0} .prog{flex:1;min-height:0}
   .rail .card{min-height:0}
   .rail .card:nth-child(2){overflow:hidden} .rail .board{flex:1;min-height:0;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent;padding-right:0.125rem}
@@ -858,7 +858,7 @@ function render() {
   const c = D.history.corpus, lastP = (PROGRESS.points || []).slice(-1)[0], L = labelsNow();
   const checked = lastP ? lastP.checked : LIVE_ONLY ? '…' : c.screened_count, susp = lastP ? lastP.suspected : LIVE_ONLY ? '…' : c.suspected_count;
   const prep = lastP ? Object.values(L).filter(v => v === 'PREPRINT').length : LIVE_ONLY ? '…' : c.preprint_count;
-  $('counters').innerHTML = `<a class="chip cyan" href="${RESULTS_URL('')}" title="All screened papers"><b>${checked}</b> / ${c.total.toLocaleString()} checked</a><a class="chip red" href="${RESULTS_URL('source-review-recommended')}"><b>${susp}</b> review recommended</a>${lastP?.under_review ? `<a class="chip amber" href="${RESULTS_URL('needs-human-review')}"><b>${lastP.under_review}</b> needs human review</a>` : ''}<a class="chip" href="${RESULTS_URL('same-paper-preprint')}" title="0.90 title screen applied"><b>${prep}</b> same paper (preprint)</a>`;
+  $('counters').innerHTML = `<a class="chip cyan" href="${RESULTS_URL('')}" title="All screened papers"><b>${checked}</b> / ${c.total.toLocaleString()} checked</a>${lastP?.under_review ? `<a class="chip amber" href="${RESULTS_URL('needs-human-review')}"><b>${lastP.under_review}</b> needs human review</a>` : ''}<a class="chip red" href="${RESULTS_URL('source-review-recommended')}"><b>${susp}</b> review recommended</a><a class="chip" href="${RESULTS_URL('same-paper-preprint')}" title="0.90 title screen applied"><b>${prep}</b> same paper (preprint)</a>`;
 
   $('feedback').href = feedbackLink({type: 'bug', session: s.session});
   // Live-only: the tab strip holds the papers running now (at most LIVE_MAX_SESSIONS), plus the one on screen.
@@ -1227,24 +1227,26 @@ function renderProgress() {
   const R = progressRange(); if (!R) { setHTML($('prog'), '<p class="empty">No progress data yet.</p>'); return; }
   // A third chart, needs human review, appears once the backend reports held papers (under_review on each point).
   const held = R.pts.some(p => p.under_review != null), np = held ? 3 : 2;
-  const box = $('prog'), W = Math.max(240, box.clientWidth - 20), H = Math.max(held ? 72 : 104, Math.min(220, Math.floor((box.clientHeight - 8) / np) - 58));
+  // Compact: fixed chart heights, so the card is as tall as its charts and the board below gets the rest.
+  const box = $('prog'), W = Math.max(240, box.clientWidth - 20), H = held ? 52 : 72;
   PGEOM = {W, H};
-  const {t0, t1} = R, pts = R.pts.map(p => ({...p, under_review: p.under_review ?? 0})), L = 32, Rp = 8, T = 10, B = 22, X = t => L + (t - t0) / (t1 - t0) * (W - L - Rp);
+  const {t0, t1} = R, pts = R.pts.map(p => ({...p, under_review: p.under_review ?? 0})), L = 32, Rp = 8, T = 6, X = t => L + (t - t0) / (t1 - t0) * (W - L - Rp);
   const at = t => { let p = null; for (const q of pts) { if (q.t <= t) p = q; else break; } return p; };
   const hp = PHOVER != null ? at(PHOVER) : null, last = pts[pts.length - 1];
   const fmtD = t => new Date(t * 1000).toLocaleString('en-US', {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/New_York'});
   const ticks = []; for (let t = Math.ceil(t0 / 86400) * 86400; t < t1 - (t1 - t0) * 0.06; t += 86400) ticks.push(t);
-  const panel = (key, name, color, cap) => {
-    const ymax = Math.max(cap, ...pts.map(p => p[key])), Y = v => T + (1 - v / ymax) * (H - T - B);
+  const panel = (key, name, color, cap, lastPanel) => {
+    const B = lastPanel ? 20 : 4, Hh = lastPanel ? H + 16 : H;  // one shared time axis, drawn under the last chart
+    const ymax = Math.max(cap, ...pts.map(p => p[key])), Y = v => T + (1 - v / ymax) * (Hh - T - B);
     let d = `M${X(t0)},${Y(0)}`; for (const p of pts) d += `H${X(p.t)}V${Y(p[key])}`; d += `H${X(t1)}`;
-    let g = `<svg viewBox="0 0 ${W} ${H}" style="height:${H}px" data-prog="1" role="img" aria-label="${name} over time">`;
+    let g = `<svg viewBox="0 0 ${W} ${Hh}" style="height:${Hh}px" data-prog="1" role="img" aria-label="${name} over time">`;
     [0, Math.round(ymax / 2), ymax].forEach(v => g += `<line x1="${L}" x2="${W - Rp}" y1="${Y(v)}" y2="${Y(v)}" stroke="#20252c" vector-effect="non-scaling-stroke"/><text x="${L - 6}" y="${Y(v) + 4.5}" text-anchor="end" font-size="13" fill="#8a919c" font-family="IBM Plex Sans, sans-serif">${v}</text>`);
-    ticks.forEach(t => g += `<text x="${X(t)}" y="${H - 4}" text-anchor="middle" font-size="13" fill="#8a919c" font-family="IBM Plex Sans, sans-serif">${new Date(t * 1000).toLocaleDateString('en-US', {month: 'short', day: 'numeric', timeZone: 'UTC'})}</text>`);
+    if (lastPanel) ticks.forEach(t => g += `<text x="${X(t)}" y="${Hh - 4}" text-anchor="middle" font-size="13" fill="#8a919c" font-family="IBM Plex Sans, sans-serif">${new Date(t * 1000).toLocaleDateString('en-US', {month: 'short', day: 'numeric', timeZone: 'UTC'})}</text>`);
     g += `<path d="${d}V${Y(0)}Z" fill="${color}" fill-opacity=".14"/><path d="${d}" fill="none" stroke="${color}" stroke-width="1.8" vector-effect="non-scaling-stroke"/>`;
     if (key === 'suspected') pts.forEach((p, i) => { if (p.suspected > (i ? pts[i - 1].suspected : 0)) g += `<circle cx="${X(p.t)}" cy="${Y(p.suspected)}" r="2.6" fill="${color}"><title>${esc(paperMeta(p.paper_id).title)}</title></circle>`; });
     const ex = X(t1), ey = Y(last[key]);
     g += `${MODE === 'live' ? `<circle class="livedot" cx="${ex}" cy="${ey}" r="3" fill="none" stroke="${color}"/>` : ''}<circle cx="${ex}" cy="${ey}" r="3" fill="${color}"/>`;
-    if (hp) g += `<line x1="${X(PHOVER)}" x2="${X(PHOVER)}" y1="${T}" y2="${H - B}" stroke="#8b94a3" stroke-dasharray="2 3" vector-effect="non-scaling-stroke"/><circle cx="${X(PHOVER)}" cy="${Y(hp[key])}" r="3.2" fill="#0b0d10" stroke="${color}" stroke-width="1.6" vector-effect="non-scaling-stroke"/>`;
+    if (hp) g += `<line x1="${X(PHOVER)}" x2="${X(PHOVER)}" y1="${T}" y2="${Hh - B}" stroke="#8b94a3" stroke-dasharray="2 3" vector-effect="non-scaling-stroke"/><circle cx="${X(PHOVER)}" cy="${Y(hp[key])}" r="3.2" fill="#0b0d10" stroke="${color}" stroke-width="1.6" vector-effect="non-scaling-stroke"/>`;
     g += '</svg>';
     const v = hp ? hp[key] : last[key], prev = (at(t1 - 86400) || {})[key] ?? 0;
     const dd = last[key] - prev, right = hp ? fmtD(PHOVER) + ' ET' : `${dd > 0 ? '+' : dd < 0 ? '−' : '±'}${Math.abs(dd)} in 24h`;
@@ -1252,7 +1254,8 @@ function renderProgress() {
     const cat = {checked: '', suspected: 'source-review-recommended', under_review: 'needs-human-review'}[key];
     return `<div class="pp" style="--c:${color}"><div class="ph"><b>${v}</b>${name}<span class="d">${right}</span><a class="pgo" href="${RESULTS_URL(cat)}" aria-label="List: ${name}" title="Open the list">›</a></div>${g}${extra}</div>`;
   };
-  setHTML($('prog'), panel('checked', 'papers checked', '#57c7cf', 10) + panel('suspected', 'review recommended', '#ff8a7f', 5) + (held ? panel('under_review', 'needs human review', '#e8b44c', 5) : ''));
+  // Severity order, as in the header: checked, then needs human review (amber), then review recommended (red).
+  setHTML($('prog'), panel('checked', 'papers checked', '#57c7cf', 10) + (held ? panel('under_review', 'needs human review', '#e8b44c', 5) : '') + panel('suspected', 'review recommended', '#ff8a7f', 5, true));
 }
 document.addEventListener('mousemove', e => {
   const svg = e.target.closest && e.target.closest('svg[data-prog]'), R = progressRange();

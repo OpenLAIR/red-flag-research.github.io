@@ -237,7 +237,8 @@ const plainTitle = s => String(s || '').replace(/\$([^$]*)\$/g, (_, m) => m.repl
     'no-source-finding': { name: 'No source finding', cls: 'nsf' },
     'same-paper-preprint': { name: 'Same paper (preprint)', cls: 'oth' },
   };
-  const ORDER = ['source-review-recommended', 'needs-human-review', 'no-source-finding', 'same-paper-preprint'];
+  // Same order as the live page: needs human review (amber) before review recommended (red), then the rest.
+  const ORDER = ['needs-human-review', 'source-review-recommended', 'no-source-finding', 'same-paper-preprint'];
   const $ = (id) => document.getElementById(id);
   const params = new URLSearchParams(location.search);
 
