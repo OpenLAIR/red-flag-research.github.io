@@ -249,6 +249,7 @@ const plainTitle = s => String(s || '').replace(/\$([^$]*)\$/g, (_, m) => m.repl
   const params = new URLSearchParams(location.search);
 
   let api = '', SNAP = '', snapshotMode = false, snapshotProbeTimer = null;
+  let snapshot = null, snapshotOffset = 0;
   let category = params.get('category') || '';
   let counts = {}, total = 0, names = {};
   let rows = 0, cursor = null, token = 0, retryTimer = null, ctl = null;
@@ -435,6 +436,7 @@ const plainTitle = s => String(s || '').replace(/\$([^$]*)\$/g, (_, m) => m.repl
       try {
         await fetchJson(api + '/api/papers?limit=1', 'no-store');
         snapshotMode = false;
+        snapshot = null; snapshotOffset = 0;
         $('snapshotNotice').hidden = true;
         load(true);
         return;
@@ -472,10 +474,11 @@ const plainTitle = s => String(s || '').replace(/\$([^$]*)\$/g, (_, m) => m.repl
     let url = api + '/api/papers?limit=' + PAGE;
     if (category) url += '&category=' + encodeURIComponent(category);
     if (!reset && cursor) url += '&cursor=' + encodeURIComponent(cursor);
-    let d, fromSnapshot = false;
+    let d, fromSnapshot = false, freshSnapshot = false;
     try {
       if (snapshotMode) {
-        d = await loadSnapshot();
+        if (!reset && snapshot) d = snapshot;
+        else { d = await loadSnapshot(); freshSnapshot = true; }
         fromSnapshot = true;
       } else {
         try {
@@ -487,6 +490,7 @@ const plainTitle = s => String(s || '').replace(/\$([^$]*)\$/g, (_, m) => m.repl
           if (mine !== token) return;
           d = await loadSnapshot();
           fromSnapshot = true;
+          freshSnapshot = true;
         }
       }
     } catch (e) {
@@ -497,20 +501,27 @@ const plainTitle = s => String(s || '').replace(/\$([^$]*)\$/g, (_, m) => m.repl
       return;
     }
     if (mine !== token) return;
+    const list = $('list');
+    if (fromSnapshot && freshSnapshot) {
+      snapshot = d; snapshotOffset = 0;
+      if (!reset) { rows = 0; cursor = null; list.textContent = ''; list.hidden = true; }
+      snapshot.papers.forEach((p) => { if (p.category && !KNOWN[p.category_id]) names[p.category_id] = p.category; });
+    }
     counts = d.counts || counts;
     total = typeof d.total === 'number' ? d.total : total;
-    d.papers.forEach((p) => { if (p.category && !KNOWN[p.category_id]) names[p.category_id] = p.category; });
-    const list = $('list');
+    const papers = fromSnapshot ? snapshot.papers.slice(snapshotOffset, snapshotOffset + PAGE) : d.papers;
+    if (!fromSnapshot) papers.forEach((p) => { if (p.category && !KNOWN[p.category_id]) names[p.category_id] = p.category; });
     const frag = document.createDocumentFragment();
-    d.papers.forEach((p) => frag.appendChild(renderRow(p)));
+    papers.forEach((p) => frag.appendChild(renderRow(p)));
     list.appendChild(frag);
+    if (fromSnapshot) snapshotOffset += papers.length;
     cursor = fromSnapshot ? null : (d.next_cursor || null);
     renderFilters();
     if (rows === 0) setState('No papers in this result yet.');
     else setState('');
     list.hidden = rows === 0;
     $('moreBtn').disabled = false;
-    $('more').hidden = !cursor;
+    $('more').hidden = fromSnapshot ? snapshotOffset >= snapshot.papers.length : !cursor;
     const u = fmtUpdated(d.updated_at);
     $('upd').textContent = u;
     $('upd').hidden = !u;
