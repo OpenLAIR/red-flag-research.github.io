@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>All screened papers · Red-flag Research</title>
+<title>Screening results · Red-flag Research</title>
 <link rel="canonical" href="https://red-flag-research.org/results/">
-<meta name="description" content="Every Stage 1 paper Red-flag Research has finished screening, by result. A flag is a lead for a person to check, not a finding of misconduct.">
+<meta name="description" content="Publicly available screening results. A flag is a lead for a person to check, not a finding of misconduct.">
 <link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="48x48" href="../icons/favicon-48.png">
 <link rel="apple-touch-icon" sizes="180x180" href="../icons/apple-touch-icon.png">
@@ -192,10 +192,9 @@ main{padding-top:56px}
 </header>
 
 <main class="wrap" id="main">
-  <h1 class="rise">All screened papers</h1>
-  <p class="lead rise" style="--d:80ms">Every Stage 1 paper the system has finished, by result. A flag is a lead for a person to check, not a finding of misconduct.</p>
+  <h1 class="rise">Screening results</h1>
+  <p class="lead rise" style="--d:80ms">Publicly available screening results. A flag is a lead for a person to check, not a finding of misconduct.</p>
 
-  <p class="snapshot-notice" id="snapshotNotice" role="status" hidden></p>
   <div class="filters" id="filters" role="group" aria-label="Filter by result" hidden></div>
   <p class="state" id="state" role="status" aria-live="polite">Loading…</p>
   <ol class="list" id="list" hidden></ol>
@@ -216,7 +215,7 @@ main{padding-top:56px}
         <ul>
           <li><a href="../">Project page</a></li>
           <li><a href="../live/">Live page</a></li>
-          <li><a href="./" aria-current="page">All screened papers</a></li>
+          <li><a href="./" aria-current="page">Screening results</a></li>
           <li><a href="../feedback.html">Send feedback</a></li>
           <li><a href="../privacy.html">Privacy policy</a></li>
         </ul>
@@ -248,11 +247,11 @@ const plainTitle = s => String(s || '').replace(/\$([^$]*)\$/g, (_, m) => m.repl
   const $ = (id) => document.getElementById(id);
   const params = new URLSearchParams(location.search);
 
-  let api = '', SNAP = '', snapshotMode = false, snapshotProbeTimer = null;
-  let snapshot = null, snapshotOffset = 0;
-  let category = params.get('category') || '';
+  const api = 'https://live-api.red-flag-research.org';
+  const approvedPaper = '8mMskG1Bhb';
+  let category = params.get('category') === 'source-review-recommended' ? 'source-review-recommended' : '';
   let counts = {}, total = 0, names = {};
-  let rows = 0, cursor = null, token = 0, retryTimer = null, ctl = null;
+  let rows = 0, token = 0, ctl = null;
 
   const titleCase = (id) => String(id).replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\s+/g, ' ').trim();
   const nameOf = (id) => (KNOWN[id] && KNOWN[id].name) || names[id] || titleCase(id);
@@ -281,7 +280,6 @@ const plainTitle = s => String(s || '').replace(/\$([^$]*)\$/g, (_, m) => m.repl
       ctl = c;
       try {
         const r = await fetch(url, { signal: c.signal, headers: { Accept: 'application/json' }, cache });
-        clearTimeout(timer);
         if (r.status >= 502 && r.status <= 504 && attempt < waits.length) {
           await new Promise((res) => setTimeout(res, waits[attempt]));
           continue;
@@ -295,6 +293,8 @@ const plainTitle = s => String(s || '').replace(/\$([^$]*)\$/g, (_, m) => m.repl
           continue;
         }
         throw e;
+      } finally {
+        clearTimeout(timer);
       }
     }
   }
@@ -423,105 +423,50 @@ const plainTitle = s => String(s || '').replace(/\$([^$]*)\$/g, (_, m) => m.repl
     return 'Updated ' + t + ' ET';
   }
 
-  function snapshotStamp(iso) {
-    const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'UTC', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(iso)).map((x) => [x.type, x.value]));
-    return parts.year + '-' + parts.month + '-' + parts.day + ' ' + parts.hour + ':' + parts.minute;
-  }
-
-  function scheduleSnapshotProbe() {
-    if (!snapshotMode || snapshotProbeTimer) return;
-    snapshotProbeTimer = setTimeout(async () => {
-      snapshotProbeTimer = null;
-      if (!snapshotMode) return;
-      try {
-        await fetchJson(api + '/api/papers?limit=1', 'no-store');
-        snapshotMode = false;
-        snapshot = null; snapshotOffset = 0;
-        $('snapshotNotice').hidden = true;
-        load(true);
-        return;
-      } catch (e) {}
-      scheduleSnapshotProbe();
-    }, 15000);
-  }
-
-  async function loadSnapshot() {
-    if (!SNAP) throw new Error('Snapshot disabled');
-    const d = await fetchJson(SNAP + '/papers/' + encodeURIComponent(category || 'all') + '.json', 'no-cache');
-    if (!d || !Array.isArray(d.papers) || d.total === 0) throw new Error('Snapshot unavailable');
-    const latest = await fetchJson(SNAP + '/latest.json', 'no-cache');
-    if (!latest || !Number.isFinite(Date.parse(latest.generated_at || ''))) throw new Error('Snapshot time unavailable');
-    snapshotMode = true;
-    $('snapshotNotice').textContent = 'Live data temporarily unavailable — showing the snapshot from ' + snapshotStamp(latest.generated_at) + ' UTC.';
-    $('snapshotNotice').hidden = false;
-    scheduleSnapshotProbe();
-    return d;
-  }
-
   async function load(reset) {
-    clearTimeout(retryTimer);
     if (ctl) ctl.abort();
     const mine = ++token;
     if (reset) {
-      rows = 0; cursor = null;
+      rows = 0;
       $('list').textContent = '';
       $('list').hidden = true;
+      $('filters').hidden = true;
       $('more').hidden = true;
+      $('upd').hidden = true;
       setState('Loading…');
     } else {
       $('moreBtn').disabled = true;
     }
     let url = api + '/api/papers?limit=' + PAGE;
     if (category) url += '&category=' + encodeURIComponent(category);
-    if (!reset && cursor) url += '&cursor=' + encodeURIComponent(cursor);
-    let d, fromSnapshot = false, freshSnapshot = false;
+    let d, papers;
     try {
-      if (snapshotMode) {
-        if (!reset && snapshot) d = snapshot;
-        else { d = await loadSnapshot(); freshSnapshot = true; }
-        fromSnapshot = true;
-      } else {
-        try {
-          d = await fetchJson(url);
-          if (!d || !Array.isArray(d.papers)) throw new Error('bad payload');
-          // An empty index (total 0) only happens while the backend rebuilds it: retry instead of showing an empty list.
-          if (d.total === 0) throw new Error('index rebuilding');
-        } catch (liveErr) {
-          if (mine !== token) return;
-          d = await loadSnapshot();
-          fromSnapshot = true;
-          freshSnapshot = true;
-        }
-      }
+      d = await fetchJson(url);
+      if (!d || !Array.isArray(d.papers)) throw new Error('bad payload');
+      papers = d.papers.filter((p) => p && p.paper_id === approvedPaper).slice(0, 1);
+      if (!papers.length) throw new Error('approved result unavailable');
     } catch (e) {
       if (mine !== token) return;
       $('moreBtn').disabled = false;
-      setState('The list is unavailable right now, retrying…', true);
-      retryTimer = setTimeout(() => load(reset), 15000);
+      setState('The approved result is temporarily unavailable.', true);
       return;
     }
     if (mine !== token) return;
     const list = $('list');
-    if (fromSnapshot && freshSnapshot) {
-      snapshot = d; snapshotOffset = 0;
-      if (!reset) { rows = 0; cursor = null; list.textContent = ''; list.hidden = true; }
-      snapshot.papers.forEach((p) => { if (p.category && !KNOWN[p.category_id]) names[p.category_id] = p.category; });
-    }
-    counts = d.counts || counts;
-    total = typeof d.total === 'number' ? d.total : total;
-    const papers = fromSnapshot ? snapshot.papers.slice(snapshotOffset, snapshotOffset + PAGE) : d.papers;
-    if (!fromSnapshot) papers.forEach((p) => { if (p.category && !KNOWN[p.category_id]) names[p.category_id] = p.category; });
+    counts = {};
+    total = papers.length;
+    papers.forEach((p) => {
+      counts[p.category_id] = (counts[p.category_id] || 0) + 1;
+      if (p.category && !KNOWN[p.category_id]) names[p.category_id] = p.category;
+    });
     const frag = document.createDocumentFragment();
     papers.forEach((p) => frag.appendChild(renderRow(p)));
     list.appendChild(frag);
-    if (fromSnapshot) snapshotOffset += papers.length;
-    cursor = fromSnapshot ? null : (d.next_cursor || null);
     renderFilters();
-    if (rows === 0) setState('No papers in this result yet.');
-    else setState('');
-    list.hidden = rows === 0;
+    setState('');
+    list.hidden = false;
     $('moreBtn').disabled = false;
-    $('more').hidden = fromSnapshot ? snapshotOffset >= snapshot.papers.length : !cursor;
+    $('more').hidden = true;
     const u = fmtUpdated(d.updated_at);
     $('upd').textContent = u;
     $('upd').hidden = !u;
@@ -540,19 +485,14 @@ const plainTitle = s => String(s || '').replace(/\$([^$]*)\$/g, (_, m) => m.repl
 
   $('moreBtn').addEventListener('click', () => load(false));
 
-  const apiParam = (params.get('api') || '').trim();
   fetch('../data/site.json', { cache: 'no-cache' }).then((r) => r.ok ? r.json() : null).catch(() => null).then((site) => {
     if (site) {
       document.querySelectorAll('[data-bind]').forEach((e) => { const v = site[e.dataset.bind]; if (v != null) e.textContent = v; });
       const hrefs = { orgUrl: site.organization && site.organization.url, authorUrl: site.authorUrl };
       document.querySelectorAll('[data-href]').forEach((e) => { if (hrefs[e.dataset.href]) e.href = hrefs[e.dataset.href]; });
     }
-    api = (/^https?:\/\//i.test(apiParam) ? apiParam : (site && site.apiBase) || '').replace(/\/+$/, '');
-    const snapshotParam = (params.get('snapshot') || '').trim();
-    SNAP = snapshotParam === 'off' ? '' : (snapshotParam || (site && site.snapshotBase) || 'https://snapshot.red-flag-research.org/v1').replace(/\/+$/, '');
-    if (!api) { setState('The list is unavailable right now, retrying…', true); return; }
-    load(true);
   });
+  load(true);
 })();
 </script>
 </body>
