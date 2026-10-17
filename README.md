@@ -1,7 +1,7 @@
 # Red-flag Research · Public site
 
-- Project homepage: https://openlair.github.io/red-flag-research.github.io/
-- Live page: https://openlair.github.io/red-flag-research.github.io/live/
+- Project homepage: https://red-flag-research.org/
+- Live page: https://red-flag-research.org/live/
 
 ## Layout
 

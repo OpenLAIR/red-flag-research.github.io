@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://openlair.github.io/red-flag-research.github.io/</loc><lastmod>2026-10-16</lastmod></url>
-  <url><loc>https://openlair.github.io/red-flag-research.github.io/live/</loc><lastmod>2026-10-16</lastmod></url>
-  <url><loc>https://openlair.github.io/red-flag-research.github.io/feedback.html</loc><lastmod>2026-10-16</lastmod></url>
-  <url><loc>https://openlair.github.io/red-flag-research.github.io/privacy.html</loc><lastmod>2026-10-16</lastmod></url>
+  <url><loc>https://red-flag-research.org/</loc><lastmod>2026-10-16</lastmod></url>
+  <url><loc>https://red-flag-research.org/live/</loc><lastmod>2026-10-16</lastmod></url>
+  <url><loc>https://red-flag-research.org/results/</loc><lastmod>2026-10-17</lastmod></url>
+  <url><loc>https://red-flag-research.org/feedback.html</loc><lastmod>2026-10-16</lastmod></url>
+  <url><loc>https://red-flag-research.org/privacy.html</loc><lastmod>2026-10-16</lastmod></url>
 </urlset>

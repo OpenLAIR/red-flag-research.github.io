@@ -6,9 +6,9 @@ Red-flag Research is by Ziqian Zhang at OpenLAIR (Lehigh AI Research Lab). Its f
 
 ## Project
 
-- [Homepage](https://openlair.github.io/red-flag-research.github.io/): what the project is, the nine-stage schedule, label meanings, how to get a result corrected
-- [Feedback form](https://openlair.github.io/red-flag-research.github.io/feedback.html): report a wrong result, a bug or a benchmark problem by e-mail
-- [Live screening](https://openlair.github.io/red-flag-research.github.io/live/): each ICLR 2027 submission as it is screened: extracted claims, candidate sources, side-by-side passages, label
+- [Homepage](https://red-flag-research.org/): what the project is, the nine-stage schedule, label meanings, how to get a result corrected
+- [Feedback form](https://red-flag-research.org/feedback.html): report a wrong result, a bug or a benchmark problem by e-mail
+- [Live screening](https://red-flag-research.org/live/): each ICLR 2027 submission as it is screened: extracted claims, candidate sources, side-by-side passages, label
 - [Benchmark on GitHub](https://github.com/OpenLAIR/red-flag-research): 20 anonymized ICLR 2027 cases, 34 target–source pairs, human labels, evaluation tools and saved baseline outputs
 - [Benchmark on Hugging Face](https://huggingface.co/datasets/red-flag-research/iclr2027-source-review-benchmark): the same benchmark as a dataset (CC BY 4.0)
 
@@ -21,5 +21,5 @@ Red-flag Research is by Ziqian Zhang at OpenLAIR (Lehigh AI Research Lab). Its f
 
 ## Optional
 
-- [Privacy policy](https://openlair.github.io/red-flag-research.github.io/privacy.html)
+- [Privacy policy](https://red-flag-research.org/privacy.html)
 - [OpenLAIR](https://openlair.github.io/)
