@@ -1146,35 +1146,158 @@ function openAbout(pid, title) {
 // ---- votes: one ballot per browser token per paper; the main stage and the flagged list share the count ----
 // Votes go to the public API once its vote route is open (user approved 2026-10-16; per-paper counts stay private).
 // Turn VOTES_ON on when the gateway serves /api/votes, so the page makes no vote requests before that. ?votes= overrides.
-const VOTES_ON = false;
+const VOTES_ON = true;
 const VOTE_API = () => (new URLSearchParams(location.search).get('votes') || D.vote_base || (VOTES_ON ? API : '')).replace(/\/+$/, '');
+const VOTE_REFRESH_MS = 30000, VOTE_ID_RE = /^[A-Za-z0-9_-]{8,}$/;
 let VOTE_TOTAL = null, VOTE_MSG = {};
 let VOTES = {}, VOTE_STATE = 'off';
+let VOTE_FETCH = null, VOTE_FETCH_IDS = '', VOTE_TIMER = null, VOTE_PENDING = false, VOTE_LAST_ATTEMPT = null;
+let VOTE_CANDIDATE_SIGNATURE = null, VOTE_CANDIDATE_IDS = [], VOTE_EPOCH = 0;
+let VOTE_CANDIDATES = new Map(), VOTE_RECENT = new Map();
 const randHex = () => [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, '0')).join('');
 const VOTER = (() => { try { let v = localStorage.getItem('lw-voter'); if (!/^[0-9a-f]{32}$/.test(v || '')) { v = randHex(); localStorage.setItem('lw-voter', v); } return v; } catch { return randHex(); } })();
-async function fetchVotes() {
+function voteModeActive() { return !SOON && !!VOTE_API() && !SNAPMODE; }
+function voteHeld(x, label) {
+  return !!x?.held || x?.under_review === true || [label, x?.label, x?.category, x?.screening, x?.result?.screening, x?.final?.status, x?.final?.category]
+    .some(v => isHeldLabel(v) || /^needs human review$/i.test(String(v || '')));
+}
+function voteRowReady(x) {
+  const status = String(x?.status || '').toLowerCase();
+  const label = x?.screening || x?.result?.screening || x?.final?.status || x?.label;
+  return x?.finished != null && ['completed', 'delivered'].includes(status) && !!label && !voteHeld(x, label);
+}
+function voteBoardRowReady(x) {
+  const label = x?.label || x?.screening || x?.category;
+  return !!label && !x.live && (!x.status || ['completed', 'delivered'].includes(x.status)) && !voteHeld(x, label);
+}
+function voteCandidateKey(pid) {
+  const rows = S.filter(x => x.paper_id === pid);
+  const row = rows.find(x => x.session === REPORT) || rows.find(x => x === S[focus]) || rows.sort((a, b) => (b.started || b.finished || 0) - (a.started || a.finished || 0))[0];
+  const recent = VOTE_RECENT.get(pid), x = row || recent || (D.history?.board || []).find(x => x.paper_id === pid);
+  if (!x || !(row || recent ? voteRowReady(x) : voteBoardRowReady(x))) return null;
+  return JSON.stringify([x.run_id || x.session || pid, x.label, x.screening, x.result?.screening, x.final?.status, x.final?.category]);
+}
+function collectVotePaperIds() {
+  const ids = [], seen = new Set();
+  const add = x => {
+    const id = typeof x?.paper_id === 'string' ? x.paper_id.trim() : '';
+    if (id && VOTE_ID_RE.test(id) && voteCandidateKey(id) != null && !seen.has(id)) { seen.add(id); ids.push(id); }
+  };
+  const ready = [...S, ...VOTE_RECENT.values()].filter(voteRowReady);
+  if (REPORT) add(ready.find(x => x.session === REPORT));
+  add(S[focus] && voteRowReady(S[focus]) ? S[focus] : null);
+  ready.sort((a, b) => (Number(b.finished) || Number(b.started) || 0) - (Number(a.finished) || Number(a.started) || 0)).forEach(add);
+  const board = (D.history?.board || []).filter(voteBoardRowReady).sort((a, b) => {
+    const time = x => {
+      const raw = x.finished ?? x.updated_at ?? x.started ?? x.t ?? x.finished_at ?? x.started_at;
+      const numeric = Number(raw);
+      return Number.isFinite(numeric) ? numeric : Date.parse(raw || '') / 1000 || 0;
+    };
+    return time(b) - time(a);
+  });
+  board.forEach(add);
+  return ids.slice(0, 100);
+}
+function votePaperIds() { return VOTE_CANDIDATE_IDS; }
+function voteListed(pid) {
+  return voteModeActive() && VOTE_STATE === 'ok' && VOTE_CANDIDATES.has(pid) &&
+    VOTE_CANDIDATES.get(pid).key === voteCandidateKey(pid) && Object.prototype.hasOwnProperty.call(VOTES, pid);
+}
+function suspendVotes() {
+  VOTE_EPOCH++;
+  if (VOTE_TIMER != null) clearTimeout(VOTE_TIMER);
+  VOTE_TIMER = null; VOTE_PENDING = false; VOTE_FETCH_IDS = '';
+  VOTES = {}; VOTE_TOTAL = null; VOTE_MSG = {}; VOTE_STATE = 'off'; VOTE_CANDIDATE_SIGNATURE = null; VOTE_CANDIDATE_IDS = []; VOTE_CANDIDATES.clear(); VOTE_RECENT.clear();
+}
+async function fetchVotes(ids, epoch, candidates) {
   const base = VOTE_API();
-  if (!base) { VOTE_STATE = 'off'; return; }
-  const ids = [...new Set([...S.filter(x => x.finished != null && x.openreview).map(x => x.paper_id), ...(D.history.board || []).map(r => r.paper_id)])].slice(0, 100);
+  if (!voteModeActive() || !base) { suspendVotes(); return; }
+  if (!ids.length) { VOTES = {}; VOTE_TOTAL = null; VOTE_STATE = 'off'; return; }
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 20000);
   try {
-    const r = await fetch(base + '/api/votes?' + ids.map(id => 'paper_id=' + enc(id)).join('&'), {cache: 'no-store', headers: {'X-Voter': VOTER}});
+    const r = await fetch(base + '/api/votes?' + ids.map(id => 'paper_id=' + enc(id)).join('&'), {cache: 'no-store', signal: ctl.signal, headers: {'X-Voter': VOTER}});
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const j = await r.json();
-    VOTES = j.votes || {}; VOTE_TOTAL = typeof j.total === 'number' ? j.total : null; VOTE_STATE = 'ok';
-  } catch (err) { VOTE_STATE = 'off'; }
+    if (epoch !== VOTE_EPOCH || !voteModeActive()) return;
+    const asked = new Set(ids), returned = j.votes || {};
+    VOTES = Object.fromEntries(Object.entries(returned).filter(([id]) => asked.has(id) && VOTE_ID_RE.test(id) && candidates.get(id) === VOTE_CANDIDATES.get(id) && candidates.get(id)?.key === voteCandidateKey(id)));
+    VOTE_TOTAL = typeof j.total === 'number' ? j.total : null; VOTE_STATE = 'ok';
+  } catch (err) {
+    if (epoch === VOTE_EPOCH && voteModeActive()) { VOTE_STATE = 'off'; VOTES = {}; VOTE_TOTAL = null; }
+  } finally { clearTimeout(timer); }
+}
+function scheduleVoteRefresh() {
+  if (VOTE_TIMER != null || !VOTE_PENDING || VOTE_FETCH) return;
+  const wait = VOTE_LAST_ATTEMPT == null ? 0 : Math.max(0, VOTE_REFRESH_MS - (Date.now() - VOTE_LAST_ATTEMPT));
+  VOTE_TIMER = setTimeout(runVoteRefresh, wait);
+}
+async function runVoteRefresh() {
+  VOTE_TIMER = null;
+  if (!VOTE_PENDING) return;
+  if (!voteModeActive()) { suspendVotes(); return; }
+  const ids = votePaperIds(), signature = ids.join('\n');
+  if (!ids.length) { VOTE_PENDING = false; VOTES = {}; VOTE_TOTAL = null; VOTE_STATE = 'off'; return; }
+  VOTE_PENDING = false; VOTE_LAST_ATTEMPT = Date.now(); VOTE_FETCH_IDS = signature;
+  if (VOTE_STATE !== 'ok') VOTE_STATE = 'loading';
+  const epoch = VOTE_EPOCH;
+  const pending = fetchVotes(ids, epoch, new Map(VOTE_CANDIDATES));
+  VOTE_FETCH = pending;
+  try { await pending; }
+  finally {
+    if (VOTE_FETCH === pending) { VOTE_FETCH = null; VOTE_FETCH_IDS = ''; }
+    if (voteModeActive() && epoch === VOTE_EPOCH) render();
+    if (VOTE_PENDING) scheduleVoteRefresh();
+  }
+}
+function requestVoteRefresh() {
+  if (!voteModeActive()) { suspendVotes(); return; }
+  const ids = votePaperIds();
+  if (!ids.length) { if (!VOTE_FETCH) VOTE_PENDING = false; VOTES = {}; VOTE_TOTAL = null; VOTE_STATE = 'off'; return; }
+  if (VOTE_FETCH) {
+    if (ids.join('\n') !== VOTE_FETCH_IDS) VOTE_PENDING = true;
+    return VOTE_FETCH;
+  }
+  VOTE_PENDING = true;
+  scheduleVoteRefresh();
+}
+function notifyVoteCandidatesChanged() {
+  if (!voteModeActive()) { suspendVotes(); return; }
+  // Live mode removes finished runs from the stage; retain their last public result for the next refresh.
+  for (const x of S) {
+    if (typeof x.paper_id === 'string' && VOTE_ID_RE.test(x.paper_id)) VOTE_RECENT.set(x.paper_id, x);
+  }
+  VOTE_RECENT = new Map([...VOTE_RECENT].sort((a, b) => (b[1].finished || b[1].started || 0) - (a[1].finished || a[1].started || 0)).slice(0, 100));
+  VOTE_CANDIDATE_IDS = collectVotePaperIds();
+  const signature = VOTE_CANDIDATE_IDS.join('\n');
+  const candidates = new Map(VOTE_CANDIDATE_IDS.map(id => {
+    const key = voteCandidateKey(id), old = VOTE_CANDIDATES.get(id);
+    // Preserve each unchanged paper across additions/reordering; re-entry gets a new object.
+    return [id, old?.key === key ? old : {key}];
+  }));
+  const changed = signature !== VOTE_CANDIDATE_SIGNATURE || [...candidates].some(([id, value]) => value !== VOTE_CANDIDATES.get(id));
+  for (const id of Object.keys(VOTES)) if (candidates.get(id) !== VOTE_CANDIDATES.get(id)) { delete VOTES[id]; delete VOTE_MSG[id]; }
+  VOTE_CANDIDATES = candidates;
+  if (!changed) return;
+  VOTE_CANDIDATE_SIGNATURE = signature;
+  if (VOTE_FETCH) VOTE_PENDING = true;
+  if (signature) requestVoteRefresh();
+  else { VOTES = {}; VOTE_TOTAL = null; VOTE_STATE = 'off'; }
 }
 const VOTE_ERR = {unknown_paper: 'Voting opens when this result is published', rate_limited: 'Too many votes from your network; try again later',
   too_many_voters_from_ip: 'Too many votes on this paper from your network', vote_service_unavailable: 'Voting is unavailable right now; try again later'};
 async function castVote(pid, vote) {
-  const base = VOTE_API(); if (!base) return;
+  const base = VOTE_API(); if (!base || !voteListed(pid) || !['agree', 'unsure', 'disagree'].includes(vote)) return;
+  const epoch = VOTE_EPOCH, candidate = VOTE_CANDIDATES.get(pid);
+  const current = () => epoch === VOTE_EPOCH && voteListed(pid) && VOTE_CANDIDATES.get(pid) === candidate;
   const next = VOTES[pid]?.mine === vote ? null : vote;  // clicking your own vote again withdraws it
   try {
     const r = await fetch(base + '/api/vote', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Voter': VOTER}, body: JSON.stringify({paper_id: pid, vote: next})});
     const j = await r.json();
+    if (!current()) return;
     if (j.ok) { VOTES[pid] = {mine: j.mine ?? null}; if (typeof j.total === 'number') VOTE_TOTAL = j.total; VOTE_MSG[pid] = j.mine ? 'Thanks, your feedback was recorded' : 'Your vote was withdrawn'; }
     else { if (j.error === 'unknown_paper') delete VOTES[pid]; VOTE_MSG[pid] = VOTE_ERR[j.error] || 'Your vote was not recorded'; }
-  } catch (err) { VOTE_MSG[pid] = 'Voting is unavailable right now; try again later'; }
-  render();
+  } catch (err) { if (current()) VOTE_MSG[pid] = 'Voting is unavailable right now; try again later'; }
+  if (current()) render();
 }
 // ---- final report: the XHIGH write-up rendered as a readable report (headings, paragraphs, quotes), never raw fields ----
 const cleanText = t => String(t || '')
@@ -1208,7 +1331,7 @@ function reportButton(s, st) {
 }
 function resultVote(pid) {
   // Feedback on a delivered result: only the viewer's own choice and the site-wide total are shown, never per-paper counts.
-  if (VOTE_STATE !== 'ok') return '';
+  if (!voteListed(pid)) return '';
   const open = pid in VOTES, mine = VOTES[pid]?.mine, opt = [['agree', 'Agree'], ['unsure', 'Not sure'], ['disagree', 'Disagree']];
   const msg = VOTE_MSG[pid] || (open ? '' : 'Voting opens when this result is published');
   return `<div class="rvote"><span>Do you agree with this result?</span>${opt.map(([k, t]) => `<button class="vbtn${mine === k ? ' mine' : ''}" data-rvote="${k}" data-pid="${esc(pid)}" aria-pressed="${mine === k}"${open ? '' : ' disabled'}>${t}</button>`).join('')}
@@ -1730,7 +1853,7 @@ function tick(now) {
   if (MODE === 'live') {
     S.forEach((x, i) => { if (!x.extra) pos[i] = durOf(x); });
     if (S[focus].extra) { if (playing) advance(); }  // a saved session opened from the board replays until the viewer leaves it
-    else if (!userPickedAt || Date.now() - userPickedAt > 60000) { userPickedAt = 0; const f = pickFocus(S.map((x, i) => stateAt(x, x.started + pos[i]))); if (f >= 0) focus = f; }
+    else if (!userPickedAt || Date.now() - userPickedAt > 60000) { userPickedAt = 0; const f = pickFocus(S.map((x, i) => stateAt(x, x.started + pos[i]))); if (f >= 0 && f !== focus) { focus = f; notifyVoteCandidatesChanged(); } }
   } else if (playing) advance();
   if (now - lastRender > 250) { lastRender = now; render(); }
   requestAnimationFrame(tick);
@@ -1740,13 +1863,15 @@ function pickStage(s, groupId) {
   return (ss.find(x => st.status[x.id] === 'run') || [...ss].reverse().find(x => st.status[x.id] === 'done' && stageIO(s, st, x)) || ss[0]).id;
 }
 function watch(i) {
+  const changed = focus !== i;
   focus = i; openStage = null;
+  if (changed) notifyVoteCandidatesChanged();
   if (MODE === 'live') { userPickedAt = Date.now(); if (!S[i].extra) { render(); return; } }
   if (pos[i] >= durOf(S[i])) pos[i] = 0; playing = true; $('play').textContent = 'Pause'; render();
 }
 async function openReport(name) {
   if (!S.some(x => x.session === name)) await openSession(name);  // loads a board session that is not in the batch
-  REPORT = name; view = 'report'; render(); $('reportView').scrollTop = 0;
+  REPORT = name; notifyVoteCandidatesChanged(); view = 'report'; render(); $('reportView').scrollTop = 0;
 }
 async function openSession(name) {
   let i = S.findIndex(x => x.session === name);
@@ -1758,6 +1883,7 @@ async function openSession(name) {
         : await fetch('sessions/' + encodeURIComponent(name) + '.json').then(q => { if (!q.ok) throw new Error('HTTP ' + q.status); return q.json(); });
       x.rank = x.rank || r.rank; x.extra = true;
       S.push(prep(x)); pos.push(0); i = S.length - 1;
+      notifyVoteCandidatesChanged();
     } catch (err) { console.info('Could not load session', name, err.message); return; }
   }
   pos[i] = 0; watch(i);
@@ -1858,10 +1984,12 @@ function scheduleSnapshotProbe() {
 function enterSnapshot(latest) {
   if (SNAPMODE) return;
   SNAPMODE = {at: latest.generated_at, latest};
+  suspendVotes();
   document.body.classList.add('snapshot');
   $('snapshotNotice').textContent = `Live data temporarily unavailable — showing the snapshot from ${snapshotStamp(latest.generated_at)} UTC.`;
   $('snapshotNotice').hidden = false;
   $('modeBadge').textContent = 'Snapshot';
+  render();
   scheduleSnapshotProbe();
 }
 async function snapshotJSON(mapping) {
@@ -1948,6 +2076,7 @@ function pumpEventFetches() {
         if (followsTail) pos[index] = durOf(run);
         render();
       }
+      notifyVoteCandidatesChanged();
       job.resolve(run);
     }).catch(err => {
       job.run._eventsState = 'error';
@@ -2085,6 +2214,7 @@ async function loadRemainingRuns(rows) {
     pos.push(durOf(x));
     focus = Math.max(0, S.indexOf(shown));
     render();
+    notifyVoteCandidatesChanged();
     eventsForRun(x).catch(() => {});
   }
 }
@@ -2105,6 +2235,7 @@ async function showBatch(batch, firstRows, laterRows, reportRun, pinned) {
     S.push(prep(x)); pos.push(durOf(x));
     focus = Math.max(0, S.indexOf(shown));
     render();
+    notifyVoteCandidatesChanged();
     eventsForRun(x).catch(() => {});
   }).then(results => {
     results.filter(r => r.status === 'rejected').forEach(r => console.info('Run not loaded:', r.reason?.message));
@@ -2121,6 +2252,7 @@ async function showBatch(batch, firstRows, laterRows, reportRun, pinned) {
     pos[0] = 0; playing = true; $('play').textContent = 'Pause';
   }
   seenSteps = new Set(); setFoot();
+  notifyVoteCandidatesChanged();
   render();  // the first readable paper is visible before any secondary request starts
   displayed();
   loadProgressInBackground();
@@ -2159,7 +2291,7 @@ async function boot() {
     // Live-only: keep the saved batches out of sight and try again.
     console.info('Live data unavailable, retrying:', err.message);
     $('liveWait').textContent = 'Live data unavailable, retrying…';
-    setTimeout(() => boot().then(fetchVotes).then(render), 15000);
+    setTimeout(() => boot().then(() => { notifyVoteCandidatesChanged(); requestVoteRefresh(); render(); }), 15000);
   }
 }
 let pollN = 0;
@@ -2180,6 +2312,7 @@ async function addNewRuns(runs) {
     S.push(prep(x)); pos.push(durOf(x));
     focus = Math.max(0, S.indexOf(shown));
     render();
+    notifyVoteCandidatesChanged();
     eventsForRun(x).catch(() => {});
   }
   const shown = S[focus];
@@ -2192,6 +2325,7 @@ async function addNewRuns(runs) {
     S.splice(drop, 1); pos.splice(drop, 1);
   }
   focus = Math.max(0, S.indexOf(shown));
+  notifyVoteCandidatesChanged();
 }
 async function pollLoop() {
   for (;;) {
@@ -2213,9 +2347,10 @@ async function pollLoop() {
           if (TERMINAL.has(x.status)) x._terminalIORefreshed = true;
           settle(x); prep(x);
         });
+        notifyVoteCandidatesChanged();
         render();
       }
-      if (runs) { await addNewRuns(runs); scanPairs(runs); }
+      if (runs) { await addNewRuns(runs); scanPairs(runs); notifyVoteCandidatesChanged(); }
       const batchRunning = runs ? runs.some(r => runKey(r.run_id).key === BATCH && !TERMINAL.has(r.status)) : false;
       if (runs && !batchRunning && S.every(x => x.finished != null) && !LIVE_ONLY) { MODE = 'replay'; setFoot(); render(); return; }
     } catch (err) { console.info('Live poll failed; retrying:', err.message); }
@@ -2521,11 +2656,12 @@ if (SOON) startSoon();
 else {
   if (LIVE_ONLY) document.body.classList.add('waiting');
   requestAnimationFrame(tick);
-  boot().then(() => fetchVotes().then(render));
+  boot().then(() => { notifyVoteCandidatesChanged(); requestVoteRefresh(); render(); });
   setInterval(async () => {
     if (SOURCE === 'api') { try { PROGRESS = keepProgress(await getJSON('/api/progress')); } catch (err) { /* keep the last series */ } }
-    await fetchVotes(); render();
+    render();
   }, 15000);
+  setInterval(requestVoteRefresh, VOTE_REFRESH_MS);
 }
 </script>
 </body>
