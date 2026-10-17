@@ -37,6 +37,9 @@ const URL_Q = new URLSearchParams(location.search);
 const HOME = URL_Q.get('home') || (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && location.port === '8890' ? 'http://localhost:8892/' : '');
 if (HOME) document.addEventListener('DOMContentLoaded', () => document.querySelectorAll('a[href^="../"]').forEach(a => { a.href = HOME + a.getAttribute('href').slice(3); }));
 const SOON = COMING_SOON && URL_Q.get('preview') !== 'live';
+// After the start (and with ?preview=live) the page shows live API data only: never the saved replay of earlier batches.
+// Until the first live paper loads, a "Loading live data" line stands in for the panels. ?runs= keeps its pinned replay.
+const LIVE_ONLY = !SOON && !URL_Q.get('runs');
 if (SOON) document.documentElement.classList.add('soon');
 </script>
 <style>
@@ -525,6 +528,8 @@ html.soon #flaggedBtn{color:var(--muted)!important;cursor:default;pointer-events
   .cs-f3 .cs-sheetB{animation:cs-lift 4.4s ease-in-out infinite}
   @keyframes cs-lift{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
 }
+.livewait{display:none;margin:3rem 1rem;text-align:center;font:500 var(--fs-lead) var(--sans);color:var(--text-2)}
+body.waiting .livewait{display:block} body.waiting main,body.waiting .replay,body.waiting #counters,body.waiting #foot{visibility:hidden}
 </style>
 </head>
 <body>
@@ -557,6 +562,7 @@ html.soon #flaggedBtn{color:var(--muted)!important;cursor:default;pointer-events
   <input type="range" id="scrub" min="0" max="1000" value="0" step="1" aria-label="Replay time">
   <span class="note dim" id="elapsed"></span>
 </div>
+<p class="livewait" id="liveWait" role="status">Loading live data…</p>
 <main class="grid">
   <div class="maincol">
   <section class="card stage" id="stage" aria-label="Main stage">
@@ -1694,8 +1700,12 @@ function applyStageIO(x, sio) {
     fx_cny_per_usd: sio.fx_cny_per_usd || 7, calls: sio.calls || [], claims: sio.claims || [], queries: sio.queries || [], candidates: sio.candidates || [],
     preprints: sio.preprints || [], final: sio.final || {findings: []}, jev_final: sio.jev_final || {}, materials: sio.materials || {}, io: sio.io || {}, under_review: sio.under_review === true, budget: sio.budget, result: sio.result || null, submission: sio.submission || null});
 }
+let MAN_CACHE = null;  // et-v1 runs share one stage graph; a slow manifest reuses the last one that loaded
 async function loadRun(row) {
-  const [man, ev, sio] = await Promise.all([getJSON('/api/manifest?run_id=' + enc(row.run_id)), eventsAfter(row.run_id, 0), getJSON('/api/stage-io?run_id=' + enc(row.run_id))]);
+  const manP = getJSON('/api/manifest?run_id=' + enc(row.run_id)).then(m => (MAN_CACHE = m, m)).catch(err => { if (MAN_CACHE) return MAN_CACHE; throw err; });
+  // Events can take ~10 s per page on the tunnel: a run whose events do not arrive is shown from stage-io and filled in by the poll.
+  const evP = eventsAfter(row.run_id, 0).catch(() => ({events: [], last: 0}));
+  const [man, ev, sio] = await Promise.all([manP, evP, getJSON('/api/stage-io?run_id=' + enc(row.run_id))]);
   const m = man.manifest || {}, edges = m.edges || [];
   const x = {run_id: row.run_id, status: row.status, rank: row._ord || 0, _ord: row._ord || 0, started: tsOf(row.started_at) ?? ev.events[0]?.t, events: ev.events, _last: ev.last,
     stages: (m.stages || []).map(st => ({id: st.id, group: st.group, label: st.label, purpose: st.purpose, role: st.role})),
@@ -1794,9 +1804,10 @@ async function boot() {
       batch = rows.length ? {key, rows, live: false} : null;
     } else {
       batch = pickBatch(runs);
-      if (batch && !batch.live) batch = await pickReplayable(batch);
+      if (batch && !batch.live && LIVE_ONLY && batch.groups?.['iclr27-live']) batch = {key: 'iclr27-live', rows: liveRows(batch.groups['iclr27-live']), live: true};
+      else if (batch && !batch.live) batch = await pickReplayable(batch);
     }
-    if (!batch) return;
+    if (!batch) throw new Error('no batch to show');
     // One slow or failing run must not take the whole page back to the saved export.
     // Load a few runs at a time: the gateway slows down sharply when many runs' events are read at once.
     const first = batch.live ? batch.rows.filter(r => !TERMINAL.has(r.status)) : batch.rows;
@@ -1808,6 +1819,7 @@ async function boot() {
     loaded.forEach(x => { if (!x.rank) x.rank = runKey(x.run_id).rank; });
     if (!pinned.length) loaded.sort((a, b) => a.rank - b.rank);
     S = loaded.map(prep); BATCH = batch.key; SOURCE = 'api'; MODE = batch.live ? 'live' : 'replay';
+    document.body.classList.remove('waiting');
     pos = S.map(x => durOf(x));
     focus = pinned.length ? 0 : Math.max(0, Math.min(focus, S.length - 1));
     if (MODE === 'replay') { focus = Math.min(focus, S.length - 1); pos[focus] = 0; playing = true; $('play').textContent = 'Pause'; }
@@ -1829,7 +1841,11 @@ async function boot() {
       pollLoop();
     }
   } catch (err) {
-    console.info('Public API unavailable, keeping the saved export:', err.message);
+    if (!LIVE_ONLY) { console.info('Public API unavailable, keeping the saved export:', err.message); return; }
+    // Live-only: keep the saved batches out of sight and try again.
+    console.info('Live data unavailable, retrying:', err.message);
+    $('liveWait').textContent = 'Live data unavailable, retrying…';
+    setTimeout(() => boot().then(fetchVotes).then(render), 15000);
   }
 }
 let pollN = 0;
@@ -1857,7 +1873,7 @@ async function pollLoop() {
     pollN++;
     try {
       const runs = pollN % 4 === 0 ? ((await getJSON('/api/runs')).runs || []) : null;
-      await Promise.all(S.filter(x => x.finished == null).map(async x => {
+      await Promise.all(S.filter(x => x.finished == null || !x.events.length).map(async x => {
         const ev = await eventsAfter(x.run_id, x._last);
         if (ev.events.length) { x.events.push(...ev.events); x._last = ev.last; }
         if (runs) { const row = runs.find(r => r.run_id === x.run_id); if (row) x.status = row.status; }
@@ -1866,7 +1882,7 @@ async function pollLoop() {
       }));
       if (runs) { await addNewRuns(runs); scanPairs(runs); }
       const batchRunning = runs ? runs.some(r => runKey(r.run_id).key === BATCH && !TERMINAL.has(r.status)) : false;
-      if (runs && !batchRunning && S.every(x => x.finished != null)) { MODE = 'replay'; setFoot(); render(); return; }
+      if (runs && !batchRunning && S.every(x => x.finished != null) && !LIVE_ONLY) { MODE = 'replay'; setFoot(); render(); return; }
     } catch (err) { console.info('Live poll failed; retrying:', err.message); }
   }
 }
@@ -2168,6 +2184,7 @@ window.addEventListener('hashchange', applyPage);
 applyPage();
 if (SOON) startSoon();
 else {
+  if (LIVE_ONLY) document.body.classList.add('waiting');
   requestAnimationFrame(tick);
   boot().then(fetchVotes).then(render);
   setInterval(async () => {
