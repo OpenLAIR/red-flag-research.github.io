@@ -632,7 +632,8 @@ body.waiting .livewait{display:block} body.waiting main,body.waiting .replay,bod
   <h2 id="aboutTitle">About these results</h2>
   <p><b>Red-flag Research</b> is a research project that screens conference submissions automatically. A <b>Source review recommended</b> label means the system found passages, numbers or tables that closely match an earlier public paper without a clear attribution, so a person should compare the two papers side by side.</p>
   <p>It is <b>not</b> a finding of plagiarism, misconduct or bad faith. It has not been reviewed by the conference, the authors or any integrity committee. The system uses language models and can be wrong: shared authors, an earlier version of the same work, a cited dataset or a common baseline can all explain matching text, and the system may not see them. A paper without a label has not been cleared either.</p>
-  <p>Benchmark cases are anonymized before release.</p>
+  <p>Benchmark cases are anonymized before sharing.</p>
+  <p>Qwen reads papers and writes reports. Jev scores source rankings and source-review questions, while OCR extracts text from PDF pages.</p>
   <h3>Think a result is wrong?</h3>
   <p>If you are an author and believe a result about your paper is wrong, use the <a class="mail" href="../feedback.html?type=correction&amp;from=live" target="_blank" rel="noopener">feedback form</a> or email <a class="mail" id="contactMail" href="mailto:red.flag.autoresearch@gmail.com">red.flag.autoresearch@gmail.com</a>. We will correct it right away, and we take the result off the live page and the public data while we check.</p>
   <p class="ab-paper" id="aboutPaper" hidden></p>
@@ -666,7 +667,8 @@ const HELD_RE = /^(HELD|UNDER_REVIEW|NEEDS_HUMAN_REVIEW|HUMAN_REVIEW|needs-human
 // Note on every result a person has not reviewed yet (short wording chosen by the user, 2026-10-16).
 const HELD_NOTE = 'Automated screening, not yet reviewed by a person. This is not a finding of misconduct.';
 // Anonymised sources of a held paper arrive as source-N; they show as "Source N" and never link anywhere.
-const anonSrc = t => String(t || '').replace(/^source-(\d+)$/i, 'Source $1');
+const anonSrc = t => String(t || '').replace(/^source-(\d+)$/i, 'Source $1').replace(/^B-[A-Z0-9]+$/i, 'Source (name unavailable)');
+const isInternalMaterialId = t => /^B-[A-Z0-9]+$/i.test(String(t || '').trim());
 const isHeldLabel = v => HELD_RE.test(v || '');
 // OpenReview titles can carry inline TeX such as "$\\mu$-GRPO"; show the symbol, drop the markup.
 const TEX = {alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', epsilon: 'ε', lambda: 'λ', mu: 'μ', pi: 'π', sigma: 'σ', tau: 'τ', theta: 'θ', phi: 'φ', ell: 'ℓ', infty: '∞', times: '×', leq: '≤', geq: '≥'};
@@ -677,20 +679,67 @@ const MAT_CATS = [['SPECIFIC','var(--wine-hot)','specific'],['RELATED','var(--te
 const catsFor = p => p && 'SPECIFIC' in p ? MAT_CATS : PAPER_CATS;
 const IN_FLIGHT_OR_OK = new Set(['completed', 'started', 'running', 'unknown', 'reused']);
 const PROV = {qwen:'var(--qwen)', jev:'var(--jev)', arxiv:'var(--arxiv)', openreview:'var(--arxiv)', ocr:'var(--ocr)', python:'var(--python)'};
+const STAGE_LABEL = {
+  pdf_target:'Target PDF Check', target_materials:'Target Text Preparation', intake:'Claim Intake',
+  jev_global_after_intake:'Intake Assessment', autonomous_search:'Public Source Search', et_tfidf_prerank:'Candidate Pre-ranking',
+  jev_candidate_rerank:'Candidate Ranking', jev_global_after_candidate_rerank:'Candidate Ranking Summary',
+  official_dates:'Source Identity and Dates', candidate_fulltext:'Source PDF and Text', candidate_fulltext_table_overlay:'Source Tables',
+  jev_section_ranking:'Claim–Section Ranking', et_element_table:'Element Table',
+  jev_global_after_element_table:'Element Table Summary', et_row_checks:'Row-by-Row Check', et_veto:'Confirmed Row Review',
+  et_gap_loop:'Re-read Loop', jev_global_after_pair_goals:'Pair Goals Summary', et_a2_gate:'Final Check',
+  et_gated_pair_review:'Gated Pair Review', et_pair_writeup:'Pair Write-up', et_pair_decision:'Pair Decision',
+  outer_delivery_archive:'Result and Provenance', attempt_terminal:'Session Closure',
+  jev_global_after_probes:'Probe Results Summary', jev_four_condition_probes:'Four-Condition Review',
+  probe_s:'Claim Check', probe_sa:'Claim and Target Check', probe_sb:'Claim and Source Check', probe_sab:'Combined Text Check',
+  exact_span_handoff:'Material Assembly', claim_tree_low:'Reasoning Trace Review', scope_acceptance:'Final Check',
+  jev_global_after_local:'Local Results Summary', evidence_freeze:'Reviewed Evidence Freeze',
+  xhigh_final:'Final Pair Review', final_format_gate:'Report Validation', jev_final:'Final Classification'
+};
 const PLAIN = {
-  pdf_target:'Check the target PDF and its page count', target_materials:'Turn target pages into text materials (OCR)',
-  intake:'Qwen reads the paper and lists the core claims to check', jev_global_after_intake:'Jev checkpoint: first view of each claim',
-  autonomous_search:'Search arXiv and OpenReview using only the public title', jev_candidate_rerank:'Jev ranks candidate source papers',
-  jev_global_after_candidate_rerank:'Jev checkpoint after candidate ranking', official_dates:'Check official publication dates',
-  candidate_fulltext:'Fetch candidate full text', candidate_fulltext_table_overlay:'Recover tables from source PDFs',
-  jev_section_ranking:'Jev ranks source sections for each claim', jev_four_condition_probes:'Build four probe conditions per claim–section pair',
-  probe_s:'Probe S: claim question only', probe_sa:'Probe S+A: claim plus target text', probe_sb:'Probe S+B: claim plus source text',
-  probe_sab:'Probe S+A+B: claim plus both texts', jev_global_after_probes:'Jev checkpoint after the four probes',
-  exact_span_handoff:'Hand exact quoted spans to review', claim_tree_low:'Qwen LOW reviews each evidence scope',
-  scope_acceptance:'Python accepts or rejects each scope', jev_global_after_local:'Jev checkpoint after local review',
-  evidence_freeze:'Freeze the evidence packet', xhigh_final:'Qwen XHIGH writes the final pair review',
-  final_format_gate:'Python checks quotes and format', jev_final:'Jev final classification',
-  outer_delivery_archive:'Deliver and archive the report', attempt_terminal:'Close the attempt'};
+  pdf_target:'Checks the target PDF and its page count.',
+  target_materials:'Extracts target-page text and uses saved OCR text where available.',
+  intake:'Reads the target paper and identifies claims and checks for review.',
+  jev_global_after_intake:'Records an early diagnostic based on the intake.',
+  autonomous_search:'Searches public sources using the paper title and intake terms.',
+  et_tfidf_prerank:'Orders candidate sources by TF-IDF similarity before Jev ranking.',
+  jev_candidate_rerank:'Ranks candidate papers by relevance and retains low-scoring candidates.',
+  jev_global_after_candidate_rerank:'Records a diagnostic after candidate ranking.',
+  official_dates:'Checks available source identity and date information.',
+  candidate_fulltext:'Retrieves source PDFs and prepares original text sections.',
+  candidate_fulltext_table_overlay:'Preserves source table material where available.',
+  jev_section_ranking:'Ranks source sections for each claim.',
+  et_element_table:'Collects literal and semantic evidence entries for each target–source pair; missing evidence remains unfilled.',
+  jev_global_after_element_table:'Summarizes element-table rows as a diagnostic; it does not decide the result.',
+  et_row_checks:'Checks each element-table row against both original texts.',
+  et_veto:'Re-reads rows that passed the row check and records whether a normal explanation applies.',
+  et_gap_loop:'Re-reads original texts for flagged pairs in bounded rounds to review open gaps.',
+  jev_global_after_pair_goals:'Summarizes pair findings and review goals as a diagnostic.',
+  et_a2_gate:'Jev checks confirmed rows for flagged pairs; a strict YES is required to keep the pair flag.',
+  et_gated_pair_review:'Adds human-review reasons for a gated pair without changing its decision.',
+  et_pair_writeup:'Writes a readable summary for flagged or escalated pairs from the review evidence.',
+  et_pair_decision:'Applies the recorded pair result and paper category.',
+  outer_delivery_archive:'Saves the current session result and its source information.',
+  attempt_terminal:'Closes the session without treating incomplete stages as complete.',
+  jev_global_after_probes:'Records a diagnostic after the four text comparisons.',
+  jev_four_condition_probes:'Compares the claim question with different combinations of target and source text.',
+  probe_s:'Jev scores the claim question without either passage.',
+  probe_sa:'Jev scores the claim question with the target passage.',
+  probe_sb:'Jev scores the claim question with the source passage.',
+  probe_sab:'Jev scores the claim question with both passages.',
+  exact_span_handoff:'Passes quoted text spans to the review stage.',
+  claim_tree_low:'Qwen LOW reviews each evidence scope.',
+  scope_acceptance:'Checks citations against saved text and retains open questions.',
+  jev_global_after_local:'Records a diagnostic after local review.',
+  evidence_freeze:'Keeps the reviewed evidence packet fixed before the final review.',
+  xhigh_final:'Writes the final pair review from the saved evidence.',
+  final_format_gate:'Checks report quotes and formatting; it does not make the scientific decision.',
+  jev_final:'Records Jev’s final classification score for the paper.'
+};
+// Only format step metadata here; claim IDs and scientific quotations stay untouched.
+const plainStepName = t => String(t || '').replace(/^(?:[CLA]\d+\s*(?:[·:–—-]\s*)?)+/i, '').trim();
+const stageLabel = st => STAGE_LABEL[st?.id] || plainStepName(st?.label) || 'Pipeline stage';
+const stageDescription = st => PLAIN[st?.id] || '';
+function callLabel(s, c) { const st = s.stageById?.[c.stage_id] || s.stageById?.[c.stage] || s.stageById?.[c.name]; return st ? stageLabel(st) : (STAGE_LABEL[c.name] || plainStepName(c.name) || 'Model request'); }
 const ROLE_ACTOR = r => ({qwen:'qwen', jev:'jev', python:'python'})[r] || 'python';
 const fmtT = t => new Date(t * 1000).toLocaleTimeString('en-US', {hour12:false, timeZone:'America/New_York'});
 const fmtDur = s => s < 1 ? '<1s' : s < 60 ? Math.round(s) + 's' : Math.floor(s / 60) + 'm' + String(Math.round(s % 60)).padStart(2, '0') + 's';
@@ -706,6 +755,10 @@ function topCat(p) {
   for (const c of cats) if ((p[c[0]] || 0) > (p[best[0]] || 0)) best = c;
   return `<span style="color:${best[1]}">${best[2]} ${pct(p[best[0]])}</span>`;
 }
+
+const trunc = (t, n) => { t = String(t || ''); return t.length > n ? t.slice(0, n - 1).trimEnd() + '…' : t; };
+// Stable display numbers do not alter source, material or event identifiers.
+const displayNumbers = new WeakMap();
 
 function prep(s) {
   s.title = plainTitle(s.title);
@@ -745,26 +798,60 @@ function loopProgress(s, st) {
     return {l, n, running};
   });
 }
-const trunc = (t, n) => { t = String(t || ''); return t.length > n ? t.slice(0, n - 1).trimEnd() + '…' : t; };
 function claimShort(s, id, n = 44) { const c = s.claims.find(x => x.id === id); return c ? `${id} · ${trunc(c.text, n)}` : (id || ''); }
-function srcName(s, id, n = 34) { return id === 'target' ? 'target paper' : trunc((s.candById[id] || {}).title || id, n); }
-function matShort(s, mid) { const m = s.materials[mid]; return m ? `${srcName(s, m.src)} · p.${m.page}` : (mid || '').slice(0, 10); }
-function readable(s, e) {
-  const sc = e.scope || {};
-  if (sc.candidate_id) return srcName(s, sc.candidate_id, 70);
-  if (sc.material_id) return `${claimShort(s, sc.claim_id, 36)}  ↔  ${matShort(s, sc.material_id)}${sc.condition ? ' · ' + sc.condition : ''}`;
-  if (sc.question_id) { const m = sc.question_id.match(/claim-(\d+)$/); return m ? claimShort(s, 'C' + m[1], 70) : 'Whole paper'; }
-  return sc.claim_id ? claimShort(s, sc.claim_id, 70) : 'Whole paper';
+function displayNumber(s, kind, id, ids = []) {
+  if (!displayNumbers.has(s)) displayNumbers.set(s, {});
+  const groups = displayNumbers.get(s), numbers = groups[kind] || (groups[kind] = new Map());
+  for (const key of [...ids, id]) if (key && !numbers.has(key)) numbers.set(key, numbers.size + 1);
+  return numbers.get(id);
 }
-function scopeLabel(s, e) {
+function sourceIds(s) {
+  const ids = [...(s.candidates || []).map(c => c.id), ...Object.values(s.materials || {}).map(m => m.src),
+    ...(s.io?.fulltext || []).map(x => x.id), ...(s.io?.pair_writeups || []).map(x => x.candidate_id),
+    ...(s.io?.gated_reviews || []).map(x => x.candidate_id), ...(s.events || []).map(e => e.scope?.candidate_id),
+    ...(s.final?.findings || []).map(x => x.B_source)];
+  return [...new Set(ids.filter(id => id && id !== 'target'))];
+}
+function sourceName(s, id, n = 34) {
+  if (id === 'target') return 'target paper';
+  if (!id) return 'Source (name unavailable)';
+  const title = s.candById?.[id]?.title;
+  if (title && !isInternalMaterialId(title)) return trunc(anonSrc(title), n);
+  return `Source ${displayNumber(s, 'source', id, sourceIds(s))}`;
+}
+function sourceTitle(s, title, id, n = 70) { return title && !isInternalMaterialId(title) ? trunc(anonSrc(title), n) : sourceName(s, id, n); }
+const srcName = sourceName;
+function materialName(s, mid) {
+  if (!mid) return 'Passage (source unavailable)';
+  const ids = [...Object.keys(s.materials || {}), ...(s.events || []).map(e => e.scope?.material_id),
+    ...(s.io?.low || []).map(x => x.material), ...(s.io?.trajectories || []).map(x => x.material)];
+  const passage = `passage ${displayNumber(s, 'material', mid, ids)}`, m = s.materials?.[mid];
+  // A passage without a recorded source must not be assigned to a numbered source.
+  return `${m?.src ? sourceName(s, m.src) : 'Source unavailable'}${m?.page == null ? '' : ` · p.${m.page}`} · ${passage}`;
+}
+function matShort(s, mid) { return materialName(s, mid); }
+function readable(s, e) { return scopeLabel(s, e, true); }
+// Group by full raw identities, never by shortened titles or visible labels.
+function scopeKey(s, e) {
   const sc = e.scope || {};
-  if (sc.candidate_id && s.candById[sc.candidate_id]) return s.candById[sc.candidate_id].title;
-  const parts = [];
-  if (sc.claim_id) parts.push(sc.claim_id);
+  const parts = ['candidate_id', 'claim_id', 'condition', 'material_id'].filter(k => sc[k]).map(k => [k, sc[k]]);
+  if (parts.length) return JSON.stringify(parts);
+  if (sc.question_id) { const m = sc.question_id.match(/claim-(\d+)$/); return m ? JSON.stringify([['claim_id', 'C' + m[1]]]) : /paper$/.test(sc.question_id) ? 'paper' : sc.question_id; }
+  return e.stage;
+}
+function scopeLabel(s, e, expandClaim = false) {
+  const sc = e.scope || {}, parts = [];
+  if (sc.claim_id) parts.push(expandClaim ? claimShort(s, sc.claim_id, 36) : sc.claim_id);
   if (sc.condition) parts.push(sc.condition);
-  if (sc.material_id) parts.push(sc.material_id.slice(0, 10));
-  if (!parts.length && sc.question_id) { const m = sc.question_id.match(/claim-(\d+)$/); parts.push(m ? 'C' + m[1] : /paper$/.test(sc.question_id) ? 'paper' : sc.question_id); }
-  return parts.join(' · ') || e.stage;
+  if (sc.candidate_id) parts.push(sourceName(s, sc.candidate_id, 70));
+  if (sc.material_id) parts.push(matShort(s, sc.material_id));
+  if (sc.question_id && !sc.claim_id && !sc.material_id && !sc.condition) {
+    const m = sc.question_id.match(/claim-(\d+)$/);
+    if (m) parts.push(expandClaim ? claimShort(s, 'C' + m[1], 70) : 'C' + m[1]);
+    else if (!/paper$/.test(sc.question_id)) parts.push(`Review question ${displayNumber(s, 'question', sc.question_id, (s.events || []).map(e => e.scope?.question_id))}`);
+    else if (!parts.length) parts.push('paper');
+  }
+  return parts.join(' · ') || stageLabel(s.stageById?.[e.stage]);
 }
 
 function buildSteps(s) {
@@ -772,19 +859,19 @@ function buildSteps(s) {
   for (const e of s.events) {
     if (e.type === 'stage.distribution') { (dists[e.stage] = dists[e.stage] || []).push(e); continue; }
     if (e.type !== 'stage.completed') continue;
-    const st = s.stageById[e.stage] || {label: e.stage, role: 'python'};
-    let actor = ROLE_ACTOR(st.role), title = st.label, quote = '', partial = false;
+    const st = s.stageById[e.stage] || {id: e.stage, label: e.stage, role: 'python'};
+    let actor = ROLE_ACTOR(st.role), title = stageLabel(st), quote = '', partial = false;
     const ds = dists[e.stage] || [];
     if (e.stage === 'intake') { actor = 'qwen'; title = `Qwen read the paper and listed ${s.claims.length} claims to check`; quote = s.claims[0] ? `${s.claims[0].id}: “${s.claims[0].text}”` : ''; }
     else if (e.stage === 'autonomous_search') { actor = 'arxiv'; title = `Searched arXiv and OpenReview with the public title · ${s.candidates.length} candidates`; quote = (s.queries || []).map(q => typeof q === 'string' ? q : (q.query || q.text || JSON.stringify(q))).slice(0, 2).join('  |  '); }
-    else if (e.stage === 'jev_candidate_rerank' && s.retained[0]) { title = `Jev ranked ${s.candidates.length} candidates`; quote = `Top non-preprint: “${s.retained[0].title}” — specific ${pct(s.retained[0].p?.SPECIFIC)}, related ${pct(s.retained[0].p?.RELATED)}`; }
+    else if (e.stage === 'jev_candidate_rerank' && s.retained[0]) { title = `Jev ranked ${s.candidates.length} candidates`; quote = `Top non-preprint: “${sourceTitle(s, s.retained[0].title, s.retained[0].id)}” — specific ${pct(s.retained[0].p?.SPECIFIC)}, related ${pct(s.retained[0].p?.RELATED)}`; }
     else if (e.stage === 'jev_section_ranking' && ds.length) { const b = ds.reduce((a, d) => (d.p?.SPECIFIC || 0) > (a.p?.SPECIFIC || 0) ? d : a); title = `Jev ranked ${ds.length} source sections across claims`; quote = `Most specific: ${scopeLabel(s, b)} — specific ${pct(b.p?.SPECIFIC)}`; }
-    else if (/^probe_/.test(e.stage) && ds.length) { const b = ds.reduce((a, d) => (d.p?.SPECIFIC || 0) > (a.p?.SPECIFIC || 0) ? d : a); title = `${st.label}: ${ds.length} questions answered`; quote = `Highest: ${scopeLabel(s, b)} — specific ${pct(b.p?.SPECIFIC)}`; }
-    else if (/^jev_global_/.test(e.stage) && ds.length) { title = st.label; quote = ds.map(d => `${scopeLabel(s, d)}: review ${pct(d.p?.YES_SUSPECTED)}, inconclusive ${pct(d.p?.UNRESOLVED)}`).join('  ·  '); }
+    else if (/^probe_/.test(e.stage) && ds.length) { const b = ds.reduce((a, d) => (d.p?.SPECIFIC || 0) > (a.p?.SPECIFIC || 0) ? d : a); title = `${stageLabel(st)}: ${ds.length} questions answered`; quote = `Highest: ${scopeLabel(s, b)} — specific ${pct(b.p?.SPECIFIC)}`; }
+    else if (/^jev_global_/.test(e.stage) && ds.length) { title = stageLabel(st); quote = ds.map(d => `${scopeLabel(s, d)}: review ${pct(d.p?.YES_SUSPECTED)}, inconclusive ${pct(d.p?.UNRESOLVED)}`).join('  ·  '); }
     else if (e.stage === 'xhigh_final') { actor = 'qwen'; title = `Qwen final review: ${labelText(s.final.status)}`; quote = s.final.conclusion ? `“${s.final.conclusion}”` : ''; }
     else if (e.stage === 'jev_final' && s.jev_final.p) { title = `Jev final: ${labelText(s.jev_final.label)}`; quote = PAPER_CATS.map(([k, , n]) => `${n} ${pct(s.jev_final.p[k])}`).join(' · '); }
     else if (e.stage === 'claim_tree_low') { actor = 'qwen'; title = 'Qwen LOW reviewed each evidence scope'; }
-    else { title = `${st.label} done`; quote = PLAIN[e.stage] || st.purpose || ''; }
+    else { title = `${stageLabel(st)} done`; quote = stageDescription(st); }
     if (e.status === 'partial') { title += ' (partial)'; quote = (quote ? quote + '  ·  ' : '') + 'Some questions here have no score; the gaps are kept, not filled.'; partial = true; }
     else if (e.status && !['completed', 'reused'].includes(e.status)) actor = 'bad';
     const prev = steps[steps.length - 1];
@@ -801,9 +888,9 @@ function buildSteps(s) {
     steps.push({t: e.t, actor, title, quote, stage: e.stage, round: passTxt, partial});
     if (e.stage === 'autonomous_search' && s.archived.length) steps.push({t: e.t + 0.001, actor: 'preprint', stage: 'title_screen',
       title: `Title screen: ${s.archived.length} candidate archived as PREPRINT`, round: 'applied after this run',
-      quote: s.archived.map(c => `“${c.title}” · ${c.id}`).join('  |  ') + ` · similarity ≥ ${D.history.screen?.threshold ?? 0.9}; not reviewed further`});
+      quote: s.archived.map(c => `“${sourceTitle(s, c.title, c.id)}”${isInternalMaterialId(c.id) ? '' : ' · ' + c.id}`).join('  |  ') + ` · similarity ≥ ${D.history.screen?.threshold ?? 0.9}; not reviewed further`});
   }
-  for (const c of callsBad) steps.push({t: c.t1, actor: 'bad', title: `A ${c.provider} request ended as ${c.status}`, quote: `${c.name}${c.http ? ' · HTTP ' + c.http : ''}`});
+  for (const c of callsBad) steps.push({t: c.t1, actor: 'bad', title: `A ${c.provider} request ended as ${c.status}`, quote: `${callLabel(s, c)}${c.http ? ' · HTTP ' + c.http : ''}`});
   steps.sort((a, b) => a.t - b.t);
   return steps;
 }
@@ -849,8 +936,8 @@ function render() {
   $('elapsed').textContent = fmtDur(pos[focus]) + ' / ' + fmtDur(dur);
   $('scrub').value = Math.round(pos[focus] / dur * 1000);
   const liveN = S.filter(x => x.finished == null).length;
-  $('replayLabel').textContent = MODE === 'live' ? `${BATCH === 'iclr27-live' ? 'Stage 1' : 'Batch ' + BATCH} · ${liveN} of ${S.length} sessions running · showing session #${s.rank}${userPickedAt ? '' : ' (most active)'}`
-    : `Session #${s.rank} · ${s.session}`;
+  $('replayLabel').textContent = MODE === 'live' ? `Live · ${liveN} of ${S.length} papers running · showing ${s.title || 'current paper'}${userPickedAt ? '' : ' · most active'}`
+    : `Replay · ${s.title || 'selected paper'}`;
   document.body.classList.toggle('live', MODE === 'live');
   document.body.classList.toggle('extra', MODE === 'live' && !!s.extra);
   $('modeBadge').textContent = SNAPMODE ? 'Snapshot' : MODE === 'live' ? 'Live' : 'Replay';
@@ -869,7 +956,7 @@ function render() {
   $('tabs').innerHTML = S.map((x, i) => {
     if (!showTab(i)) return '';
     const y = states[i], cls = i === focus && !y.finished ? 'run' : !y.started ? 'wait' : y.finished ? (x.label === 'YES_SUSPECTED' ? 'flag' : x.label === 'PREPRINT' ? 'pre' : 'done') : 'run';
-    return `<button class="tab${i === focus ? ' on' : ''}" data-i="${i}"><span class="dot ${cls}"></span><span class="muted">#${x.rank}</span><span class="t">${esc(x.title)}</span></button>`;
+    return `<button class="tab${i === focus ? ' on' : ''}" data-i="${i}" title="${esc(x.title)}"><span class="dot ${cls}"></span><span class="t">${esc(x.title || 'Untitled paper')}</span></button>`;
   }).join('') + `<span class="seg" role="group" aria-label="View"><button data-view="stage" class="${view === 'stage' ? 'on' : ''}">Stage view</button><button data-view="flow" class="${view === 'flow' ? 'on' : ''}">Flow view</button></span>`;
   const flowMode = isPipelinePage() || view === 'flow', flaggedMode = view === 'flagged', reportMode = view === 'report';
   document.body.classList.toggle('reportmode', reportMode); $('reportView').hidden = !reportMode;
@@ -892,7 +979,7 @@ function render() {
   const lp = st.cur ? loopProgress(s, st).find(p => p.n > 0 && s.stages.filter(x => x.group === st.cur.group).some(x => x.id === p.l.to)) : null;
   $('nowline').innerHTML = !st.started ? '<span class="now done">Queued</span><span class="what">Waiting for a free worker</span>'
     : st.finished ? `<span class="now done">Done</span><span class="what">Screened against ${s.retained.length} non-preprint candidates in ${fmtDur(s.finished - s.started)}${s.archived.length ? ` <span class="muted">· ${s.archived.length} same-title preprint set aside</span>` : ''}</span>`
-    : `<span class="now">Now</span><span class="what">${esc(PLAIN[st.cur?.id] || st.cur?.purpose || st.cur?.label || '')}${lp ? ` <span class="muted">· ${esc(lp.l.label.split('·')[0].trim().replace(/^Next /, ''))} ${lp.n}${lp.l.bound ? ' of ' + lp.l.bound : ''}</span>` : ''}</span>`;
+    : `<span class="now">Now</span><span class="what">${esc(stageDescription(st.cur) || stageLabel(st.cur))}${lp ? ` <span class="muted">· ${esc(lp.l.label.split('·')[0].trim().replace(/^Next /, ''))} ${lp.n}${lp.l.bound ? ' of ' + lp.l.bound : ''}</span>` : ''}</span>`;
   renderEvidence(s, st);
 
   const vis = s.steps.filter(x => x.t <= T).slice(-16).reverse();
@@ -928,14 +1015,14 @@ function stageIO(s, st, x) {
     const q = (s.queries || []).map(v => typeof v === 'string' ? v : (v.query || v.text || JSON.stringify(v)));
     return IOL('in', 'Public title only' + (q.length ? ': ' + q.slice(0, 2).map(v => `<span class="mono">${esc(trunc(v, 80))}</span>`).join(' · ') : '')) +
       IOL('out', `${s.candidates.length} candidate papers from arXiv and OpenReview`) +
-      s.candidates.slice(0, 5).map(c => `<div class="ex"><div class="h">${link(c.url, trunc(c.title, 90))}${s.archived.includes(c) ? '<span class="st-chip" style="color:var(--text-2)">PREPRINT · same title</span>' : ''}</div><div class="snip">${esc(c.provider)} · ${esc(c.date || 'date unknown')}</div></div>`).join('') +
+      s.candidates.slice(0, 5).map(c => `<div class="ex"><div class="h">${link(c.url, sourceTitle(s, c.title, c.id, 90))}${s.archived.includes(c) ? '<span class="st-chip" style="color:var(--text-2)">PREPRINT · same title</span>' : ''}</div><div class="snip">${esc(c.provider)} · ${esc(c.date || 'date unknown')}</div></div>`).join('') +
       (s.candidates.length > 5 ? `<div class="iol">+${s.candidates.length - 5} more candidates</div>` : '');
   }
   if (id === 'jev_candidate_rerank') return IOL('in', 'Claims + candidate titles and abstracts') + IOL('out', 'Relevance of each candidate to the target claims') +
-    s.retained.slice(0, 3).map(c => `<div class="drow2"><div class="lbl">${link(c.url, trunc(c.title, 80))}</div><div class="bl">${distBar(c.p)}<span class="top1">${c.p ? topCat(c.p) : ''}</span></div></div>`).join('') +
+    s.retained.slice(0, 3).map(c => `<div class="drow2"><div class="lbl">${link(c.url, sourceTitle(s, c.title, c.id, 80))}</div><div class="bl">${distBar(c.p)}<span class="top1">${c.p ? topCat(c.p) : ''}</span></div></div>`).join('') +
     (s.archived.length ? `<div class="iol">${s.archived.length} same-title preprint left out</div>` : '');
   if (id === 'official_dates') return IOL('out', 'First public date of each candidate; the date filter is off for free sources, so dates are recorded, not used to drop papers') +
-    s.retained.slice(0, 3).map(c => { const d = io.dates[c.id] || {}; return `<div class="ex"><div class="h">${esc(trunc(c.title, 80))}</div><div class="snip">${esc(d.date || 'date unknown')} · ${esc({ELIGIBLE: 'inside the 12 months before the ICLR deadline', OUTSIDE: 'outside that window (kept; filter off)'}[d.gate] || 'date could not be confirmed')}</div></div>`; }).join('');
+    s.retained.slice(0, 3).map(c => { const d = io.dates[c.id] || {}; return `<div class="ex"><div class="h">${esc(sourceTitle(s, c.title, c.id, 80))}</div><div class="snip">${esc(d.date || 'date unknown')} · ${esc({ELIGIBLE: 'inside the 12 months before the ICLR deadline', OUTSIDE: 'outside that window (kept; filter off)'}[d.gate] || 'date could not be confirmed')}</div></div>`; }).join('');
   if (id === 'candidate_fulltext') return IOL('in', 'Top candidates with public PDFs') + IOL('out', `${io.source_sections} source sections`) +
     io.fulltext.map(a => `<div class="ex"><div class="h">${esc(srcName(s, a.id, 80))}</div><div class="snip">${a.pages ?? '?'} pages · ${a.chars ? Math.round(a.chars / 1000) + 'k characters' : ''} · ${esc(a.status)}</div></div>`).join('');
   if (id === 'jev_section_ranking') return IOL('in', 'Each claim × each source section') + IOL('out', 'Which source sections matter most for each claim (top shown)') + jevRows(s, ds, 3, true);
@@ -969,7 +1056,7 @@ function stageIO(s, st, x) {
 function stageRow(s, st, x) {
   const stc = st.status[x.id], reached = stc === 'done' || stc === 'run';
   return `<div class="srow"><span class="dot ${stc === 'done' ? 'done' : stc === 'run' ? 'run' : stc === 'gap' ? 'flag' : 'wait'}" style="margin-top:5px"></span>
-    <div><div class="sl">${esc(x.label)}</div><div class="sp">${esc(PLAIN[x.id] || x.purpose || '')}</div><div class="role">${esc(x.role)}</div></div>
+    <div><div class="sl">${esc(stageLabel(x))}</div><div class="sp">${esc(stageDescription(x))}</div><div class="role">${esc(x.role)}</div></div>
     <div class="dl">${reached ? (stageIO(s, st, x) || '<span class="empty">Done</span>') : '<span class="empty">Not reached yet in this replay</span>'}</div></div>`;
 }
 const LEGEND = `<span class="lg">${PAPER_CATS.concat(MAT_CATS).map(([, c, n]) => `<span style="--c:${c}">${n}</span>`).join('')}</span>`;
@@ -1026,10 +1113,10 @@ function renderHero(s, st) {
       ${sub.primary_area ? `<span class="fact"><b>Primary Area</b> ${esc(sub.primary_area)}</span>` : ''}${sub.keywords?.length ? `<span class="fact"><b>Keywords</b> ${esc(sub.keywords.join(', '))}</span>` : ''}</div></div>`;
   let right, tl = '';
   if (top) {
-    const sd = dayMs(top.date), td = dayMs(tDate), id = String(top.id).replace(/^(arxiv|openreview|huggingface)-/, '');
+    const sd = dayMs(top.date), td = dayMs(tDate), id = isInternalMaterialId(top.id) ? sourceName(s, top.id) : String(top.id).replace(/^(arxiv|openreview|huggingface)-/, '');
     const rel = sd && td ? (sd < td ? `<b>public ${Math.round((td - sd) / 864e5)} days before</b> the submission` : `appeared ${Math.round((sd - td) / 864e5)} days after`) : 'public date unknown';
-    right = `<div class="side b">${miniPage('b', top.title, top.abstract, top.provider === 'arxiv' ? 'arXiv:' + id : null, PROVNAME[top.provider] || 'Source')}
-      <div class="cap"><span class="who">Source</span><span class="srcl">${out(top.url, esc(top.title))}</span><span>${esc(PROVNAME[top.provider] || top.provider || '')} ${esc(id)} · ${rel}</span><span>Jev's closest of ${s.retained.length} candidates</span></div></div>`;
+    right = `<div class="side b">${miniPage('b', sourceTitle(s, top.title, top.id), top.abstract, top.provider === 'arxiv' ? 'arXiv:' + id : null, PROVNAME[top.provider] || 'Source')}
+      <div class="cap"><span class="who">Source</span><span class="srcl">${out(top.url, esc(sourceTitle(s, top.title, top.id)))}</span><span>${esc(PROVNAME[top.provider] || top.provider || '')} ${esc(id)} · ${rel}</span><span>Jev's closest of ${s.retained.length} candidates</span></div></div>`;
     tl = timeline(top.date, tDate, s.iclr_deadline);
   } else {
     const n = st.status.autonomous_search === 'done' ? s.candidates.length : 0;
@@ -1138,7 +1225,7 @@ function renderReport() {
     for (const e of ep) m[e.cid] = {cid: e.cid, y: e.p.YES_SUSPECTED ?? null, title: e.title, url: e.url, flagged: false, written: false};
     for (const w of pw) {
       const c = srcOf(w.candidate_id), r = m[w.candidate_id] || (m[w.candidate_id] = {cid: w.candidate_id, y: null, written: false});
-      r.title = w.candidate_title || c.title || r.title || w.candidate_id; r.url = w.candidate_url || c.url || r.url || null;
+      r.title = sourceTitle(s, w.candidate_title || c.title || r.title, w.candidate_id); r.url = w.candidate_url || c.url || r.url || null;
       r.flagged = w.pair_status === 'SUSPECTED' || isHeldLabel(w.pair_status); r.written = w.writeup_status === 'WRITTEN';  // a held pair is flagged too, only not reviewed yet
     }
     return Object.values(m).sort((a, b) => (b.y ?? -1) - (a.y ?? -1));
@@ -1157,37 +1244,38 @@ function renderReport() {
     [/MECHANISM|design ideas|module names/i, 'Similar method design'], [/figure/i, 'Matching figure']];
   const findingET = (x, i) => {
     const c = srcOf(x.B_source), reason = sentenceCase(cleanET(x.reason)), kind = (KIND.find(([re]) => re.test(x.reason || '')) || [])[1];
+    const title = sourceTitle(s, c.title, x.B_source, 60);
     return `<section class="rp-sec">
-      <div class="rp-sub">Finding ${i + 1} of ${f.findings.length} · vs ${esc(trunc(c.title || 'source', 60))}</div>
+      <div class="rp-sub">Finding ${i + 1} of ${f.findings.length} · vs ${esc(trunc(title, 60))}</div>
       <h3>${esc(kind || trunc(reason.split(/[.;:(,]/)[0] || reason, 80))}</h3>
       <div class="rp-cols"><div class="rp-body"><p class="rp-lead">${esc(reason)}</p>
         ${x.normal ? `<p class="rp-note">${esc(NORMAL[x.normal] || NORMAL.UNKNOWN)}</p>` : ''}</div>
         <div class="rp-quotes"><blockquote class="a">“${esc(lead(cleanText(x.A)))}”<cite>Target paper · page ${esc(x.A_page ?? '?')}</cite></blockquote>
-        <blockquote class="b">“${esc(lead(cleanText(x.B)))}”<cite>${c.url ? `<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(trunc(c.title || 'Source', 60))}</a>` : esc(trunc(c.title || 'Source', 60))} · page ${esc(x.B_page ?? '?')}</cite></blockquote></div></div></section>`;
+        <blockquote class="b">“${esc(lead(cleanText(x.B)))}”<cite>${c.url ? `<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(trunc(title, 60))}</a>` : esc(trunc(title, 60))} · page ${esc(x.B_page ?? '?')}</cite></blockquote></div></div></section>`;
   };
   const second = gr.filter(g => g.status === 'AGREES' || g.status === 'DISAGREES');
   const secondSec = () => `<section class="rp-sec"><h3>Second review</h3>${second.map(g => {
-    const w = pw.find(x => x.candidate_id === g.candidate_id) || {}, title = srcOf(g.candidate_id).title || w.candidate_title || g.candidate_id;
+    const w = pw.find(x => x.candidate_id === g.candidate_id) || {}, title = sourceTitle(s, srcOf(g.candidate_id).title || w.candidate_title, g.candidate_id);
     return `<div class="rp-2r"><p><b>vs ${esc(trunc(title, 70))}</b> A second model re-read the evidence and ${g.status === 'AGREES' ? 'agrees' : 'does not agree'} with the flag.</p>${g.normal_explanation ? `<p class="rp-note">${esc(sentenceCase(cleanET(g.normal_explanation)))}</p>` : ''}</div>`;
   }).join('')}</section>`;
   const unknowns = (f.unknowns || []).filter(u => !et || !/^pair \S+:/.test(u));
   const finding = (x, i) => {
-    const c = srcOf(x.B_source);
+    const c = srcOf(x.B_source), title = sourceTitle(s, c.title, x.B_source, 60);
     return `<section class="rp-sec">
       <div class="rp-sub">Finding ${i + 1} of ${f.findings.length} · claim ${esc(x.claim)}</div>
       <h3>${esc(trunc(sentenceCase(claimText(x.claim).split(/[.;:(]/)[0] || x.claim), 110))}</h3>
       <div class="rp-cols"><div class="rp-body"><p class="rp-lead">${esc(sentenceCase(x.reason))}</p>
         <p class="rp-note">${esc(NORMAL[x.normal] || NORMAL.UNKNOWN)}</p></div>
         <div class="rp-quotes"><blockquote class="a">“${esc(lead(cleanText(x.A)))}”<cite>Target paper · page ${esc(x.A_page ?? '?')}</cite></blockquote>
-        <blockquote class="b">“${esc(lead(cleanText(x.B)))}”<cite>${c.url ? `<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(trunc(c.title || 'Source', 60))}</a>` : esc(trunc(c.title || 'Source', 60))} · page ${esc(x.B_page ?? '?')}</cite></blockquote></div></div></section>`;
+        <blockquote class="b">“${esc(lead(cleanText(x.B)))}”<cite>${c.url ? `<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(title)}</a>` : esc(title)} · page ${esc(x.B_page ?? '?')}</cite></blockquote></div></div></section>`;
   };
   setHTML($('reportView'), `<div class="rp">
-    <div class="rp-top"><button class="btn" data-close-report="1">← Back to the stage</button><span class="note">Session #${s.rank} · ${esc(s.session)}</span></div>
+    <div class="rp-top"><button class="btn" data-close-report="1">← Back to the stage</button><span class="note">${esc(s.title || 'Screening report')}</span></div>
     <header class="rp-head"><div class="rp-title">${s.held ? `<p class="rp-auto">${HELD_NOTE}</p>` : ''}<h2>${s.openreview ? `<a href="${esc(s.openreview)}" target="_blank" rel="noopener">${esc(s.title)}</a>` : esc(s.title)}</h2>
       <p class="rp-date">Screening report${dt ? ' · ' + dt : ''}</p>
       ${s.human_review?.confirmed ? `<p class="rp-human"><span class="hr-ok">${esc(s.human_review.badge || 'Reviewed by a person')}</span>${s.human_review.verdict ? ' ' + esc(s.human_review.verdict.replace(/^Confirmed by human review:\s*/i, '')) : ''}${s.human_review.reviewed_at ? ` <span class="note">(${esc(s.human_review.reviewed_at)})</span>` : ''}</p>` : ''}
       <p class="rp-stand">${esc(stand || 'The final review did not write a summary.')}</p>
-      <p class="rp-meta">${sub.number ? `ICLR 2027 submission #${sub.number} · ` : ''}compared with ${sources.length ? sources.map(c => `<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(trunc(c.title, 70))}</a>`).join(' and ') : et ? (srcRows.length ? `${srcRows.length} candidate source${srcRows.length === 1 ? '' : 's'}` : 'no source') : top ? esc(top.title) : 'no source'}</p></div>
+      <p class="rp-meta">${sub.number ? `ICLR 2027 submission #${sub.number} · ` : ''}compared with ${sources.length ? sources.map(c => `<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(sourceTitle(s, c.title, c.id, 70))}</a>`).join(' and ') : et ? (srcRows.length ? `${srcRows.length} candidate source${srcRows.length === 1 ? '' : 's'}` : 'no source') : top ? esc(sourceTitle(s, top.title, top.id, 70)) : 'no source'}</p></div>
       <aside class="rp-card"><div class="rp-card-h">In numbers</div>${numbers.map(([k, v]) => `<div class="rp-row"><span>${k}</span><b>${v}</b></div>`).join('')}</aside></header>
     <section class="rp-sec"><h3>What the paper claims</h3>
       <ol class="rp-claims">${s.claims.map(c => `<li><b>${esc(c.id)}</b> ${esc(cleanText(c.text))}</li>`).join('')}</ol></section>
@@ -1294,7 +1382,7 @@ function renderFlagged() {
   setHTML($('flaggedView'), `<div class="fl-head"><h2>Flagged papers</h2><span class="chip red"><b>${tot[0]}</b> yes</span><span class="chip"><b>${tot[1]}</b> no</span><span class="note">${rows.filter(r => !r.held).length} Source review recommended · ${rows.filter(r => r.held).length} needs human review (a model flagged a close match; a person has not checked it yet). This is not a finding of plagiarism or misconduct. Votes here and on the main stage are one count; one vote per paper per browser.</span><button class="btn" data-close-flagged="1">Back to the stage</button></div>
     <div class="fl-list">${rows.map((r, i) => `<div class="fl-row"><span class="rk">${i + 1}</span>
       <div style="min-width:0"><div class="t"><a href="${r.openreview}" target="_blank" rel="noopener">${esc(r.title)} ↗</a></div>
-      <div class="m">${r.held ? '<span class="hr-tag">Needs human review</span> ' : ''}${r.submission ? `ICLR 2027 #${r.submission} · ` : ''}${r.source_title ? `vs ${r.source_url && !r.held ? `<a href="${r.source_url}" target="_blank" rel="noopener">${esc(r.source_title)}</a>` : esc(anonSrc(r.source_title))}` : (LIVE_ONLY ? '' : 'flagged by the earlier 50-paper run')}${r.session ? ` · <button class="linkbtn" data-open="${esc(r.session)}">trajectory ›</button>` : ''} · ${wrongLink(r.pid, r.title)}</div></div>
+      <div class="m">${r.held ? '<span class="hr-tag">Needs human review</span> ' : ''}${r.submission ? `ICLR 2027 #${r.submission} · ` : ''}${r.source_title ? `vs ${r.source_url && !r.held ? `<a href="${r.source_url}" target="_blank" rel="noopener">${esc(anonSrc(r.source_title))}</a>` : esc(anonSrc(r.source_title))}` : (LIVE_ONLY ? '' : 'flagged by the earlier 50-paper run')}${r.session ? ` · <button class="linkbtn" data-open="${esc(r.session)}">trajectory ›</button>` : ''} · ${wrongLink(r.pid, r.title)}</div></div>
       <div class="pv${r.held ? ' held' : ''}">${r.p ? pct(r.p.YES_SUSPECTED) : '—'}<small>${r.p ? 'Jev, whole paper' : 'no saved trajectory'}</small></div>${r.session ? `<button class="btn rpt-open" data-report="${esc(r.session)}">Read the report →</button>` : '<span class="note">no saved report</span>'}</div>`).join('') || '<p class="empty">No paper is flagged yet.</p>'}</div>`);
 }
 
@@ -1310,7 +1398,7 @@ function etPairs(s, st) {
   for (const d of (st.dist.jev_global_after_pair_goals || [])) {
     if (!d.p || !/-pair-\d+$/.test(d.scope?.question_id || '')) continue;
     const m = (d.q || '').match(/pair ([^\s,]+)/), cid = m ? m[1] : d.scope.question_id, c = s.candById?.[cid];
-    by[cid] = {cid, p: d.p, title: c?.title || cid, url: c?.url || null};
+    by[cid] = {cid, p: d.p, title: sourceTitle(s, c?.title, cid), url: c?.url || null};
   }
   return Object.values(by).sort((a, b) => (b.p.YES_SUSPECTED || 0) - (a.p.YES_SUSPECTED || 0));
 }
@@ -1318,7 +1406,7 @@ function paperSeries(s, st) {
   return ckptsFor(s).map(([id, lab]) => {
     if (id === 'et_a2_gate') return {id, lab, p: null, gate: st.status[id] === 'done'};
     if (id === 'jev_global_after_pair_goals') { const tp = etPairs(s, st)[0]; if (tp) return {id, lab, p: tp.p, pair: tp}; }
-    const ds = (st.dist[id] || []).filter(d => id === 'jev_final' || scopeLabel(s, d) === 'paper'); return {id, lab, p: ds.length ? ds[ds.length - 1].p : null};
+    const ds = (st.dist[id] || []).filter(d => id === 'jev_final' || scopeKey(s, d) === 'paper'); return {id, lab, p: ds.length ? ds[ds.length - 1].p : null};
   });
 }
 function renderVerdict(s, st) {
@@ -1371,7 +1459,7 @@ function renderEvidence(s, st) {
   const el = $('evidence');
   if (st.status.xhigh_final === 'done' && s.final.findings.length) {
     const top = s.retained[0], f = s.final.findings.find(x => top && x.B_source === top.id) || s.final.findings[0];
-    const src = trunc(s.candById[f.B_source]?.title || 'Source', 44);
+    const src = sourceName(s, f.B_source, 44);
     el.innerHTML = `<div class="eh"><b>Final finding</b><span class="note">${s.final.findings.length} finding${s.final.findings.length > 1 ? 's' : ''} · Qwen XHIGH</span></div>
       <p class="ask"><b>${esc(f.claim)}</b> ${esc(f.reason)}</p>${quotePair(`Target · p.${esc(f.A_page ?? '?')}`, f.A, `${esc(src)} · p.${esc(f.B_page ?? '?')}`, f.B)}`;
     return;
@@ -1425,7 +1513,7 @@ function renderFlow(s, st) {
   const L = flowLayout(s), {pos, W, H} = L;
   const curId = st.cur && st.status[st.cur.id] === 'run' ? st.cur.id : null;
   const trunc = (t, n) => t.length > n ? t.slice(0, n - 1) + '…' : t;
-  let g = `<svg viewBox="0 0 ${L.width} ${L.height}" width="${L.width}" height="${L.height}" role="img" aria-label="Pipeline flow for session ${esc(s.session)}">`;
+  let g = `<svg viewBox="0 0 ${L.width} ${L.height}" width="${L.width}" height="${L.height}" role="img" aria-label="Pipeline flow for ${esc(s.title || 'the selected paper')}">`;
   for (const c of L.cols) {
     const ss = s.stages.filter(n => n.group === c.g.id), done = ss.filter(n => st.status[n.id] === 'done').length;
  const selG = openStage && s.stageById[openStage]?.group === c.g.id;
@@ -1452,16 +1540,16 @@ function renderFlow(s, st) {
     let bar = '';
     if (last && last.p) { let ox = 12; const bw = W - 24; for (const [k, c] of catsFor(last.p)) { const w = (last.p[k] || 0) * bw; if (w > 0) bar += `<rect x="${ox}" y="${H - 14}" width="${w}" height="6" style="fill:${c}"/>`; ox += w; } }
     const hot = !heldDone(s, st) && last && last.p && ['YES_SUSPECTED', 'SPECIFIC'].includes(topKey(last.p)) ? ' hot' : '';  // flagged outcomes draw in wine
-    g += `<g class="fn ${stc}${hot}${openStage === n.id ? ' sel' : ''}" data-stage="${n.id}" transform="translate(${p.x},${p.y})"><title>${esc(PLAIN[n.id] || n.purpose || n.label)}${stc === 'skip' ? ' Not needed for this paper.' : ''}</title>
+    g += `<g class="fn ${stc}${hot}${openStage === n.id ? ' sel' : ''}" data-stage="${n.id}" transform="translate(${p.x},${p.y})"><title>${esc(stageDescription(n) || stageLabel(n))}${stc === 'skip' ? ' Not needed for this paper.' : ''}</title>
       <rect class="box" width="${W}" height="${H}" rx="9"/><rect class="bar" width="4" height="${H - 16}" x="0" y="8" rx="2"/>
-      <text class="fl" x="12" y="24">${esc(trunc(n.label, 21))}</text>
+      <text class="fl" x="12" y="24">${esc(trunc(stageLabel(n), 21))}</text>
       <text class="fr" x="12" y="42">${esc(trunc(`${n.role}${ds.length ? ` · ${ds.length} Jev q · ${last && last.p ? topCatText(last.p) : ''}` : ''}`, 26))}</text>${bar}</g>`;
   }
   g += '</svg>';
   $('flow').innerHTML = g;
   const sel = openStage && s.stageById[openStage];
   $('flowdetail').innerHTML = sel ? `<div class="secdetail"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:8px"><b>${esc(s.groups.find(x => x.id === sel.group)?.label || '')}</b><button class="btn" data-close="1">Close</button></div>${stageRow(s, st, sel)}${(st.dist[sel.id] || []).length ? `<div style="margin-top:8px">${LEGEND}</div>` : ''}</div>`
-    : `<div class="fd-empty"><b>Session #${s.rank}</b><br>Click a stage to see what went in and what came out. Click it again to close.<br><br><span class="note">Grey dashed arrows are bounded loops · the teal dashed arrow is the current handoff · colored bars appear only where Jev answered.</span></div>`;
+    : `<div class="fd-empty"><b>${esc(s.title || 'Pipeline stages')}</b><br>Click a stage to see what it does and what data are available. Click it again to close.<br><br><span class="note">Grey dashed arrows are bounded loops · the teal dashed arrow is the current handoff · colored bars appear only where Jev answered.</span></div>`;
 }
 function topKey(p) { if (!p) return null; const cats = catsFor(p); let b = cats[0]; for (const c of cats) if ((p[c[0]] || 0) > (p[b[0]] || 0)) b = c; return b[0]; }
 function topCatText(p) { if (!p) return 'no score'; const cats = catsFor(p); let b = cats[0]; for (const c of cats) if ((p[c[0]] || 0) > (p[b[0]] || 0)) b = c; return `${b[2]} ${pct(p[b[0]])}`; }
@@ -1491,8 +1579,10 @@ function renderBudget(s, st, states) {
 
 function renderChart(s, st) {
   const order = s.stages.filter(x => /^jev_global_|^jev_final$/.test(x.id)).map(x => x.id);
-  const claims = [...new Set(order.flatMap(id => (st.dist[id] || []).map(d => id === 'jev_final' ? 'paper' : scopeLabel(s, d))))];
+  const claims = [...new Set(order.flatMap(id => (st.dist[id] || []).map(d => id === 'jev_final' ? 'paper' : scopeKey(s, d))))];
   if (!claims.length) { $('chart').innerHTML = '<p class="empty">Waiting for the first Jev checkpoint.</p>'; return; }
+  const claimLabels = new Map();
+  for (const id of order) for (const d of st.dist[id] || []) { const key = id === 'jev_final' ? 'paper' : scopeKey(s, d); if (!claimLabels.has(key)) claimLabels.set(key, id === 'jev_final' ? 'paper' : scopeLabel(s, d)); }
   const box = $('chart'), W = Math.max(240, box.clientWidth), H = Math.max(110, Math.round(W * Math.max(80, box.clientHeight - 24) / Math.max(200, box.clientWidth))), L = 42, B = 26, xs = i => L + i * (W - L - 24) / Math.max(1, order.length - 1), ys = v => 8 + (1 - v) * (H - B - 8);
   const colors = ['#57c7cf', '#ece8df', '#b3b9c2', '#6fa3a8', '#8a919c'];
   let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Jev model score for source review per claim at each checkpoint">`;
@@ -1500,14 +1590,14 @@ function renderChart(s, st) {
   order.forEach((id, i) => svg += `<text x="${xs(i)}" y="${H - 6}" fill="#8a919c" font-size="13" text-anchor="middle" font-family="IBM Plex Sans, sans-serif">${id === 'jev_final' ? 'final' : (CK_SHORT[id.replace('jev_global_after_', '')] || id.replace('jev_global_after_', ''))}</text>`);
   let lastVal = null, lastAt = null;
   claims.forEach((cl, ci) => {
-    const pts = order.map((id, i) => { const d = (st.dist[id] || []).find(d => (id === 'jev_final' ? 'paper' : scopeLabel(s, d)) === cl); return d ? [xs(i), ys(d.p?.YES_SUSPECTED || 0), d.p?.YES_SUSPECTED || 0] : null; }).filter(Boolean);
+    const pts = order.map((id, i) => { const d = (st.dist[id] || []).find(d => (id === 'jev_final' ? 'paper' : scopeKey(s, d)) === cl); return d ? [xs(i), ys(d.p?.YES_SUSPECTED || 0), d.p?.YES_SUSPECTED || 0] : null; }).filter(Boolean);
     const col = cl === 'paper' ? '#ff8a7f' : colors[ci % colors.length];
     if (pts.length > 1) svg += `<polyline fill="none" stroke="${col}" stroke-width="1.8" points="${pts.map(p => p[0] + ',' + p[1]).join(' ')}"/>`;
     pts.forEach(p => svg += `<circle cx="${p[0]}" cy="${p[1]}" r="${cl === 'paper' ? 4.5 : 3}" fill="${col}"/>`);
-    if (cl === 'paper' && pts.length) { lastVal = pts[pts.length - 1][2]; lastAt = order[order.indexOf(order.filter(id => (st.dist[id] || []).some(d => (id === 'jev_final' ? 'paper' : scopeLabel(s, d)) === 'paper')).pop())]; }
+    if (cl === 'paper' && pts.length) { lastVal = pts[pts.length - 1][2]; lastAt = order[order.indexOf(order.filter(id => (st.dist[id] || []).some(d => (id === 'jev_final' ? 'paper' : scopeKey(s, d)) === 'paper')).pop())]; }
   });
   svg += '</svg>';
-  $('chart').innerHTML = svg + `<div class="lg">${claims.map((c, i) => `<span style="--c:${c === 'paper' ? '#ff8a7f' : colors[i % colors.length]}">${esc(c === 'paper' ? 'paper' : c)}</span>`).join('')}</div>`;
+  $('chart').innerHTML = svg + `<div class="lg">${claims.map((c, i) => `<span style="--c:${c === 'paper' ? '#ff8a7f' : colors[i % colors.length]}">${esc(claimLabels.get(c) || c)}</span>`).join('')}</div>`;
 }
 
 function renderActivity(s, st) {
@@ -1518,7 +1608,7 @@ function renderActivity(s, st) {
   const maxDur = Math.max(1, ...rows.map(c => Math.min(T, c.t1 ?? T) - c.t0));
   $('activity').innerHTML = rows.length ? rows.map(c => {
     const run = (c.t1 == null || c.t1 > T), dur = Math.max(0, Math.min(T, c.t1 ?? T) - c.t0), col = PROV[c.provider] || 'var(--python)';
-    return `<div class="arow"><span class="prov" style="background:${col}"></span><span class="nm">${esc(c.name)} · ${esc(c.provider)}</span><span class="db"><i style="width:${Math.max(4, dur / maxDur * 100)}%;background:${run ? 'var(--cyan)' : col}"></i></span><span style="text-align:right">${run ? 'running' : fmtDur(dur)}</span></div>`;
+    return `<div class="arow"><span class="prov" style="background:${col}"></span><span class="nm">${esc(callLabel(s, c))} · ${esc(c.provider)}</span><span class="db"><i style="width:${Math.max(4, dur / maxDur * 100)}%;background:${run ? 'var(--cyan)' : col}"></i></span><span style="text-align:right">${run ? 'running' : fmtDur(dur)}</span></div>`;
   }).join('') : '<p class="empty">No calls yet.</p>';
   const a = s.started, b = Math.max(s.finished, T);
   $('strip').innerHTML = done.map(c => `<i style="left:${(c.t0 - a) / (b - a) * 100}%;background:${PROV[c.provider] || 'var(--python)'}"></i>`).join('') +
@@ -1606,7 +1696,7 @@ function boardRows(states) {
 const onStage = r => S[focus] && S[focus].session === r.session;
 function renderPair(states) {
   BOARD = boardRows(states);
-  setHTML($('board'), BOARD.slice(0, 10).map((r, i) => `<button class="brow${onStage(r) ? ' on' : ''}" data-open="${esc(r.session)}" title="Replay the trajectory of session ${esc(r.session)}">
+  setHTML($('board'), BOARD.slice(0, 10).map((r, i) => `<button class="brow${onStage(r) ? ' on' : ''}" data-open="${esc(r.session)}" title="Replay the trajectory for ${esc(r.title || 'this paper')}">
     <span class="rk">${i + 1}</span>
     <div class="tt"><span class="clamp1">${esc(r.title)}</span><div class="src">${isHeldLabel(r.label || r.category) ? '<span class="hr-tag">Needs human review</span>' : ''}${r.human_review?.confirmed ? `<span class="hr-ok">${esc(r.human_review.badge || 'Reviewed by a person')}</span>` : ''}<span class="clamp1">vs ${esc(anonSrc(r.source_title) || '—')}</span>${r.more > 0 ? `<span class="more">+${r.more} more source${r.more > 1 ? 's' : ''}</span>` : ''}</div></div>
     ${etBoard() ? `<span class="pv${r.label === 'YES_SUSPECTED' ? ' hot' : ''}">${pct(r.p?.YES_SUSPECTED)}<span class="go">trajectory ›</span><span class="go rgo" data-report="${esc(r.session)}" title="Read the written report of this paper">report ›</span></span>`
@@ -2345,7 +2435,7 @@ function renderSoon() {
     renderFlow(s, st);
     const sel = openStage && s.stageById[openStage];
     $('flowdetail').innerHTML = sel ? `<div class="secdetail"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:8px"><b>${esc(s.groups.find(x => x.id === sel.group)?.label || '')}</b><button class="btn" data-close="1">Close</button></div>
-        <div class="srow"><span class="dot wait" style="margin-top:5px"></span><div><div class="sl">${esc(sel.label)}</div><div class="sp">${esc(PLAIN[sel.id] || '')}</div><div class="role">${esc(sel.role)}</div></div><div class="dl"><span class="empty">Not started. This stage runs when Stage 1 starts.</span></div></div></div>`
+        <div class="srow"><span class="dot wait" style="margin-top:5px"></span><div><div class="sl">${esc(stageLabel(sel))}</div><div class="sp">${esc(stageDescription(sel))}</div><div class="role">${esc(sel.role)}</div></div><div class="dl"><span class="empty">Not started. This stage runs when Stage 1 starts.</span></div></div></div>`
       : `<div class="fd-empty"><b>Stage 1 · not started</b><br>Click a stage to see what it does. Nothing has run yet.<br><br><span class="note">Every stage is idle. The arrows light up as papers move through the pipeline.</span></div>`;
   }
   soonBudget(); soonChart();

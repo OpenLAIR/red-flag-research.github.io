@@ -5,7 +5,7 @@
     { "status": "next", "lead": true, "title": "More kinds of attack", "text": "Update the screening pipeline beyond paper laundering: reused figures and tables, reused ideas, and other automated-research attacks." },
     { "status": "next", "title": "Stage reports", "text": "After each stage, a short report with aggregate numbers and what went wrong." },
     { "status": "next", "title": "Author responses and a correction log", "text": "A public log of corrected results, with the author's response when they want one shown." },
-    { "status": "after-dec-16", "title": "Synthetic benchmark on Hugging Face", "text": "A gated synthetic split, released after ICLR 2027 decisions." },
+    { "status": "after-dec-16", "title": "Synthetic benchmark on Hugging Face", "text": "A gated synthetic split, planned for after ICLR 2027 decisions." },
     { "status": "later", "title": "More venues", "text": "Other conferences and journals after ICLR 2027." },
     { "status": "later", "title": "Faster search", "text": "A local index of earlier work, so each paper is checked against more sources in less time." }
   ]
