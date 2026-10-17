@@ -95,6 +95,7 @@ a{color:inherit} button{font:inherit;color:inherit;cursor:pointer}
 .chip.red{background:var(--wine);color:var(--wine-t2)} .chip.red b{color:var(--wine-hot)}
 .chip.cyan{background:var(--teal);color:var(--teal-t2)} .chip.cyan b{color:var(--cyan)}
 .chip.amber{background:var(--panel-2);color:var(--text-2)} .chip.amber b{color:var(--amber)}
+.rp-auto{margin:0 0 1rem;padding:0.625rem 0.875rem;border-radius:var(--r-md);background:#f3e2b9;color:#5c3b00;font:500 var(--fs-body)/1.5 var(--sans)} .vheld{color:var(--amber)!important}
 .hr-tag{display:inline-block;margin-right:0.375rem;padding:0 0.375rem;border-radius:0.25rem;background:var(--step);color:var(--amber);font-size:var(--fs-sm);white-space:nowrap} .fl-row .pv.held{color:var(--text)}
 .fbk{display:inline-flex;align-items:center;gap:0.5rem;height:2.25rem;padding:0 0.875rem;border-radius:var(--r-chip);background:var(--teal);color:var(--teal-t);font-size:var(--fs-sm);font-weight:600;text-decoration:none;white-space:nowrap;transition:background-color .18s ease,transform .14s var(--ease)} .fbk:hover{background:var(--teal-2)} .fbk:active{transform:scale(.97)}
 .fbk svg{width:1rem;height:1rem;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
@@ -654,9 +655,10 @@ const LABEL = PUBLIC_LABEL;
 const labelText = k => LABEL[k] || (k ? String(k).replace(/_/g, ' ').toLowerCase() : 'delivered');
 // Held results (user decision 2026-10-16): a Stage 1 paper the system would flag stays "Under review" until a person releases it.
 // The backend sends a needs-human-review value; the page then shows no flag, no score and no evidence for that finished paper.
-PUBLIC_LABEL.HELD = 'Needs human review';
+PUBLIC_LABEL.HELD = PUBLIC_LABEL.NEEDS_HUMAN_REVIEW = 'Needs human review';
 const HELD_RE = /^(HELD|UNDER_REVIEW|NEEDS_HUMAN_REVIEW|HUMAN_REVIEW|needs-human-review|under-review)$/;
-const HELD_NOTE = 'A model flagged a close match; a person has not checked it yet.';
+// Note on every result a person has not reviewed yet (short wording chosen by the user, 2026-10-16).
+const HELD_NOTE = 'Automated screening, not yet reviewed by a person. This is not a finding of misconduct.';
 // Anonymised sources of a held paper arrive as source-N; they show as "Source N" and never link anywhere.
 const anonSrc = t => String(t || '').replace(/^source-(\d+)$/i, 'Source $1');
 const isHeldLabel = v => HELD_RE.test(v || '');
@@ -707,23 +709,16 @@ function prep(s) {
   // The saved title-screen overlay only applies to the run whose saved label it was computed from.
   const overlay = (D.history.screen?.by_paper || {})[s.paper_id] || null;
   s.screen = overlay && (!s.screening || overlay.label_before === s.screening) ? overlay : null;
-  // Double-blind review: the paper's own preprint would name its authors, so only the count is kept. Its title, link and id are never shown.
-  const preIds = new Set([...(s.preprints || []).map(p => p.id), ...(s.screen?.matches || []).map(m => m.candidate_id)].filter(Boolean));
-  const nPre = Math.max((s.preprints || []).length, (s.screen?.matches || []).length);
-  s.candidates = s.candidates.filter(c => !preIds.has(c.id));
-  s.archived = Array.from({length: nPre}, () => ({}));
-  s.retained = s.candidates;
-  s.candById = Object.fromEntries(s.candidates.map(c => [c.id, c]));
-  s.preprints = [];
+  const runtimePre = (s.preprints || []).map(p => ({id: p.id, title: p.title, url: p.url, provider: (p.id || '').split('-')[0], date: null, p: null, similarity: p.similarity}));
+  const pre = new Set([...runtimePre.map(p => p.id), ...(s.screen?.matches || []).map(m => m.candidate_id)]);
+  s.archived = [...runtimePre, ...s.candidates.filter(c => pre.has(c.id) && !runtimePre.some(r => r.id === c.id))];
+  s.retained = s.candidates.filter(c => !pre.has(c.id));
+  s.candById = Object.fromEntries([...s.candidates, ...runtimePre].map(c => [c.id, c]));
   s.label = s.screening ? (s.screen?.label_after || s.screening) : null;
   // A held run comes without its review data (the backend drops those keys), so every reader gets an empty default.
   s.io = {low: [], low_unresolved: [], trajectories: [], gate: {}, pair_writeups: [], gated_reviews: [], dates: {}, fulltext: [], ...(s.io || {})};
   s.held = s.under_review === true || [s.label, s.final?.category, s.final?.status, s.result?.screening].some(v => HELD_RE.test(v || ''));
-  if (s.held) {
-    s.label = 'HELD'; s.final = {findings: [], unknowns: []};
-    // Scores stay public for a held paper; which sources it was compared with does not, until a person releases the result.
-    s.candidates.forEach((c, i) => { c.title = `Source ${i + 1}`; c.url = ''; c.abstract = ''; });
-  }
+  if (s.held) s.label = 'HELD';  // shown in full, in amber, with the automated-result note
   s.totalTokens = s.calls.reduce((a, c) => a + (['qwen', 'jev'].includes(c.provider) ? c.tokens : 0), 0) || 1;
   s.ocrCalls = s.calls.filter(c => c.provider === 'ocr').length || 1;
   s.steps = buildSteps(s);
@@ -800,7 +795,7 @@ function buildSteps(s) {
     steps.push({t: e.t, actor, title, quote, stage: e.stage, round: passTxt, partial});
     if (e.stage === 'autonomous_search' && s.archived.length) steps.push({t: e.t + 0.001, actor: 'preprint', stage: 'title_screen',
       title: `Title screen: ${s.archived.length} candidate archived as PREPRINT`, round: 'applied after this run',
-      quote: `same title as the submission (similarity ≥ ${D.history.screen?.threshold ?? 0.9}); not reviewed further`});
+      quote: s.archived.map(c => `“${c.title}” · ${c.id}`).join('  |  ') + ` · similarity ≥ ${D.history.screen?.threshold ?? 0.9}; not reviewed further`});
   }
   for (const c of callsBad) steps.push({t: c.t1, actor: 'bad', title: `A ${c.provider} request ended as ${c.status}`, quote: `${c.name}${c.http ? ' · HTTP ' + c.http : ''}`});
   steps.sort((a, b) => a.t - b.t);
@@ -914,13 +909,12 @@ function render() {
 function jevRows(s, ds, n = 3, snip = false) {
   const key = p => p ? ('SPECIFIC' in p ? (p.SPECIFIC || 0) + 0.5 * (p.RELATED || 0) : (p.YES_SUSPECTED || 0)) : 0;
   const sorted = [...ds].sort((a, b) => key(b.p) - key(a.p)).slice(0, n);
-  return sorted.map(d => `<div class="drow2" title="${s.held ? '' : esc(d.q)}"><div class="lbl">${esc(readable(s, d))}</div><div class="bl">${distBar(d.p)}<span class="top1">${topCat(d.p)}</span></div>${snip && d.scope?.material_id && s.materials[d.scope.material_id] ? `<div class="snip">“${esc(trunc(s.materials[d.scope.material_id].text, 180))}”</div>` : ''}</div>`).join('');
+  return sorted.map(d => `<div class="drow2" title="${esc(d.q)}"><div class="lbl">${esc(readable(s, d))}</div><div class="bl">${distBar(d.p)}<span class="top1">${topCat(d.p)}</span></div>${snip && d.scope?.material_id && s.materials[d.scope.material_id] ? `<div class="snip">“${esc(trunc(s.materials[d.scope.material_id].text, 180))}”</div>` : ''}</div>`).join('');
 }
 const IOL = (k, v) => `<div class="iol"><b>${k}</b>${v}</div>`;
 const link = (url, t) => `<a href="${url}" target="_blank" rel="noopener">${esc(t)} ↗</a>`;
 function stageIO(s, st, x) {
   const io = s.io, ds = st.dist[x.id] || [], id = x.id;
-  if (heldDone(s, st) && /^(et_|gpr|xhigh|claim_tree|probe_|exact_span|low_|scope_|final_|outer_|jev_section|autonomous_search|official_dates|candidate_fulltext)/.test(id)) return IOL('out', esc(HELD_NOTE));
   if (id === 'pdf_target') return IOL('in', s.openreview ? `Target PDF from ${link(s.openreview, 'OpenReview ' + s.paper_id)}` : 'Target PDF supplied for this case (no OpenReview page)') + IOL('out', `${io.pdf_pages ?? '?'} pages, file hash checked`);
   if (id === 'target_materials') return IOL('out', `${io.pdf_pages ?? '?'} pages turned into text (${esc(io.ocr_coverage || '')})`) + (io.first_page ? `<div class="ex"><div class="h">Page 1</div><div class="snip">“${esc(trunc(io.first_page, 220))}”</div></div>` : '');
   if (id === 'intake') return IOL('in', 'Full target text') + IOL('out', `${s.claims.length} core claims, each with technical checks`) + s.claims.map(c => `<div class="ex"><div class="h"><b>${esc(c.id)}</b> ${esc(trunc(c.text, 190))}</div>${c.checks[0] ? `<div class="snip">Check (${esc(c.checks[0].dim)}): ${esc(trunc(c.checks[0].q, 150))}</div>` : ''}</div>`).join('');
@@ -1025,9 +1019,7 @@ function renderHero(s, st) {
       <span>${sub.number ? `ICLR 2027 #${sub.number}` : 'user-designated case'}${tDate ? ` · submitted ${tDate}` : ''}</span>
       ${sub.primary_area ? `<span class="fact"><b>Primary Area</b> ${esc(sub.primary_area)}</span>` : ''}${sub.keywords?.length ? `<span class="fact"><b>Keywords</b> ${esc(sub.keywords.join(', '))}</span>` : ''}</div></div>`;
   let right, tl = '';
-  if (heldDone(s, st)) {
-    right = `<div class="side b waiting"><div class="pg b ghost" aria-hidden="true"></div><div class="cap"><span class="who">Source</span><span class="srcl">${esc(top ? anonSrc(top.title) : 'Source')}</span><span>Needs human review · ${HELD_NOTE}</span></div></div>`;
-  } else if (top) {
+  if (top) {
     const sd = dayMs(top.date), td = dayMs(tDate), id = String(top.id).replace(/^(arxiv|openreview|huggingface)-/, '');
     const rel = sd && td ? (sd < td ? `<b>public ${Math.round((td - sd) / 864e5)} days before</b> the submission` : `appeared ${Math.round((sd - td) / 864e5)} days after`) : 'public date unknown';
     right = `<div class="side b">${miniPage('b', top.title, top.abstract, top.provider === 'arxiv' ? 'arXiv:' + id : null, PROVNAME[top.provider] || 'Source')}
@@ -1102,7 +1094,7 @@ const cleanET = t => String(t || '').trim()
   .replace(/The LOW loop[^.]*\.\s*/g, '').replace(/\s*This is not proof of misconduct\.?/g, '')
   .replace(/^At least one pair is SUSPECTED; source review is recommended\.?$/, 'At least one source pair was flagged, so a person should review the source.')
   .replace(/^Searched scope: (\d+) candidate\(s\) with usable full text; this is not a clearance of the paper\.?$/, (_, n) => `We compared the paper with ${n} candidate source${n === '1' ? '' : 's'} that had usable full text and found nothing to flag. This is not a clearance of the paper.`)
-  .replace(/Therefore,? the final screening label is (YES_SUSPECTED|NO_SUPPORTED|UNRESOLVED)(, recommending human source review)?\./g, (_, k) => `So the result is ${PUBLIC_LABEL[k]}.`)
+  .replace(/Therefore,? the final screening label is (YES_SUSPECTED|NO_SUPPORTED|UNRESOLVED|NEEDS_HUMAN_REVIEW)(, recommending human source review)?\./g, (_, k) => `So the result is ${PUBLIC_LABEL[k]}.`)
   .replace(/verified ([A-Z][A-Z_]+) correspondence/g, (_, k) => 'verified case of ' + (ET_TERM[k] || k))
   .replace(/\b[A-Z]{2,}(?:_[A-Z]+)+\b/g, k => PUBLIC_LABEL[k] ? k : ET_TERM[k] || k.toLowerCase().replace(/_/g, ' '))
   .replace(/Target A/g, 'The target paper').replace(/target A/g, 'the target paper').replace(/Candidate B/g, 'The source').replace(/candidate B/g, 'the source')
@@ -1114,7 +1106,6 @@ const sentenceCase = t => { t = cleanText(t); return t ? t[0].toUpperCase() + t.
 const NORMAL = {SUPPORTED: 'An ordinary explanation is supported by the evidence.', CONTRADICTED: 'The evidence contradicts an ordinary explanation.',
   POSSIBLE: 'An ordinary explanation is possible but not shown by the inspected text.', UNKNOWN: 'Whether an ordinary explanation applies could not be checked.'};
 function reportButton(s, st) {
-  if (s.held) return '';
   return st.finished && s.final?.status && s.final.findings?.length !== undefined ? `<button class="btn rpt-open" data-report="${esc(s.session)}">Read the report →</button>` : '';
 }
 function resultVote(pid) {
@@ -1127,13 +1118,6 @@ function resultVote(pid) {
 }
 function renderReport() {
   const s = S.find(x => x.session === REPORT) || S[focus], st = stateAt(s, s.started + durOf(s));
-  if (s.held) {
-    setHTML($('reportView'), `<div class="rp"><div class="rp-top"><button class="btn" data-close-report="1">← Back to the stage</button><span class="note">Session #${s.rank} · ${esc(s.session)}</span></div>
-      <header class="rp-head"><div class="rp-title"><h2>${s.openreview ? `<a href="${esc(s.openreview)}" target="_blank" rel="noopener">${esc(s.title)}</a>` : esc(s.title)}</h2>
-      <p class="rp-stand"><span class="res HELD">Needs human review</span></p><p class="rp-stand">${HELD_NOTE}</p></div></header>
-      <footer class="rp-foot"><p>${wrongLink(s.paper_id, s.title)} · <button class="linkbtn" data-about="1">About these results</button></p></footer></div>`);
-    return;
-  }
   const f = s.final || {findings: []}, label = s.label || f.status, top = s.retained[0];
   const srcOf = id => s.candById[id] || {};
   const sources = [...new Set(f.findings.map(x => x.B_source).filter(Boolean))].map(srcOf).filter(c => c.title);
@@ -1149,7 +1133,7 @@ function renderReport() {
     for (const w of pw) {
       const c = srcOf(w.candidate_id), r = m[w.candidate_id] || (m[w.candidate_id] = {cid: w.candidate_id, y: null, written: false});
       r.title = w.candidate_title || c.title || r.title || w.candidate_id; r.url = w.candidate_url || c.url || r.url || null;
-      r.flagged = w.pair_status === 'SUSPECTED'; r.written = w.writeup_status === 'WRITTEN';
+      r.flagged = w.pair_status === 'SUSPECTED' || isHeldLabel(w.pair_status); r.written = w.writeup_status === 'WRITTEN';  // a held pair is flagged too, only not reviewed yet
     }
     return Object.values(m).sort((a, b) => (b.y ?? -1) - (a.y ?? -1));
   })();
@@ -1157,7 +1141,7 @@ function renderReport() {
   const stand = !et ? sentenceCase(String(f.conclusion || '').replace(/^\s*\w+ is a review signal, not a fact\.\s*/i, ''))
     : (written ? sentenceCase(cleanET(written.summary)) : sentenceCase(cleanET(f.conclusion))) + (label === 'YES_SUSPECTED' && !written ? ' The written review for this paper was not produced in this run; the flagged sources are listed below.' : '');
   const numbers = et ? [['Result', `<span class="res ${esc(label)}">${esc(labelText(label))}</span>`], ['Jev, strongest pair', ep[0] ? pct(ep[0].p.YES_SUSPECTED) : '—'],
-    ['Sources compared', Math.max(ep.length, pw.length)], ['Flagged pairs', pw.filter(w => w.pair_status === 'SUSPECTED').length], ['Findings', f.findings.length], ['Time', s.finished ? fmtDur(s.finished - s.started) : '—']]
+    ['Sources compared', Math.max(ep.length, pw.length)], ['Flagged pairs', pw.filter(w => w.pair_status === 'SUSPECTED' || isHeldLabel(w.pair_status)).length], ['Findings', f.findings.length], ['Time', s.finished ? fmtDur(s.finished - s.started) : '—']]
     : [['Result', `<span class="res ${esc(label)}">${esc(labelText(label))}</span>`], ['Jev, whole paper', jev ? pct(jev.YES_SUSPECTED) + ' review' : '—'],
     ['Findings', f.findings.length], ['Matched checks', checked ? `${matched} of ${checked}` : '—'], ['Candidates screened', s.retained.length], ['Time', s.finished ? fmtDur(s.finished - s.started) : '—']];
   const sourceSec = () => `<section class="rp-sec"><h3>Sources compared</h3><div class="rp-srcs">${srcRows.map(r => `<div class="rp-src"><span class="t">${r.url ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a>` : esc(r.title)}</span>
@@ -1193,7 +1177,7 @@ function renderReport() {
   };
   setHTML($('reportView'), `<div class="rp">
     <div class="rp-top"><button class="btn" data-close-report="1">← Back to the stage</button><span class="note">Session #${s.rank} · ${esc(s.session)}</span></div>
-    <header class="rp-head"><div class="rp-title"><h2>${s.openreview ? `<a href="${esc(s.openreview)}" target="_blank" rel="noopener">${esc(s.title)}</a>` : esc(s.title)}</h2>
+    <header class="rp-head"><div class="rp-title">${s.held ? `<p class="rp-auto">${HELD_NOTE}</p>` : ''}<h2>${s.openreview ? `<a href="${esc(s.openreview)}" target="_blank" rel="noopener">${esc(s.title)}</a>` : esc(s.title)}</h2>
       <p class="rp-date">Screening report${dt ? ' · ' + dt : ''}</p>
       <p class="rp-stand">${esc(stand || 'The final review did not write a summary.')}</p>
       <p class="rp-meta">${sub.number ? `ICLR 2027 submission #${sub.number} · ` : ''}compared with ${sources.length ? sources.map(c => `<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(trunc(c.title, 70))}</a>`).join(' and ') : et ? (srcRows.length ? `${srcRows.length} candidate source${srcRows.length === 1 ? '' : 's'}` : 'no source') : top ? esc(top.title) : 'no source'}</p></div>
@@ -1335,7 +1319,7 @@ function renderVerdict(s, st) {
   }
   if (held) {
     setHTML($('verdict'), `<div class="vtop"><span class="big" style="color:var(--text)">${y == null ? '—' : pct(y)}</span><span class="cap"><b>model score</b>Jev, ${last?.pair ? 'strongest pair' : 'whole paper'}</span></div>${svg}
-    <p class="vheld">${HELD_NOTE}</p><div class="vfoot"><span></span><span class="res HELD">Needs human review</span></div>`);
+    <p class="vheld">${HELD_NOTE}</p><div class="vfoot"><span>${last?.pair ? 'vs ' + esc(trunc(last.pair.title, 42)) : ''}</span><span class="res HELD">Needs human review</span>${reportButton(s, st)}</div>`);
     return;
   }
   if (isET(s)) {
@@ -1358,7 +1342,6 @@ function quotePair(aWho, a, bWho, b) {
 }
 function renderEvidence(s, st) {
   const el = $('evidence');
-  if (heldDone(s, st)) { el.innerHTML = `<p class="empty">${HELD_NOTE}</p>`; return; }
   if (st.status.xhigh_final === 'done' && s.final.findings.length) {
     const top = s.retained[0], f = s.final.findings.find(x => top && x.B_source === top.id) || s.final.findings[0];
     const src = trunc(s.candById[f.B_source]?.title || 'Source', 44);
@@ -1525,7 +1508,6 @@ const PAIRS_DONE = new Map();
 // suspicious: Jev's review probability at least this high (same rule as the backend's count).
 const SUSPECT_MIN = 0.5;
 function notePairs(x) {
-  if (x.held) return;
   const st = stateAt(x, Infinity);
   PAIRS_DONE.set(x.run_id, {session: x.session, run_id: x.run_id, started: x.started || 0, rank: x.rank, paper_id: x.paper_id, title: x.title, openreview: x.openreview,
     submission: x.submission?.number, label: x.label, pairs: etPairs(x, st)});

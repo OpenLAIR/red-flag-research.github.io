@@ -167,6 +167,7 @@ main{padding-top:56px}
   .acts{margin-left:auto}
 }
 @media (max-width:720px){main{padding-top:32px}.row{padding:14px}.act{min-height:44px;padding:0 14px}.f{min-height:44px}}
+.m.auto{color:#e8b44c}
 </style>
 </head>
 <body>
@@ -313,13 +314,19 @@ const plainTitle = s => String(s || '').replace(/\$([^$]*)\$/g, (_, m) => m.repl
     box.hidden = false;
   }
 
+  const AUTO_NOTE = 'Automated screening, not yet reviewed by a person. This is not a finding of misconduct.';
   function metaLines(p) {
     const lines = [];
     const first = el('p', 'm');
     first.appendChild(document.createTextNode('ICLR 2027 #' + p.submission));
-    if (p.category_id === 'same-paper-preprint') {
-      // Double-blind rule: say that a preprint exists, never which one.
+    // Same paper (preprint): the matching preprint is shown with its link when the backend sends it (user decision, 2026-10-16).
+    const pre = p.category_id === 'same-paper-preprint' ? (p.preprint || (Array.isArray(p.sources) && p.sources[0]) || null) : null;
+    if (p.category_id === 'same-paper-preprint' && !(pre && pre.title)) {
       first.appendChild(document.createTextNode(' · Same paper found as a public preprint'));
+    } else if (pre) {
+      first.appendChild(document.createTextNode(' · Same paper as '));
+      const u = safeUrl(pre.url);
+      first.appendChild(u ? link(pre.title, u, null, true) : document.createTextNode(pre.title));
     } else if (Array.isArray(p.sources) && p.sources.length) {
       const s = p.sources[0];
       first.appendChild(document.createTextNode(' · vs '));
@@ -333,7 +340,7 @@ const plainTitle = s => String(s || '').replace(/\$([^$]*)\$/g, (_, m) => m.repl
     }
     lines.push(first);
     if (p.category_id === 'needs-human-review') {
-      lines.push(el('p', 'm', 'A model flagged a close match; a person has not checked it yet.'));
+      lines.push(el('p', 'm auto', p.automated_note || AUTO_NOTE));  // a result a person has not reviewed yet
     }
     return lines;
   }
