@@ -16,7 +16,7 @@
   "showOptionalPlaceholders": false,
   "privacyEffective": "2026-10-16",
   "repoPublic": true,
-  "apiBase": "https://spec-integrity-unified-valium.trycloudflare.com",
+  "apiBase": "https://live-api.red-flag-research.org",
   "definition": "Red-flag Research is a research project from OpenLAIR that screens conference submissions for automated-research attacks, starting with paper laundering in ICLR 2027.",
   "datasetUrl": "https://huggingface.co/datasets/red-flag-research/iclr2027-source-review-benchmark"
 }

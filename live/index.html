@@ -1677,7 +1677,7 @@ function setFoot() {
 }
 setFoot();
 
-const API = (new URLSearchParams(location.search).get('api') || D.api_base || 'https://spec-integrity-unified-valium.trycloudflare.com').replace(/\/+$/, '');
+const API = (new URLSearchParams(location.search).get('api') || D.api_base || 'https://live-api.red-flag-research.org').replace(/\/+$/, '');
 const enc = encodeURIComponent, TERMINAL = new Set(['completed', 'failed', 'stopped', 'cancelled', 'canceled', 'delivered', 'error', 'aborted']);
 async function getJSON(path, ms = 30000) {  // the quick tunnel takes up to ~9 s per request when several run at once
   // The gateway answers 502/503/504 when the hub is slow or restarting; retry those twice before giving up.
