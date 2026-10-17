@@ -283,7 +283,8 @@ body.extra .replay #play,body.extra .replay #scrub,body.extra .replay [data-spee
 .prog{display:flex;flex-direction:column;gap:0.5rem}
 .pp{position:relative;border-radius:var(--r-md);background:var(--bg);padding:0.625rem 0.75rem 0.25rem}
 .pp .ph{display:flex;align-items:baseline;gap:0.5rem;font-size:var(--fs-sm);color:var(--text-2);white-space:nowrap;min-width:0}
-.pp .ph b{font:600 1.5rem/1 var(--sans);color:var(--c)} .pp .ph .d{margin-left:auto;font-size:var(--fs-sm);color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.pp .ph b{font:600 1.5rem/1 var(--sans);color:var(--c)} .pp .pgo{flex:none;padding:0 0.375rem;border-radius:0.375rem;color:var(--text-2);text-decoration:none;font-size:var(--fs-body)} .pp .pgo:hover{color:var(--text);background:var(--step)}
+a.chip{text-decoration:none} a.chip:hover{filter:brightness(1.15)} .pp .ph .d{margin-left:auto;font-size:var(--fs-sm);color:var(--muted);overflow:hidden;text-overflow:ellipsis}
 .pp svg{display:block;width:100%;margin-top:0.125rem;cursor:crosshair}
 @keyframes ppulse{0%{r:3;opacity:1}80%,100%{r:9;opacity:0}} .livedot{animation:ppulse 1.6s ease-out infinite}
 .linkbtn{border:0;cursor:pointer;color:var(--cyan)!important;font:inherit;background:none;padding:0 0.25rem;border-radius:0.375rem} .linkbtn:hover{background:var(--teal)!important}
@@ -638,6 +639,8 @@ const D = SOON ? {batch: null, sessions: [], history: {corpus: {total: 43013}, p
 // Feedback goes through the site's feedback page, which sends a templated e-mail (decided 2026-10-16).
 // Query, as the form reads it: type=correction|bug|benchmark|press|other, paper=<OpenReview id>, title, session, from=live.
 const FEEDBACK_URL = (HOME || '../') + 'feedback.html';
+// The public results list (all screened papers, filterable by result).
+const RESULTS_URL = cat => (HOME || '../') + 'results/' + (cat ? '?category=' + cat : '');
 const feedbackLink = q => FEEDBACK_URL + '?' + new URLSearchParams(Object.fromEntries(Object.entries({...q, from: 'live'}).filter(([, v]) => v))).toString();
 // Corrections and support (decided 2026-10-15).
 const CONTACT_EMAIL = 'red.flag.autoresearch@gmail.com';
@@ -850,7 +853,7 @@ function render() {
   const c = D.history.corpus, lastP = (PROGRESS.points || []).slice(-1)[0], L = labelsNow();
   const checked = lastP ? lastP.checked : LIVE_ONLY ? '…' : c.screened_count, susp = lastP ? lastP.suspected : LIVE_ONLY ? '…' : c.suspected_count;
   const prep = lastP ? Object.values(L).filter(v => v === 'PREPRINT').length : LIVE_ONLY ? '…' : c.preprint_count;
-  $('counters').innerHTML = `<span class="chip cyan"><b>${checked}</b> / ${c.total.toLocaleString()} checked</span><span class="chip red"><b>${susp}</b> review recommended</span>${lastP?.under_review ? `<span class="chip amber"><b>${lastP.under_review}</b> needs human review</span>` : ''}<span class="chip" title="0.90 title screen applied"><b>${prep}</b> same paper (preprint)</span>`;
+  $('counters').innerHTML = `<a class="chip cyan" href="${RESULTS_URL('')}" title="All screened papers"><b>${checked}</b> / ${c.total.toLocaleString()} checked</a><a class="chip red" href="${RESULTS_URL('source-review-recommended')}"><b>${susp}</b> review recommended</a>${lastP?.under_review ? `<a class="chip amber" href="${RESULTS_URL('needs-human-review')}"><b>${lastP.under_review}</b> needs human review</a>` : ''}<a class="chip" href="${RESULTS_URL('same-paper-preprint')}" title="0.90 title screen applied"><b>${prep}</b> same paper (preprint)</a>`;
 
   $('feedback').href = feedbackLink({type: 'bug', session: s.session});
   // Live-only: the tab strip holds the papers running now (at most LIVE_MAX_SESSIONS), plus the one on screen.
@@ -1241,7 +1244,8 @@ function renderProgress() {
     const v = hp ? hp[key] : last[key], prev = (at(t1 - 86400) || {})[key] ?? 0;
     const dd = last[key] - prev, right = hp ? fmtD(PHOVER) + ' ET' : `${dd > 0 ? '+' : dd < 0 ? '−' : '±'}${Math.abs(dd)} in 24h`;
     const extra = key === 'suspected' ? (() => { const q = [...pts].reverse().find(p => p.label === 'YES_SUSPECTED' && (!hp || p.t <= PHOVER)); return q ? `<div class="note" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:2px 0 6px">newest: ${esc(paperMeta(q.paper_id).title)}</div>` : ''; })() : '';
-    return `<div class="pp" style="--c:${color}"><div class="ph"><b>${v}</b>${name}<span class="d">${right}</span></div>${g}${extra}</div>`;
+    const cat = {checked: '', suspected: 'source-review-recommended', under_review: 'needs-human-review'}[key];
+    return `<div class="pp" style="--c:${color}"><div class="ph"><b>${v}</b>${name}<span class="d">${right}</span><a class="pgo" href="${RESULTS_URL(cat)}" aria-label="List: ${name}" title="Open the list">›</a></div>${g}${extra}</div>`;
   };
   setHTML($('prog'), panel('checked', 'papers checked', '#57c7cf', 10) + panel('suspected', 'review recommended', '#ff8a7f', 5) + (held ? panel('under_review', 'needs human review', '#e8b44c', 5) : ''));
 }
@@ -1651,7 +1655,7 @@ document.addEventListener('click', e => {
   const op = e.target.closest('[data-open]'); if (op) { view = 'stage'; openSession(op.dataset.open); return; }
   if (e.target.closest('[data-about]')) { openAbout(null); return; }
   const vb2 = e.target.closest('[data-vote]'); if (vb2) { castVote(vb2.dataset.pid, vb2.dataset.vote); return; }
-  if (e.target.closest('#flaggedBtn')) { view = view === 'flagged' ? 'stage' : 'flagged'; render(); return; }
+  if (e.target.closest('#flaggedBtn')) { location.href = RESULTS_URL(''); return; }  // the separate results list replaces the in-page flagged view
   if (e.target.closest('[data-close-flagged]')) { view = 'stage'; render(); return; }
   const rpt = e.target.closest('[data-report]'); if (rpt) { openReport(rpt.dataset.report); return; }
   if (e.target.closest('[data-close-report]')) { view = 'stage'; render(); return; }

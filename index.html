@@ -370,6 +370,7 @@ a.tile-fig:active{transform:scale(.99)}
 .t-a b{font-size:var(--s-fig-xl)}
 .t-b{grid-column:2;grid-row:2;min-height:170px;background:var(--panel)}
 .t-c{grid-column:3;grid-row:2;min-height:170px;background:var(--panel)}
+.t-c .spark{display:block;width:100%;height:48px;margin-bottom:auto}
 .lede{grid-column:2/4;grid-row:1;padding:28px 32px;border-radius:var(--r-lg)}
 .mission{font:400 var(--s-lead)/1.5 var(--serif);color:var(--text);margin:0 0 14px;max-width:60ch;text-wrap:pretty}
 .intro{color:var(--text-2);margin:0;max-width:60ch;text-wrap:pretty}
@@ -1029,7 +1030,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
           <p class="intro">Public: benchmark, evaluation tools and saved baseline outputs.</p>
         </div>
         <a class="tile-fig t-b" href="#schedule" aria-label="9 public stages, see the schedule"><b id="f-stages">9</b><span>public stages <i class="go" aria-hidden="true">→</i></span><em>up to <span id="f-per">5,000</span> papers per stage</em></a>
-        <div class="tile-fig t-c"><b id="f-lanes">5</b><span>concurrent sessions</span></div>
+        <a class="tile-fig t-c" href="./results/" aria-label="Papers checked so far, see the list"><svg class="spark" id="f-spark" viewBox="0 0 200 48" preserveAspectRatio="none" aria-hidden="true"></svg><b id="f-checked">—</b><span>papers checked <i class="go" aria-hidden="true">→</i></span></a>
       </div>
     </div>
   </section>
@@ -2059,7 +2060,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
     $('f-total').textContent = n(s.totalPapers);
     $('f-stages').textContent = s.stages.length;
     $('f-per').textContent = n(s.stages[0].papers);
-    $('f-lanes').textContent = lanes;
+    if ($('f-lanes')) $('f-lanes').textContent = lanes;  // the tile now shows papers checked
     const tick = tickFactory(s, stages, fmt);
     const first = tick();
     renderSchedule(s, first.live, fmt, s.displayTimeZoneLabel, first.t);
@@ -2084,6 +2085,22 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
     $('feed').innerHTML = `<p style="color:var(--text-2)">Could not load the page data (${esc(e.message)}). Serve this folder over HTTP, not file://.</p>`;
   });
 })();
+</script>
+<script>
+  // "Papers checked" tile: the running count and its line over time, from the public progress series.
+  (async () => {
+    try {
+      const site = await fetch('data/site.json', { cache: 'no-store' }).then((r) => r.json());
+      const r = await fetch(site.apiBase.replace(/\/$/, '') + '/api/progress', { cache: 'no-store' });
+      const pts = r.ok ? ((await r.json()).points || []) : [];
+      if (!pts.length) return;
+      const last = pts[pts.length - 1];
+      document.getElementById('f-checked').textContent = last.checked.toLocaleString('en-US');
+      const t0 = pts[0].t, t1 = Math.max(last.t, t0 + 1), ymax = Math.max(1, last.checked);
+      const d = pts.map((p, i) => `${i ? 'L' : 'M'}${((p.t - t0) / (t1 - t0) * 200).toFixed(1)},${(46 - p.checked / ymax * 44).toFixed(1)}`).join('');
+      document.getElementById('f-spark').innerHTML = `<path d="${d}" fill="none" stroke="#57c7cf" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+    } catch { /* the API can be down; the tile keeps its dash */ }
+  })();
 </script>
 </body>
 </html>
