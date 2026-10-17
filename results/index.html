@@ -144,6 +144,8 @@ main{padding-top:56px}
 .m{margin:2px 0 0;color:var(--muted);font-size:var(--s-sm);line-height:1.45;overflow-wrap:anywhere}
 .m a{color:var(--text-2);text-underline-offset:3px}
 .m a:hover{color:var(--text)}
+.m.rv{color:var(--muted)}
+.m.rv button{padding:0;border:0;background:none;color:inherit;font:inherit;line-height:inherit;text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}
 .side{display:grid;grid-template-columns:56px 208px 132px;gap:14px;align-items:center}
 .sc{text-align:right;font-weight:600}
 .sc.srr{color:#ff8a7f} .sc.nhr{color:#e8b44c}
@@ -345,6 +347,24 @@ const plainTitle = s => String(s || '').replace(/\$([^$]*)\$/g, (_, m) => m.repl
       const line = el('p', 'm hr');
       line.appendChild(el('span', 'hr-ok', p.human_review.badge || 'Reviewed by a person'));
       if (p.human_review.verdict) line.appendChild(document.createTextNode(' ' + p.human_review.verdict.replace(/^Confirmed by human review:\s*/i, '')));
+      lines.push(line);
+    }
+    const reviewNote = typeof p.review_note === 'string' ? p.review_note : '';
+    if (reviewNote.trim() && !(p.human_review && p.human_review.confirmed)) {
+      const line = el('p', 'm rv');
+      line.title = reviewNote;
+      const button = el('button', null, 'Reviewed by a person');
+      button.type = 'button';
+      button.setAttribute('aria-expanded', 'false');
+      const note = el('span', null, ' ' + reviewNote.replace(/^Reviewed by a person:\s*/i, ''));  // the label already says it
+      note.hidden = true;
+      button.addEventListener('click', () => {
+        const expanded = button.getAttribute('aria-expanded') !== 'true';
+        button.setAttribute('aria-expanded', String(expanded));
+        note.hidden = !expanded;
+      });
+      line.appendChild(button);
+      line.appendChild(note);
       lines.push(line);
     }
     if (p.category_id === 'needs-human-review') {
