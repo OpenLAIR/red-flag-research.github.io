@@ -221,7 +221,7 @@ body.flowmode .bottom,body.flowmode .rail{display:none} body.flowmode .grid{grid
 
 /* ---- rail ---- */
 .brow{cursor:pointer;border:0;width:100%;text-align:left;color:inherit;font:inherit;transition:background-color .18s ease} .brow:hover{background:var(--step)} .brow.on{background:var(--teal)}
-.brow .go{white-space:nowrap;font-size:var(--fs-sm);color:var(--cyan);opacity:0;transition:opacity .16s} .brow:hover .go,.brow:focus-visible .go{opacity:1}
+.brow .go{white-space:nowrap;font-size:var(--fs-sm);color:var(--cyan);opacity:0;transition:opacity .16s} .brow .rgo{text-decoration:underline;text-underline-offset:2px} .brow:hover .go,.brow:focus-visible .go{opacity:1}
 body.extra .replay #play,body.extra .replay #scrub,body.extra .replay [data-speed]{display:inline-flex}
 .board{display:flex;flex-direction:column;gap:0.25rem}
 .brow{display:grid;grid-template-columns:1.25rem minmax(0,1fr) 5.5rem;gap:0.5rem;padding:0.5rem 0.625rem;border-radius:var(--r-sm);align-items:center;background:var(--panel-2)}
@@ -612,7 +612,7 @@ body.waiting .livewait{display:block} body.waiting main,body.waiting .replay,bod
       <div class="prog" id="prog"></div>
     </section>
     <section class="card" aria-label="Suspect leaderboard">
-      <h3>Highest scores so far <button class="tag linkbtn" id="flaggedBtn" title="Every paper whose current result is Source review recommended, with votes">All flagged ›</button></h3>
+      <h3>Highest scores so far <button class="tag linkbtn" id="flaggedBtn" title="Every paper whose current result is Source review recommended, with its report">All flagged reports ›</button></h3>
       <div class="board" id="board"></div>
     </section>
   </aside>
@@ -848,7 +848,12 @@ function render() {
   $('counters').innerHTML = `<span class="chip cyan"><b>${checked}</b> / ${c.total.toLocaleString()} checked</span><span class="chip red"><b>${susp}</b> review recommended</span><span class="chip" title="0.90 title screen applied"><b>${prep}</b> same paper (preprint)</span>`;
 
   $('feedback').href = feedbackLink({type: 'bug', session: s.session});
+  // Live-only: the tab strip holds the papers running now (at most LIVE_MAX_SESSIONS), plus the one on screen.
+  // Finished papers leave it; replays of finished papers come later (user, 2026-10-16).
+  const runningIdx = S.map((x, i) => i).filter(i => S[i].finished == null && !S[i].extra).slice(0, LIVE_MAX_SESSIONS);
+  const showTab = i => !(LIVE_ONLY && MODE === 'live') || i === focus || runningIdx.includes(i);
   $('tabs').innerHTML = S.map((x, i) => {
+    if (!showTab(i)) return '';
     const y = states[i], cls = i === focus && !y.finished ? 'run' : !y.started ? 'wait' : y.finished ? (x.label === 'YES_SUSPECTED' ? 'flag' : x.label === 'PREPRINT' ? 'pre' : 'done') : 'run';
     return `<button class="tab${i === focus ? ' on' : ''}" data-i="${i}"><span class="dot ${cls}"></span><span class="muted">#${x.rank}</span><span class="t">${esc(x.title)}</span></button>`;
   }).join('') + `<span class="seg" role="group" aria-label="View"><button data-view="stage" class="${view === 'stage' ? 'on' : ''}">Stage view</button><button data-view="flow" class="${view === 'flow' ? 'on' : ''}">Flow view</button></span>`;
@@ -1564,11 +1569,11 @@ function renderPair(states) {
   setHTML($('board'), BOARD.slice(0, 10).map((r, i) => `<button class="brow${onStage(r) ? ' on' : ''}" data-open="${esc(r.session)}" title="Replay the trajectory of session ${esc(r.session)}">
     <span class="rk">${i + 1}</span>
     <div class="tt"><span class="clamp1">${esc(r.title)}</span><div class="src"><span class="clamp1">vs ${esc(r.source_title || '—')}</span>${r.more > 0 ? `<span class="more">+${r.more} more source${r.more > 1 ? 's' : ''}</span>` : ''}</div></div>
-    ${etBoard() ? `<span class="pv${r.label === 'YES_SUSPECTED' ? ' hot' : ''}">${pct(r.p?.YES_SUSPECTED)}<span class="go">trajectory ›</span></span>`
+    ${etBoard() ? `<span class="pv${r.label === 'YES_SUSPECTED' ? ' hot' : ''}">${pct(r.p?.YES_SUSPECTED)}<span class="go">trajectory ›</span><span class="go rgo" data-report="${esc(r.session)}" title="Read the written report of this paper">report ›</span></span>`
       : `<span class="pv${i < 3 ? ' hot' : ''}">${pct(r.p?.YES_SUSPECTED)}<span class="go">trajectory ›</span></span>`}</button>`).join('') || '<p class="empty">No scored paper yet.</p>');
   const bh = $('board')?.previousElementSibling?.firstChild; if (bh && bh.nodeType === 3) bh.textContent = etBoard() ? 'Most suspicious pairs so far ' : 'Highest scores so far ';
   const n = Object.values(labelsNow()).filter(v => v === 'YES_SUSPECTED').length;
-  $('flaggedBtn').textContent = `All flagged (${n}) ›`;
+  $('flaggedBtn').textContent = `All flagged reports (${n}) ›`;
 }
 
 function renderMyCalls(s, st) {
@@ -1634,6 +1639,7 @@ document.addEventListener('click', e => {
   if (e.target.closest('#followBtn')) { follow = !follow; render(); return; }
   const vb = e.target.closest('[data-view]'); if (vb) { view = vb.dataset.view; render(); return; }
   const fc = e.target.closest('[data-focus]'); if (fc) { watch(+fc.dataset.focus); return; }
+  const brp = e.target.closest('.rgo[data-report]'); if (brp) { openReport(brp.dataset.report); return; }  // the board row's own report link, before the row's replay
   const op = e.target.closest('[data-open]'); if (op) { view = 'stage'; openSession(op.dataset.open); return; }
   if (e.target.closest('[data-about]')) { openAbout(null); return; }
   const vb2 = e.target.closest('[data-vote]'); if (vb2) { castVote(vb2.dataset.pid, vb2.dataset.vote); return; }
@@ -1841,8 +1847,8 @@ async function boot() {
     } else render();
     scanPairs(runs);
     if (MODE === 'live') {
-      // The running papers are on screen; the recently finished ones follow without holding up the first paint.
-      if (first.length && later.length) mapPool(later, 2, loadRun).then(ps => {
+      // The running papers are on screen; the recently finished ones follow without holding up the first paint (not in live-only).
+      if (first.length && later.length && !LIVE_ONLY) mapPool(later, 2, loadRun).then(ps => {
         ps.filter(p => p.status === 'fulfilled').forEach(p => { const x = p.value; if (!x.rank) x.rank = runKey(x.run_id).rank; S.push(prep(x)); pos.push(durOf(x)); });
         render();
       });
@@ -1863,10 +1869,12 @@ async function addNewRuns(runs) {
   const have = new Set(S.map(x => x.run_id));
   numberRuns(runs.filter(r => r.started_at && runKey(r.run_id).key === BATCH));
   const fresh = runs.filter(r => r.started_at && runKey(r.run_id).key === BATCH && !TERMINAL.has(r.status) && !have.has(r.run_id));
-  if (!fresh.length) return;
-  const got = (await mapPool(fresh, 2, loadRun)).filter(p => p.status === 'fulfilled').map(p => p.value);
+  if (!fresh.length && !LIVE_ONLY) return;
+  const got = fresh.length ? (await mapPool(fresh, 2, loadRun)).filter(p => p.status === 'fulfilled').map(p => p.value) : [];
   got.forEach(x => { if (!x.rank) x.rank = runKey(x.run_id).rank; S.push(prep(x)); pos.push(durOf(x)); });
   const shown = S[focus];
+  // Live-only: finished papers are not kept on the stage; only the one on screen stays until the view moves on.
+  if (LIVE_ONLY) for (let i = S.length - 1; i >= 0; i--) if (S[i] !== shown && S[i].finished != null && !S[i].extra) { S.splice(i, 1); pos.splice(i, 1); }
   while (S.length > LIVE_MAX_SESSIONS) {
     let drop = -1, oldest = Infinity;
     S.forEach((x, i) => { if (x !== shown && x.finished != null && x.started < oldest) { oldest = x.started; drop = i; } });
@@ -2121,7 +2129,7 @@ function renderSoon() {
   setHTML($('activity'), '<p class="empty">Nothing yet</p>');
   soonProg();
   setHTML($('board'), '<p class="empty">Nothing yet</p>');
-  $('flaggedBtn').textContent = 'All flagged (0) ›'; $('flaggedBtn').disabled = true;
+  $('flaggedBtn').textContent = 'All flagged reports (0) ›'; $('flaggedBtn').disabled = true;
 }
 // countdown: start time from ../data/schedule.json, else the fallback; ?now=<ISO time> moves the clock for testing
 const SOON_NOW = Date.parse(URL_Q.get('now') || ''), SOON_T0 = Date.now();
