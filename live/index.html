@@ -843,8 +843,8 @@ function render() {
 
   // One source for the counters and the progress charts: each paper once, latest label wins.
   const c = D.history.corpus, lastP = (PROGRESS.points || []).slice(-1)[0], L = labelsNow();
-  const checked = lastP ? lastP.checked : c.screened_count, susp = lastP ? lastP.suspected : c.suspected_count;
-  const prep = lastP ? Object.values(L).filter(v => v === 'PREPRINT').length : c.preprint_count;
+  const checked = lastP ? lastP.checked : LIVE_ONLY ? '…' : c.screened_count, susp = lastP ? lastP.suspected : LIVE_ONLY ? '…' : c.suspected_count;
+  const prep = lastP ? Object.values(L).filter(v => v === 'PREPRINT').length : LIVE_ONLY ? '…' : c.preprint_count;
   $('counters').innerHTML = `<span class="chip cyan"><b>${checked}</b> / ${c.total.toLocaleString()} checked</span><span class="chip red"><b>${susp}</b> review recommended</span><span class="chip" title="0.90 title screen applied"><b>${prep}</b> same paper (preprint)</span>`;
 
   $('feedback').href = feedbackLink({type: 'bug', session: s.session});
@@ -1192,7 +1192,7 @@ function renderReport() {
 }
 
 // ---- progress: papers checked and suspected over time (each paper once, latest label wins) ----
-let PROGRESS = D.history.progress || {points: []}, PHOVER = null, PGEOM = {W: 320, H: 92};
+let PROGRESS = (LIVE_ONLY ? null : D.history.progress) || {points: []}, PHOVER = null, PGEOM = {W: 320, H: 92};  // live-only: never the saved batches' counts
 function labelsNow() { const m = {}; for (const p of PROGRESS.points || []) m[p.paper_id] = p.label; return m; }
 function fitRows(box) {
   // Show as many whole rows as the box holds at the current size; a half-cut row reads as a glitch.
