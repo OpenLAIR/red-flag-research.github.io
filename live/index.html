@@ -94,6 +94,8 @@ a{color:inherit} button{font:inherit;color:inherit;cursor:pointer}
 .chip b{font-weight:600;font-size:var(--fs-body);color:var(--text)}
 .chip.red{background:var(--wine);color:var(--wine-t2)} .chip.red b{color:var(--wine-hot)}
 .chip.cyan{background:var(--teal);color:var(--teal-t2)} .chip.cyan b{color:var(--cyan)}
+.chip.amber{background:var(--panel-2);color:var(--text-2)} .chip.amber b{color:var(--amber)}
+.hr-tag{display:inline-block;margin-right:0.375rem;padding:0 0.375rem;border-radius:0.25rem;background:var(--step);color:var(--amber);font-size:var(--fs-sm);white-space:nowrap} .fl-row .pv.held{color:var(--text)}
 .fbk{display:inline-flex;align-items:center;gap:0.5rem;height:2.25rem;padding:0 0.875rem;border-radius:var(--r-chip);background:var(--teal);color:var(--teal-t);font-size:var(--fs-sm);font-weight:600;text-decoration:none;white-space:nowrap;transition:background-color .18s ease,transform .14s var(--ease)} .fbk:hover{background:var(--teal-2)} .fbk:active{transform:scale(.97)}
 .fbk svg{width:1rem;height:1rem;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .replay{display:flex;align-items:center;gap:0.5rem;padding:0.375rem 1.25rem 0;font-size:var(--fs-sm);color:var(--text-2)}
@@ -649,9 +651,12 @@ const LABEL = PUBLIC_LABEL;
 const labelText = k => LABEL[k] || (k ? String(k).replace(/_/g, ' ').toLowerCase() : 'delivered');
 // Held results (user decision 2026-10-16): a Stage 1 paper the system would flag stays "Under review" until a person releases it.
 // The backend sends a needs-human-review value; the page then shows no flag, no score and no evidence for that finished paper.
-PUBLIC_LABEL.HELD = 'Under review';
+PUBLIC_LABEL.HELD = 'Needs human review';
 const HELD_RE = /^(HELD|UNDER_REVIEW|NEEDS_HUMAN_REVIEW|HUMAN_REVIEW|needs-human-review|under-review)$/;
-const HELD_NOTE = 'Under review — a person will check this result before it is published.';
+const HELD_NOTE = 'A model flagged a close match; a person has not checked it yet.';
+// Anonymised sources of a held paper arrive as source-N; they show as "Source N" and never link anywhere.
+const anonSrc = t => String(t || '').replace(/^source-(\d+)$/i, 'Source $1');
+const isHeldLabel = v => HELD_RE.test(v || '');
 const heldDone = (s, st) => s.held && st.finished;
 const PAPER_CATS = [['YES_SUSPECTED','var(--wine-hot)','review recommended'],['UNRESOLVED','var(--grey-c)','inconclusive'],['NO_SUPPORTED','var(--done)','no source finding']];
 const MAT_CATS = [['SPECIFIC','var(--wine-hot)','specific'],['RELATED','var(--text-2)','related'],['TOPIC_ONLY','var(--grey-c)','topic only'],['UNKNOWN','var(--grey-d)','unknown']];
@@ -845,7 +850,7 @@ function render() {
   const c = D.history.corpus, lastP = (PROGRESS.points || []).slice(-1)[0], L = labelsNow();
   const checked = lastP ? lastP.checked : LIVE_ONLY ? '…' : c.screened_count, susp = lastP ? lastP.suspected : LIVE_ONLY ? '…' : c.suspected_count;
   const prep = lastP ? Object.values(L).filter(v => v === 'PREPRINT').length : LIVE_ONLY ? '…' : c.preprint_count;
-  $('counters').innerHTML = `<span class="chip cyan"><b>${checked}</b> / ${c.total.toLocaleString()} checked</span><span class="chip red"><b>${susp}</b> review recommended</span><span class="chip" title="0.90 title screen applied"><b>${prep}</b> same paper (preprint)</span>`;
+  $('counters').innerHTML = `<span class="chip cyan"><b>${checked}</b> / ${c.total.toLocaleString()} checked</span><span class="chip red"><b>${susp}</b> review recommended</span>${lastP?.under_review ? `<span class="chip amber"><b>${lastP.under_review}</b> needs human review</span>` : ''}<span class="chip" title="0.90 title screen applied"><b>${prep}</b> same paper (preprint)</span>`;
 
   $('feedback').href = feedbackLink({type: 'bug', session: s.session});
   // Live-only: the tab strip holds the papers running now (at most LIVE_MAX_SESSIONS), plus the one on screen.
@@ -1013,7 +1018,7 @@ function renderHero(s, st) {
       ${sub.primary_area ? `<span class="fact"><b>Primary Area</b> ${esc(sub.primary_area)}</span>` : ''}${sub.keywords?.length ? `<span class="fact"><b>Keywords</b> ${esc(sub.keywords.join(', '))}</span>` : ''}</div></div>`;
   let right, tl = '';
   if (heldDone(s, st)) {
-    right = `<div class="side b waiting"><div class="pg b ghost" aria-hidden="true"></div><div class="cap"><span class="who">Source</span><span class="srcl">Under review</span><span>${HELD_NOTE}</span></div></div>`;
+    right = `<div class="side b waiting"><div class="pg b ghost" aria-hidden="true"></div><div class="cap"><span class="who">Source</span><span class="srcl">${esc(top ? anonSrc(top.title) : 'Source')}</span><span>Needs human review · ${HELD_NOTE}</span></div></div>`;
   } else if (top) {
     const sd = dayMs(top.date), td = dayMs(tDate), id = String(top.id).replace(/^(arxiv|openreview|huggingface)-/, '');
     const rel = sd && td ? (sd < td ? `<b>public ${Math.round((td - sd) / 864e5)} days before</b> the submission` : `appeared ${Math.round((sd - td) / 864e5)} days after`) : 'public date unknown';
@@ -1117,7 +1122,7 @@ function renderReport() {
   if (s.held) {
     setHTML($('reportView'), `<div class="rp"><div class="rp-top"><button class="btn" data-close-report="1">← Back to the stage</button><span class="note">Session #${s.rank} · ${esc(s.session)}</span></div>
       <header class="rp-head"><div class="rp-title"><h2>${s.openreview ? `<a href="${esc(s.openreview)}" target="_blank" rel="noopener">${esc(s.title)}</a>` : esc(s.title)}</h2>
-      <p class="rp-stand"><span class="res HELD">Under review</span></p><p class="rp-stand">${HELD_NOTE}</p></div></header>
+      <p class="rp-stand"><span class="res HELD">Needs human review</span></p><p class="rp-stand">${HELD_NOTE}</p></div></header>
       <footer class="rp-foot"><p>${wrongLink(s.paper_id, s.title)} · <button class="linkbtn" data-about="1">About these results</button></p></footer></div>`);
     return;
   }
@@ -1257,15 +1262,16 @@ function paperMeta(pid) {
 }
 function renderFlagged() {
   const L = labelsNow(), when = {};
-  for (const p of PROGRESS.points || []) if (p.label === 'YES_SUSPECTED') when[p.paper_id] = p.t;
-  const rows = Object.keys(L).filter(k => L[k] === 'YES_SUSPECTED').map(paperMeta)
+  const flagged = v => v === 'YES_SUSPECTED' || isHeldLabel(v);
+  for (const p of PROGRESS.points || []) if (flagged(p.label)) when[p.paper_id] = p.t;
+  const rows = Object.keys(L).filter(k => flagged(L[k])).map(k => ({...paperMeta(k), held: isHeldLabel(L[k])}))
     .sort((a, b) => (b.p?.YES_SUSPECTED || 0) - (a.p?.YES_SUSPECTED || 0) || when[b.pid] - when[a.pid]);
   const tot = rows.reduce((a, r) => { const v = VOTES[r.pid] || {}; return [a[0] + (v.laundering || 0), a[1] + (v.not_laundering || 0)]; }, [0, 0]);
-  setHTML($('flaggedView'), `<div class="fl-head"><h2>Source review recommended</h2><span class="chip red"><b>${tot[0]}</b> yes</span><span class="chip"><b>${tot[1]}</b> no</span><span class="note">${rows.length} papers whose latest result is Source review recommended. This is not a finding of plagiarism or misconduct. Votes here and on the main stage are one count; one vote per paper per browser.</span><button class="btn" data-close-flagged="1">Back to the stage</button></div>
+  setHTML($('flaggedView'), `<div class="fl-head"><h2>Flagged papers</h2><span class="chip red"><b>${tot[0]}</b> yes</span><span class="chip"><b>${tot[1]}</b> no</span><span class="note">${rows.filter(r => !r.held).length} Source review recommended · ${rows.filter(r => r.held).length} needs human review (a model flagged a close match; a person has not checked it yet). This is not a finding of plagiarism or misconduct. Votes here and on the main stage are one count; one vote per paper per browser.</span><button class="btn" data-close-flagged="1">Back to the stage</button></div>
     <div class="fl-list">${rows.map((r, i) => `<div class="fl-row"><span class="rk">${i + 1}</span>
       <div style="min-width:0"><div class="t"><a href="${r.openreview}" target="_blank" rel="noopener">${esc(r.title)} ↗</a></div>
-      <div class="m">${r.submission ? `ICLR 2027 #${r.submission} · ` : ''}${r.source_title ? `vs ${r.source_url ? `<a href="${r.source_url}" target="_blank" rel="noopener">${esc(r.source_title)}</a>` : esc(r.source_title)}` : 'flagged by the earlier 50-paper run'}${r.session ? ` · <button class="linkbtn" data-open="${esc(r.session)}">trajectory ›</button>` : ''} · ${wrongLink(r.pid, r.title)}</div></div>
-      <div class="pv">${r.p ? pct(r.p.YES_SUSPECTED) : '—'}<small>${r.p ? 'Jev, whole paper' : 'no saved trajectory'}</small></div>${r.session ? `<button class="btn rpt-open" data-report="${esc(r.session)}">Read the report →</button>` : '<span class="note">no saved report</span>'}</div>`).join('') || '<p class="empty">No paper is flagged yet.</p>'}</div>`);
+      <div class="m">${r.held ? '<span class="hr-tag">Needs human review</span> ' : ''}${r.submission ? `ICLR 2027 #${r.submission} · ` : ''}${r.source_title ? `vs ${r.source_url && !r.held ? `<a href="${r.source_url}" target="_blank" rel="noopener">${esc(r.source_title)}</a>` : esc(anonSrc(r.source_title))}` : (LIVE_ONLY ? '' : 'flagged by the earlier 50-paper run')}${r.session ? ` · <button class="linkbtn" data-open="${esc(r.session)}">trajectory ›</button>` : ''} · ${wrongLink(r.pid, r.title)}</div></div>
+      <div class="pv${r.held ? ' held' : ''}">${r.p ? pct(r.p.YES_SUSPECTED) : '—'}<small>${r.p ? 'Jev, whole paper' : 'no saved trajectory'}</small></div>${r.session ? `<button class="btn rpt-open" data-report="${esc(r.session)}">Read the report →</button>` : '<span class="note">no saved report</span>'}</div>`).join('') || '<p class="empty">No paper is flagged yet.</p>'}</div>`);
 }
 
 const CKPTS = [['jev_global_after_intake', 'read'], ['jev_global_after_candidate_rerank', 'rank'], ['jev_global_after_probes', 'probe'], ['jev_global_after_local', 'check'], ['jev_final', 'final']];
@@ -1314,8 +1320,8 @@ function renderVerdict(s, st) {
     return;
   }
   if (held) {
-    setHTML($('verdict'), `<div class="vtop"><span class="big" style="color:var(--text)">${y == null ? '—' : pct(y)}</span><span class="cap"><b>review</b>Jev, ${last?.pair ? 'strongest pair' : 'whole paper'}</span></div>${svg}
-    <p class="vheld">${HELD_NOTE}</p><div class="vfoot"><span></span><span class="res HELD">Under review</span></div>`);
+    setHTML($('verdict'), `<div class="vtop"><span class="big" style="color:var(--text)">${y == null ? '—' : pct(y)}</span><span class="cap"><b>model score</b>Jev, ${last?.pair ? 'strongest pair' : 'whole paper'}</span></div>${svg}
+    <p class="vheld">${HELD_NOTE}</p><div class="vfoot"><span></span><span class="res HELD">Needs human review</span></div>`);
     return;
   }
   if (isET(s)) {
@@ -1529,7 +1535,7 @@ async function refreshTopPairs() {
 function boardRowsET() {
   refreshTopPairs();
   // One row per paper (its strongest pair), so a paper never fills several places in the ten.
-  if (TOP_PAIRS) { const seen = new Set(); return TOP_PAIRS.filter(r => { const k = r.paper_id || r.title; return !HELD_RE.test(r.label || r.category || '') && !seen.has(k) && seen.add(k); }); }
+  if (TOP_PAIRS) { const seen = new Set(); return TOP_PAIRS.filter(r => { const k = r.paper_id || r.title; return !seen.has(k) && seen.add(k); }); }
   S.forEach(x => { if (x.finished != null && isET(x) && !PAIRS_DONE.has(x.run_id)) notePairs(x); });
   // One run per paper: the newest finished run of each paper (by paper id, else title) supplies its pairs.
   const newest = new Map();
@@ -1568,11 +1574,11 @@ function renderPair(states) {
   BOARD = boardRows(states);
   setHTML($('board'), BOARD.slice(0, 10).map((r, i) => `<button class="brow${onStage(r) ? ' on' : ''}" data-open="${esc(r.session)}" title="Replay the trajectory of session ${esc(r.session)}">
     <span class="rk">${i + 1}</span>
-    <div class="tt"><span class="clamp1">${esc(r.title)}</span><div class="src"><span class="clamp1">vs ${esc(r.source_title || '—')}</span>${r.more > 0 ? `<span class="more">+${r.more} more source${r.more > 1 ? 's' : ''}</span>` : ''}</div></div>
+    <div class="tt"><span class="clamp1">${esc(r.title)}</span><div class="src">${isHeldLabel(r.label || r.category) ? '<span class="hr-tag">Needs human review</span>' : ''}<span class="clamp1">vs ${esc(anonSrc(r.source_title) || '—')}</span>${r.more > 0 ? `<span class="more">+${r.more} more source${r.more > 1 ? 's' : ''}</span>` : ''}</div></div>
     ${etBoard() ? `<span class="pv${r.label === 'YES_SUSPECTED' ? ' hot' : ''}">${pct(r.p?.YES_SUSPECTED)}<span class="go">trajectory ›</span><span class="go rgo" data-report="${esc(r.session)}" title="Read the written report of this paper">report ›</span></span>`
       : `<span class="pv${i < 3 ? ' hot' : ''}">${pct(r.p?.YES_SUSPECTED)}<span class="go">trajectory ›</span></span>`}</button>`).join('') || '<p class="empty">No scored paper yet.</p>');
   const bh = $('board')?.previousElementSibling?.firstChild; if (bh && bh.nodeType === 3) bh.textContent = etBoard() ? 'Most suspicious pairs so far ' : 'Highest scores so far ';
-  const n = Object.values(labelsNow()).filter(v => v === 'YES_SUSPECTED').length;
+  const n = Object.values(labelsNow()).filter(v => v === 'YES_SUSPECTED' || isHeldLabel(v)).length;
   $('flaggedBtn').textContent = `All flagged reports (${n}) ›`;
 }
 
