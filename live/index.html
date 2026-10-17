@@ -660,6 +660,9 @@ const HELD_NOTE = 'A model flagged a close match; a person has not checked it ye
 // Anonymised sources of a held paper arrive as source-N; they show as "Source N" and never link anywhere.
 const anonSrc = t => String(t || '').replace(/^source-(\d+)$/i, 'Source $1');
 const isHeldLabel = v => HELD_RE.test(v || '');
+// OpenReview titles can carry inline TeX such as "$\\mu$-GRPO"; show the symbol, drop the markup.
+const TEX = {alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', epsilon: 'ε', lambda: 'λ', mu: 'μ', pi: 'π', sigma: 'σ', tau: 'τ', theta: 'θ', phi: 'φ', ell: 'ℓ', infty: '∞', times: '×', leq: '≤', geq: '≥'};
+const plainTitle = s => String(s || '').replace(/\$([^$]*)\$/g, (_, m) => m.replace(/\\([a-zA-Z]+)/g, (x, k) => TEX[k] ?? '').replace(/[{}^_]/g, '')).replace(/\s+/g, ' ').trim();
 const heldDone = (s, st) => s.held && st.finished;
 const PAPER_CATS = [['YES_SUSPECTED','var(--wine-hot)','review recommended'],['UNRESOLVED','var(--grey-c)','inconclusive'],['NO_SUPPORTED','var(--done)','no source finding']];
 const MAT_CATS = [['SPECIFIC','var(--wine-hot)','specific'],['RELATED','var(--text-2)','related'],['TOPIC_ONLY','var(--grey-c)','topic only'],['UNKNOWN','var(--grey-d)','unknown']];
@@ -697,6 +700,7 @@ function topCat(p) {
 }
 
 function prep(s) {
+  s.title = plainTitle(s.title);
   s.events.sort((a, b) => a.seq - b.seq);
   s.calls.sort((a, b) => a.t0 - b.t0);
   s.stageById = Object.fromEntries(s.stages.map(x => [x.id, x]));
@@ -1534,7 +1538,7 @@ async function refreshTopPairs() {
   try {
     const j = await getJSON(`/api/top-pairs?prefix=${enc(batchPrefix())}&limit=10`, 8000);  // one row per paper (the backend keeps each paper's strongest pair)
     // A rescan in progress can briefly answer with fewer papers; keep the fuller list until the new one catches up.
-    if (Array.isArray(j.pairs) && (j.papers_scanned ?? 0) >= topScanned) topScanned = j.papers_scanned ?? 0, TOP_PAIRS = j.pairs.map(r => ({...r, session: r.session || r.run_id.replace(/^public-demo-/, ''), source_title: r.source_title || r.source_id,
+    if (Array.isArray(j.pairs) && (j.papers_scanned ?? 0) >= topScanned) topScanned = j.papers_scanned ?? 0, TOP_PAIRS = j.pairs.map(r => ({...r, title: plainTitle(r.title), session: r.session || r.run_id.replace(/^public-demo-/, ''), source_title: r.source_title || r.source_id,
       more: r.more_sources ?? r.other_sources ?? r.additional_sources ?? 0}));
   } catch (err) { /* not deployed yet or unavailable: keep the page's own list */ }
 }
