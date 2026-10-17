@@ -1824,7 +1824,8 @@ async function boot() {
     if (pinned.length) {
       const key = runKey(pinned[0]).key;
       numberRuns(runs.filter(r => r.started_at && runKey(r.run_id).key === key));
-      const rows = pinned.map(id => runs.find(r => r.run_id === id)).filter(Boolean);
+      // /api/runs lists only the most recent runs (256), so an older pinned run is loaded by id directly.
+      const rows = pinned.map(id => runs.find(r => r.run_id === id) || (/^public-demo-[A-Za-z0-9_-]+$/.test(id) ? {run_id: id, status: 'completed', started_at: null} : null)).filter(Boolean);
       batch = rows.length ? {key, rows, live: false} : null;
     } else {
       batch = pickBatch(runs);
