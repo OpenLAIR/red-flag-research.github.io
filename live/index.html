@@ -698,7 +698,9 @@ function prep(s) {
   s.candById = Object.fromEntries(s.candidates.map(c => [c.id, c]));
   s.preprints = [];
   s.label = s.screening ? (s.screen?.label_after || s.screening) : null;
-  s.held = [s.label, s.final?.category, s.final?.status, s.result?.screening].some(v => HELD_RE.test(v || ''));
+  // A held run comes without its review data (the backend drops those keys), so every reader gets an empty default.
+  s.io = {low: [], low_unresolved: [], trajectories: [], gate: {}, pair_writeups: [], gated_reviews: [], dates: {}, fulltext: [], ...(s.io || {})};
+  s.held = s.under_review === true || [s.label, s.final?.category, s.final?.status, s.result?.screening].some(v => HELD_RE.test(v || ''));
   if (s.held) { s.label = 'HELD'; s.final = {findings: [], unknowns: []}; }
   s.totalTokens = s.calls.reduce((a, c) => a + (['qwen', 'jev'].includes(c.provider) ? c.tokens : 0), 0) || 1;
   s.ocrCalls = s.calls.filter(c => c.provider === 'ocr').length || 1;
@@ -891,7 +893,7 @@ const IOL = (k, v) => `<div class="iol"><b>${k}</b>${v}</div>`;
 const link = (url, t) => `<a href="${url}" target="_blank" rel="noopener">${esc(t)} ↗</a>`;
 function stageIO(s, st, x) {
   const io = s.io, ds = st.dist[x.id] || [], id = x.id;
-  if (heldDone(s, st) && /^(jev_|et_|gpr|xhigh|claim_tree|probe_)/.test(id)) return IOL('out', esc(HELD_NOTE));
+  if (heldDone(s, st) && /^(jev_|et_|gpr|xhigh|claim_tree|probe_|exact_span|low_|scope_|final_|outer_)/.test(id)) return IOL('out', esc(HELD_NOTE));
   if (id === 'pdf_target') return IOL('in', s.openreview ? `Target PDF from ${link(s.openreview, 'OpenReview ' + s.paper_id)}` : 'Target PDF supplied for this case (no OpenReview page)') + IOL('out', `${io.pdf_pages ?? '?'} pages, file hash checked`);
   if (id === 'target_materials') return IOL('out', `${io.pdf_pages ?? '?'} pages turned into text (${esc(io.ocr_coverage || '')})`) + (io.first_page ? `<div class="ex"><div class="h">Page 1</div><div class="snip">“${esc(trunc(io.first_page, 220))}”</div></div>` : '');
   if (id === 'intake') return IOL('in', 'Full target text') + IOL('out', `${s.claims.length} core claims, each with technical checks`) + s.claims.map(c => `<div class="ex"><div class="h"><b>${esc(c.id)}</b> ${esc(trunc(c.text, 190))}</div>${c.checks[0] ? `<div class="snip">Check (${esc(c.checks[0].dim)}): ${esc(trunc(c.checks[0].q, 150))}</div>` : ''}</div>`).join('');
@@ -1687,7 +1689,7 @@ function applyStageIO(x, sio) {
     paper_id: sio.paper_id || x.paper_id, title: sio.title || x.title,
     openreview: sio.openreview === undefined ? x.openreview : sio.openreview, in_corpus: sio.in_corpus, caps: sio.caps || x.caps || {}, target_created: sio.target_created, iclr_deadline: sio.iclr_deadline,
     fx_cny_per_usd: sio.fx_cny_per_usd || 7, calls: sio.calls || [], claims: sio.claims || [], queries: sio.queries || [], candidates: sio.candidates || [],
-    preprints: sio.preprints || [], final: sio.final || {findings: []}, jev_final: sio.jev_final || {}, materials: sio.materials || {}, io: sio.io || {}, budget: sio.budget, result: sio.result || null, submission: sio.submission || null});
+    preprints: sio.preprints || [], final: sio.final || {findings: []}, jev_final: sio.jev_final || {}, materials: sio.materials || {}, io: sio.io || {}, under_review: sio.under_review === true, budget: sio.budget, result: sio.result || null, submission: sio.submission || null});
 }
 async function loadRun(row) {
   const [man, ev, sio] = await Promise.all([getJSON('/api/manifest?run_id=' + enc(row.run_id)), eventsAfter(row.run_id, 0), getJSON('/api/stage-io?run_id=' + enc(row.run_id))]);
