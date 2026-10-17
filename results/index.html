@@ -168,6 +168,7 @@ main{padding-top:56px}
 }
 @media (max-width:720px){main{padding-top:32px}.row{padding:14px}.act{min-height:44px;padding:0 14px}.f{min-height:44px}}
 .m.auto{color:#e8b44c}
+.m.hr{color:#e0cfcd} .hr-ok{display:inline-block;margin-right:6px;padding:1px 8px;border-radius:6px;background:#9b2c24;color:#fff4f2;font-size:var(--s-sm);font-weight:600;line-height:1.3;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -339,6 +340,13 @@ const plainTitle = s => String(s || '').replace(/\$([^$]*)\$/g, (_, m) => m.repl
       }
     }
     lines.push(first);
+    // A person's review, when the backend sends one: the badge and its verdict (wording from the backend).
+    if (p.human_review && p.human_review.confirmed) {
+      const line = el('p', 'm hr');
+      line.appendChild(el('span', 'hr-ok', p.human_review.badge || 'Reviewed by a person'));
+      if (p.human_review.verdict) line.appendChild(document.createTextNode(' ' + p.human_review.verdict.replace(/^Confirmed by human review:\s*/i, '')));
+      lines.push(line);
+    }
     if (p.category_id === 'needs-human-review') {
       lines.push(el('p', 'm auto', p.automated_note || AUTO_NOTE));  // a result a person has not reviewed yet
     }
@@ -367,6 +375,7 @@ const plainTitle = s => String(s || '').replace(/\$([^$]*)\$/g, (_, m) => m.repl
     if (!hasScore) sc.setAttribute('aria-label', 'No score');
     side.appendChild(sc);
     side.appendChild(el('span', 'cat ' + cls, nameOf(cid)));
+
     const acts = el('div', 'acts');
     const ru = safeUrl(p.report_url);
     if (ru) acts.appendChild(link('Report', ru, 'act', false));

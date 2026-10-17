@@ -95,6 +95,8 @@ a{color:inherit} button{font:inherit;color:inherit;cursor:pointer}
 .chip.red{background:var(--wine);color:var(--wine-t2)} .chip.red b{color:var(--wine-hot)}
 .chip.cyan{background:var(--teal);color:var(--teal-t2)} .chip.cyan b{color:var(--cyan)}
 .chip.amber{background:var(--panel-2);color:var(--text-2)} .chip.amber b{color:var(--amber)}
+.hr-ok{display:inline-block;margin:0 0.375rem;padding:0 0.375rem;border-radius:0.25rem;background:var(--wine-2);color:var(--wine-hot);font:600 var(--fs-sm)/1.6 var(--sans);white-space:nowrap}
+.rp-human{margin:0 0 0.875rem;padding:0.625rem 0.875rem;border-radius:var(--r-md);background:#f1d3cd;color:#5c1410;font:500 var(--fs-body)/1.5 var(--sans)} .rp-human .hr-ok{margin-left:0;background:#9b2c24;color:#fff4f2}
 .rp-auto{margin:0 0 1rem;padding:0.625rem 0.875rem;border-radius:var(--r-md);background:#f3e2b9;color:#5c3b00;font:500 var(--fs-body)/1.5 var(--sans)} .vheld{color:var(--amber)!important}
 .hr-tag{display:inline-block;margin-right:0.375rem;padding:0 0.375rem;border-radius:0.25rem;background:var(--step);color:var(--amber);font-size:var(--fs-sm);white-space:nowrap} .fl-row .pv.held{color:var(--text)}
 .fbk{display:inline-flex;align-items:center;gap:0.5rem;height:2.25rem;padding:0 0.875rem;border-radius:var(--r-chip);background:var(--teal);color:var(--teal-t);font-size:var(--fs-sm);font-weight:600;text-decoration:none;white-space:nowrap;transition:background-color .18s ease,transform .14s var(--ease)} .fbk:hover{background:var(--teal-2)} .fbk:active{transform:scale(.97)}
@@ -1179,6 +1181,7 @@ function renderReport() {
     <div class="rp-top"><button class="btn" data-close-report="1">← Back to the stage</button><span class="note">Session #${s.rank} · ${esc(s.session)}</span></div>
     <header class="rp-head"><div class="rp-title">${s.held ? `<p class="rp-auto">${HELD_NOTE}</p>` : ''}<h2>${s.openreview ? `<a href="${esc(s.openreview)}" target="_blank" rel="noopener">${esc(s.title)}</a>` : esc(s.title)}</h2>
       <p class="rp-date">Screening report${dt ? ' · ' + dt : ''}</p>
+      ${s.human_review?.confirmed ? `<p class="rp-human"><span class="hr-ok">${esc(s.human_review.badge || 'Reviewed by a person')}</span>${s.human_review.verdict ? ' ' + esc(s.human_review.verdict.replace(/^Confirmed by human review:\s*/i, '')) : ''}${s.human_review.reviewed_at ? ` <span class="note">(${esc(s.human_review.reviewed_at)})</span>` : ''}</p>` : ''}
       <p class="rp-stand">${esc(stand || 'The final review did not write a summary.')}</p>
       <p class="rp-meta">${sub.number ? `ICLR 2027 submission #${sub.number} · ` : ''}compared with ${sources.length ? sources.map(c => `<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(trunc(c.title, 70))}</a>`).join(' and ') : et ? (srcRows.length ? `${srcRows.length} candidate source${srcRows.length === 1 ? '' : 's'}` : 'no source') : top ? esc(top.title) : 'no source'}</p></div>
       <aside class="rp-card"><div class="rp-card-h">In numbers</div>${numbers.map(([k, v]) => `<div class="rp-row"><span>${k}</span><b>${v}</b></div>`).join('')}</aside></header>
@@ -1310,7 +1313,8 @@ function renderVerdict(s, st) {
     svg += `<text x="${X(i)}" y="${H - 3}" text-anchor="middle" font-size="13" font-family="IBM Plex Sans, sans-serif" fill="${pts[i] || x.gate ? '#b3b9c2' : '#8a919c'}">${x.lab}</text>`;
   });
   svg += '</svg>';
-  const res = st.finished ? `<span class="res ${esc(s.label)}">${esc(labelText(s.label))}</span>${reportButton(s, st)}${wrongLink(s.paper_id, s.title)}` : st.started ? '<span class="res run">running</span>' : '<span class="res">queued</span>';
+  const hrBadge = s.human_review?.confirmed ? `<span class="hr-ok">${esc(s.human_review.badge || 'Reviewed by a person')}</span>` : '';
+  const res = st.finished ? `<span class="res ${esc(s.label)}">${esc(labelText(s.label))}</span>${hrBadge}${reportButton(s, st)}${wrongLink(s.paper_id, s.title)}` : st.started ? '<span class="res run">running</span>' : '<span class="res">queued</span>';
   if (st.status.jev_candidate_rerank !== 'done' && !st.finished) {
     // No source ranked yet: the probability means little without a candidate, so show the same searching state as the duel.
     setHTML($('verdict'), `<div class="vwait"><span class="spin"></span><div><b>Scoring after the source is found</b><span>${st.started ? (st.status.intake === 'done' ? 'Searching for candidate sources' : 'Reading the target') : 'Queued'}<span class="dots"><i>.</i><i>.</i><i>.</i></span></span></div></div>
@@ -1570,7 +1574,7 @@ function renderPair(states) {
   BOARD = boardRows(states);
   setHTML($('board'), BOARD.slice(0, 10).map((r, i) => `<button class="brow${onStage(r) ? ' on' : ''}" data-open="${esc(r.session)}" title="Replay the trajectory of session ${esc(r.session)}">
     <span class="rk">${i + 1}</span>
-    <div class="tt"><span class="clamp1">${esc(r.title)}</span><div class="src">${isHeldLabel(r.label || r.category) ? '<span class="hr-tag">Needs human review</span>' : ''}<span class="clamp1">vs ${esc(anonSrc(r.source_title) || '—')}</span>${r.more > 0 ? `<span class="more">+${r.more} more source${r.more > 1 ? 's' : ''}</span>` : ''}</div></div>
+    <div class="tt"><span class="clamp1">${esc(r.title)}</span><div class="src">${isHeldLabel(r.label || r.category) ? '<span class="hr-tag">Needs human review</span>' : ''}${r.human_review?.confirmed ? `<span class="hr-ok">${esc(r.human_review.badge || 'Reviewed by a person')}</span>` : ''}<span class="clamp1">vs ${esc(anonSrc(r.source_title) || '—')}</span>${r.more > 0 ? `<span class="more">+${r.more} more source${r.more > 1 ? 's' : ''}</span>` : ''}</div></div>
     ${etBoard() ? `<span class="pv${r.label === 'YES_SUSPECTED' ? ' hot' : ''}">${pct(r.p?.YES_SUSPECTED)}<span class="go">trajectory ›</span><span class="go rgo" data-report="${esc(r.session)}" title="Read the written report of this paper">report ›</span></span>`
       : `<span class="pv${i < 3 ? ' hot' : ''}">${pct(r.p?.YES_SUSPECTED)}<span class="go">trajectory ›</span></span>`}</button>`).join('') || '<p class="empty">No scored paper yet.</p>');
   const bh = $('board')?.previousElementSibling?.firstChild; if (bh && bh.nodeType === 3) bh.textContent = etBoard() ? 'Most suspicious pairs so far ' : 'Highest scores so far ';
@@ -1715,7 +1719,7 @@ function applyStageIO(x, sio) {
     paper_id: sio.paper_id || x.paper_id, title: sio.title || x.title,
     openreview: sio.openreview === undefined ? x.openreview : sio.openreview, in_corpus: sio.in_corpus, caps: sio.caps || x.caps || {}, target_created: sio.target_created, iclr_deadline: sio.iclr_deadline,
     fx_cny_per_usd: sio.fx_cny_per_usd || 7, calls: sio.calls || [], claims: sio.claims || [], queries: sio.queries || [], candidates: sio.candidates || [],
-    preprints: sio.preprints || [], final: sio.final || {findings: []}, jev_final: sio.jev_final || {}, materials: sio.materials || {}, io: sio.io || {}, under_review: sio.under_review === true, budget: sio.budget, result: sio.result || null, submission: sio.submission || null});
+    preprints: sio.preprints || [], final: sio.final || {findings: []}, jev_final: sio.jev_final || {}, materials: sio.materials || {}, io: sio.io || {}, under_review: sio.under_review === true, human_review: sio.human_review || null, budget: sio.budget, result: sio.result || null, submission: sio.submission || null});
 }
 let MAN_CACHE = null;  // et-v1 runs share one stage graph; a slow manifest reuses the last one that loaded
 async function loadRun(row) {
