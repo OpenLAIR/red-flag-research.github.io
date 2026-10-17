@@ -103,7 +103,7 @@ a{color:inherit} button{font:inherit;color:inherit;cursor:pointer}
 .fbk svg{width:1rem;height:1rem;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .replay{display:flex;align-items:center;gap:0.5rem;padding:0.375rem 1.25rem 0;font-size:var(--fs-sm);color:var(--text-2)}
 .replay .badge{font-weight:600;color:var(--text-2);background:var(--panel-2);padding:0.25rem 0.625rem;border-radius:0.5rem}
-body.live .replay .badge{color:var(--cyan);background:var(--teal)} body.live .replay .badge::before{content:'';display:inline-block;width:0.5rem;height:0.5rem;border-radius:50%;background:var(--cyan);margin-right:0.5rem;animation:breathe 1.6s ease-in-out infinite}
+body.live:not(.snapshot) .replay .badge{color:var(--cyan);background:var(--teal)} body.live:not(.snapshot) .replay .badge::before{content:'';display:inline-block;width:0.5rem;height:0.5rem;border-radius:50%;background:var(--cyan);margin-right:0.5rem;animation:breathe 1.6s ease-in-out infinite}
 body.live #play,body.live #next,body.live [data-speed],body.live #scrub{display:none} body.live .replay{padding-bottom:0.125rem}
 .replay input[type=range]{flex:1;accent-color:var(--cyan);min-width:7.5rem}
 .btn{border:0;background:var(--panel-2);border-radius:var(--r-chip);padding:0.5rem 0.875rem;font-size:var(--fs-sm);font-weight:500;color:var(--text);transition:background-color .18s ease,transform .14s var(--ease)}
@@ -535,6 +535,8 @@ html.soon #flaggedBtn{color:var(--muted)!important;cursor:default;pointer-events
   @keyframes cs-lift{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
 }
 .livewait{display:none;margin:3rem 1rem;text-align:center;font:500 var(--fs-lead) var(--sans);color:var(--text-2)}
+.snapshot-notice{margin:0.125rem 1.25rem 0;padding:0.5rem 0.75rem;border-left:0.1875rem solid var(--amber);border-radius:0 var(--r-sm) var(--r-sm) 0;background:var(--panel-2);color:var(--text-2);font-size:var(--fs-sm);overflow-wrap:anywhere;min-width:0}
+.snapshot .rvote .vbtn{display:none}
 body.waiting .livewait{display:block} body.waiting main,body.waiting .replay,body.waiting #counters,body.waiting #foot{visibility:hidden}
 </style>
 </head>
@@ -552,6 +554,7 @@ body.waiting .livewait{display:block} body.waiting main,body.waiting .replay,bod
   <div class="counters" id="counters"></div>
   <a class="fbk" id="feedback" href="../feedback.html?type=bug&amp;from=live" target="_blank" rel="noopener" title="Opens the feedback form with this session filled in"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"/><path d="M8 5.5v2M8 9.2v.1"/></svg>Report a problem</a>
 </header>
+<div class="snapshot-notice" id="snapshotNotice" role="status" hidden></div>
 <div class="soonbar" id="soonbar" role="group" aria-label="Stage 1 countdown">
   <span class="sb-state"><span class="sb-dot" aria-hidden="true"></span><span data-cs-show="pending">Coming soon</span><span data-cs-show="zero">Opening soon</span></span>
   <div class="sb-digits" role="timer" aria-label="Time until Stage 1 starts">
@@ -850,7 +853,7 @@ function render() {
     : `Session #${s.rank} · ${s.session}`;
   document.body.classList.toggle('live', MODE === 'live');
   document.body.classList.toggle('extra', MODE === 'live' && !!s.extra);
-  $('modeBadge').textContent = MODE === 'live' ? 'Live' : 'Replay';
+  $('modeBadge').textContent = SNAPMODE ? 'Snapshot' : MODE === 'live' ? 'Live' : 'Replay';
 
   // One source for the counters and the progress charts: each paper once, latest label wins.
   const c = D.history.corpus, lastP = (PROGRESS.points || []).slice(-1)[0], L = labelsNow();
@@ -1678,8 +1681,78 @@ function setFoot() {
 setFoot();
 
 const API = (new URLSearchParams(location.search).get('api') || D.api_base || 'https://live-api.red-flag-research.org').replace(/\/+$/, '');
+const SNAP = (URL_Q.get('snapshot') === 'off' ? '' : (URL_Q.get('snapshot') || D.snapshot_base || 'https://snapshot.red-flag-research.org/v1')).replace(/\/+$/, '');
 const enc = encodeURIComponent, TERMINAL = new Set(['completed', 'failed', 'stopped', 'cancelled', 'canceled', 'delivered', 'error', 'aborted']);
-async function getJSON(path, ms = 30000) {  // the quick tunnel takes up to ~9 s per request when several run at once
+let SNAPMODE = null, SNAP_LATEST_PROMISE = null, SNAP_PROBE_TIMER = null;
+function snapPath(path) {
+  const u = new URL(path, location.href), p = u.pathname;
+  if (p === '/api/runs') return {file: 'runs.json'};
+  if (p === '/api/progress') return {file: 'progress.json'};
+  if (p === '/api/top-pairs') return {file: 'top-pairs.json'};
+  const runId = u.searchParams.get('run_id');
+  if (!runId) return null;
+  const kind = {'/api/manifest': 'manifest', '/api/stage-io': 'stage-io', '/api/events': 'events'}[p];
+  if (!kind) return null;
+  return {file: `runs/${enc(runId)}/${kind}.json`, after: kind === 'events' ? Math.max(0, Number(u.searchParams.get('after_seq')) || 0) : null};
+}
+async function snapshotFetch(file) {
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 15000);
+  try {
+    const r = await fetch(SNAP + '/' + file, {cache: 'no-cache', signal: ctl.signal});
+    if (!r.ok) { const err = new Error('Snapshot ' + file + ' ' + r.status); err.status = r.status; throw err; }
+    return await r.json();
+  } finally { clearTimeout(timer); }
+}
+async function snapshotLatest() {
+  if (SNAPMODE) return SNAPMODE.latest;
+  if (!SNAP_LATEST_PROMISE) SNAP_LATEST_PROMISE = snapshotFetch('latest.json').then(j => {
+    if (!j?.generated_at || !Number.isFinite(Date.parse(j.generated_at))) throw new Error('Invalid snapshot latest');
+    return j;
+  });
+  try { return await SNAP_LATEST_PROMISE; }
+  catch (err) { SNAP_LATEST_PROMISE = null; throw err; }
+}
+function snapshotStamp(iso) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {timeZone: 'UTC', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'}).formatToParts(new Date(iso)).map(x => [x.type, x.value]));
+  return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}`;
+}
+function scheduleSnapshotProbe() {
+  if (!SNAPMODE || SNAP_PROBE_TIMER) return;
+  SNAP_PROBE_TIMER = setTimeout(async () => {
+    SNAP_PROBE_TIMER = null;
+    if (!SNAPMODE) return;
+    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 10000);
+    try {
+      const r = await fetch(API + '/api/progress', {cache: 'no-store', signal: ctl.signal});
+      if (r.ok) { location.reload(); return; }
+    } catch (err) { /* probe again while the snapshot is active */ }
+    finally { clearTimeout(timer); }
+    scheduleSnapshotProbe();
+  }, 15000);
+}
+function enterSnapshot(latest) {
+  if (SNAPMODE) return;
+  SNAPMODE = {at: latest.generated_at, latest};
+  document.body.classList.add('snapshot');
+  $('snapshotNotice').textContent = `Live data temporarily unavailable — showing the snapshot from ${snapshotStamp(latest.generated_at)} UTC.`;
+  $('snapshotNotice').hidden = false;
+  $('modeBadge').textContent = 'Snapshot';
+  scheduleSnapshotProbe();
+}
+async function snapshotJSON(mapping) {
+  if (!mapping) throw new Error('No snapshot for this API path');
+  const latest = await snapshotLatest();
+  const body = await snapshotFetch(mapping.file);
+  let result = body;
+  if (mapping.after != null) {
+    const events = (Array.isArray(body.events) ? body.events : []).filter(e => Number(e.seq) > mapping.after);
+    const last = events.reduce((n, e) => Number.isFinite(Number(e.seq)) ? Math.max(n, Number(e.seq)) : n, mapping.after);
+    result = {...body, events, has_more: false, next_after_seq: last, last_seq: last};
+  }
+  enterSnapshot(latest);
+  return result;
+}
+async function liveJSON(path, ms) {  // the quick tunnel takes up to ~9 s per request when several run at once
   // The gateway answers 502/503/504 when the hub is slow or restarting; retry those twice before giving up.
   for (let attempt = 0; ; attempt++) {
     const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), ms);
@@ -1694,9 +1767,18 @@ async function getJSON(path, ms = 30000) {  // the quick tunnel takes up to ~9 s
     }
     try {
       if (r.status >= 502 && r.status <= 504 && attempt < 2) { await new Promise(res => setTimeout(res, 1500 * (attempt + 1))); continue; }
-      if (!r.ok) throw new Error(path + ' ' + r.status);
+      if (!r.ok) { const err = new Error(path + ' ' + r.status); err.status = r.status; throw err; }
       return await r.json();
     } finally { clearTimeout(timer); }
+  }
+}
+async function getJSON(path, ms = 30000) {
+  const mapping = snapPath(path);
+  if (SNAPMODE) return snapshotJSON(mapping);
+  try { return await liveJSON(path, ms); }
+  catch (err) {
+    if (!SNAP || !mapping || !(err.status >= 500 || err.name === 'AbortError' || err instanceof TypeError)) throw err;
+    try { return await snapshotJSON(mapping); } catch (snapErr) { throw err; }
   }
 }
 const tsOf = v => v ? Date.parse(v) / 1000 : null;
@@ -1902,7 +1984,7 @@ async function addNewRuns(runs) {
 }
 async function pollLoop() {
   for (;;) {
-    await new Promise(r => setTimeout(r, 3000));
+    await new Promise(r => setTimeout(r, SNAPMODE ? 60000 : 3000));
     pollN++;
     try {
       const runs = pollN % 4 === 0 ? ((await getJSON('/api/runs')).runs || []) : null;
