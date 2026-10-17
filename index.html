@@ -1650,7 +1650,7 @@ footer{background:var(--bg);padding:0 0 40px;overflow:hidden}
       try {
         const res = await fetch(site.apiBase.replace(/\/$/, '') + '/api/progress', { cache: 'no-store' });
         const pts = res.ok ? ((await res.json()).points || []) : [];
-        if (res.ok) {
+        if (res.ok && pts.length) {  // an empty series only appears while the backend rebuilds its index
           const last = pts[pts.length - 1];  // the same totals the live page's header shows
           live = last ? { checked: last.checked, flagged: last.suspected, held: last.under_review || 0 } : { checked: 0, flagged: 0, held: 0 };
           series = cumulativeSeries(pts);

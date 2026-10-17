@@ -420,6 +420,8 @@ const plainTitle = s => String(s || '').replace(/\$([^$]*)\$/g, (_, m) => m.repl
     try {
       d = await fetchJson(url);
       if (!d || !Array.isArray(d.papers)) throw new Error('bad payload');
+      // An empty index (total 0) only happens while the backend rebuilds it: retry instead of showing an empty list.
+      if (d.total === 0) throw new Error('index rebuilding');
     } catch (e) {
       if (mine !== token) return;
       $('moreBtn').disabled = false;
