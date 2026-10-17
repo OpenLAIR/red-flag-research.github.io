@@ -1852,9 +1852,15 @@ async function boot() {
     await refreshTopPairs();  // so the board opens on the backend's list, not the few loaded papers
     seenSteps = new Set(); setFoot();
     if (reportRun && S[0]?.run_id === reportRun) {
+      // A report link needs the run's steps: if they did not arrive with the first load, ask again (the tunnel drops some big pages).
+      for (let i = 0; i < 2 && !S[0].events.length; i++) {
+        try { const ev = await eventsAfter(reportRun, 0); if (ev.events.length) { Object.assign(S[0], {events: ev.events, _last: ev.last}); if (S[0].started == null) S[0].started = ev.events[0].t; settle(S[0]); S[0] = prep(S[0]); } }
+        catch (err) { await new Promise(res => setTimeout(res, 2000)); }
+      }
       pos[0] = durOf(S[0]); playing = false; $('play').textContent = 'Replay';
       const st0 = stateAt(S[0], S[0].started + pos[0]);
-      if (st0.finished && reportButton(S[0], st0)) { await openReport(S[0].session); } else render();
+      // A finished run with a result opens its report, even if its steps could not be read.
+      if ((st0.finished || TERMINAL.has(S[0].status)) && S[0].final?.status) { await openReport(S[0].session); } else render();
     } else render();
     scanPairs(runs);
     if (MODE === 'live') {
