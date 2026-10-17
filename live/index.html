@@ -1553,7 +1553,7 @@ function boardRowsET() {
 // Read the pair scores of the batch's other finished papers in the background (newest first, a few at a time).
 let pairScan = null;
 function scanPairs(runs) {
-  if (pairScan || !etBoard() || TOP_PAIRS) return;
+  if (pairScan || SNAPMODE || !etBoard() || TOP_PAIRS) return;  // a snapshot carries its own top-pairs list
   const todo = latestPerPaper(runs.filter(r => runKey(r.run_id).key === BATCH)).filter(r => ['completed', 'delivered'].includes(r.status) && !PAIRS_DONE.has(r.run_id) && !S.some(x => x.run_id === r.run_id))
     .sort((a, b) => tsOf(b.started_at) - tsOf(a.started_at)).slice(0, 150);
   if (!todo.length) return;
