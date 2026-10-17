@@ -840,6 +840,7 @@ function pickFocus(states) {
 
 function render() {
   if (SOON) { renderSoon(); return; }
+  if (!S.length) { document.body.classList.add('waiting'); return; }  // no saved replay ships with the page: wait for the API
   T = S[focus].started + pos[focus];
   const states = S.map((x, i) => stateAt(x, x.started + pos[i]));
   const s = S[focus], st = states[focus], dur = durOf(s);
@@ -1603,6 +1604,7 @@ function renderMyCalls(s, st) {
 }
 
 function tick(now) {
+  if (!S.length) { requestAnimationFrame(tick); return; }
   const dt = (now - (tick.prev || now)) / 1000; tick.prev = now;
   const advance = () => { const d = durOf(S[focus]); pos[focus] = Math.min(d, pos[focus] + dt * speed); if (pos[focus] >= d) { playing = false; $('play').textContent = 'Replay'; } };
   if (MODE === 'live') {
