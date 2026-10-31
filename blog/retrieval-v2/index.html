@@ -1,0 +1,1070 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finding the source · Red-flag notes, Part 1</title>
+<meta name="description" content="How Red-flag v2 finds the earlier papers a submission may have been laundered from: a full-text search over 2.92M arXiv papers and a small source selector. Hit@3 0.910 on PAN200, about 12 times faster than our first live retriever, and the failures we hit on the way.">
+<link rel="canonical" href="https://red-flag-research.org/blog/retrieval-v2/">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://red-flag-research.org/blog/retrieval-v2/">
+<meta property="og:site_name" content="Red-flag Research">
+<meta property="og:title" content="Finding the source: inside Red-flag v2 retrieval">
+<meta property="og:description" content="Hit@3 0.910 on PAN200 over 2.92M full-text arXiv papers, in about 3.6 s per query. What worked, what did not, and what is still hard.">
+<meta property="og:image" content="https://red-flag-research.org/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="../../icons/favicon-48.png">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<style>
+/* Palette and type follow the homepage (index.html): ground and panels, teal for our systems and actions,
+   wine for anything that is a flag or a source, paper for the white moments, red only for the hero field. */
+:root{
+  --bg:#0b0d10; --panel:#13161b; --panel-2:#1a1e24; --step:#20252c; --line-2:#2b313a;
+  --text:#e8eaed; --text-2:#b3b9c2; --muted:#8a919c;
+  --flag:#ff5d4f;
+  --cyan:#57c7cf; --cyan-ink:#062528; --cyan-hover:#7bd6dc;
+  --teal:#0e2a2d; --teal-2:#133a3e; --teal-3:#19474c; --teal-t:#eef4f4; --teal-t2:#c9d9db;
+  --wine:#2a1113; --wine-2:#3a171a; --wine-3:#481d21; --wine-hot:#ff8a7f; --wine-t:#f6eeed; --wine-t2:#e0cfcd;
+  --paper:#ece8df; --paper-2:#e2ddd0; --paper-ink:#14171c; --paper-ink-2:#2c3138; --paper-ink-3:#474d56; --paper-acc:#0b5f65;
+  --amber:#e8b44c;
+  --field-red:#b3261e; --ink-red:#fff4f2; --btn-ink:#7a130d;
+  --card:var(--panel); --card-2:var(--panel-2); --inset-s:var(--bg);
+  --r-lg:18px; --r-md:12px; --r-sm:8px; --r-chip:10px;
+  --sans:'IBM Plex Sans',system-ui,sans-serif; --serif:'Newsreader',Georgia,serif; --code:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --s-sm:13px; --s-body:16px; --s-lead:20px; --s-h3:28px; --s-h2:52px; --s-fig:88px; --s-fig-xl:112px;
+  --wrap:1360px; --gutter:32px; --read:720px;
+  --ease:cubic-bezier(.22,1,.36,1); --ease-soft:cubic-bezier(.33,1,.68,1);
+  --t-press:140ms; --t-hover:180ms;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{margin:0;background:var(--bg);color:var(--text);font:400 var(--s-body)/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+.num{font-variant-numeric:tabular-nums}
+.wrap{max-width:calc(var(--wrap) + 2*var(--gutter));margin:0 auto;padding:0 var(--gutter)}
+.skip{position:absolute;left:-999px;top:8px;background:var(--ink-red);color:var(--btn-ink);padding:8px 12px;border-radius:var(--r-sm);z-index:20}
+.skip:focus{left:8px}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:4px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* reading progress: a thin red rule under the top bar */
+.progress{position:fixed;left:0;top:0;height:3px;width:100%;transform-origin:0 50%;transform:scaleX(0);background:var(--flag);z-index:30}
+
+.mark{flex:none;display:block}
+.wave{transform-origin:31% 88%;transform-box:fill-box;animation:sway 4.2s ease-in-out infinite}
+@keyframes sway{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-5deg)}}
+
+.btn{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 22px;border-radius:var(--r-chip);font:600 var(--s-body)/1 var(--sans);text-decoration:none;white-space:nowrap;border:0;cursor:pointer;transition:background-color var(--t-hover) ease,transform var(--t-press) var(--ease)}
+@media (hover:hover) and (pointer:fine){.btn:hover{transform:translateY(-2px)}}
+.btn:active{transform:translateY(1px) scale(.97)}
+.btn-primary{background:var(--cyan);color:var(--cyan-ink)}
+.btn-primary:hover{background:var(--cyan-hover)}
+.is-red .btn-primary{background:var(--ink-red);color:var(--btn-ink)}
+.is-red .btn-primary:hover{background:#fff}
+.btn-ghost{background:var(--card-2);color:var(--text)}
+.btn-ghost:hover{background:var(--step)}
+.is-red .btn-ghost:hover{background:#74150f}
+.btn-sm{height:38px;padding:0 16px;font-size:var(--s-sm)}
+
+/* top bar, as on the homepage */
+.top{position:sticky;top:0;z-index:10;background:var(--bg)}
+.topbar{display:flex;align-items:center;gap:20px;min-height:68px}
+.lockup{display:flex;align-items:center;gap:16px;min-width:0}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font:500 var(--s-lead)/1 var(--serif);letter-spacing:-.01em;white-space:nowrap}
+.tile{flex:none;width:36px;height:36px;border-radius:8px;background:var(--field-red);display:grid;place-items:center}
+.tile.sm{width:30px;height:30px}
+.sep{flex:none;width:1px;height:28px;background:var(--line-2)}
+.crumb{margin:0;font-size:var(--s-sm);color:var(--muted);white-space:nowrap}
+.crumb a{color:var(--text-2);text-underline-offset:3px}
+.nav{display:flex;align-items:center;gap:6px;margin-left:auto}
+.nv{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 12px;border-radius:var(--r-chip);background:var(--panel-2);color:var(--text);font:500 var(--s-sm)/1 var(--sans);text-decoration:none;white-space:nowrap;transition:background-color var(--t-hover) ease}
+.nv:hover,.nv[aria-current="true"]{background:var(--step)}
+
+/* hero: the red field, a blunt headline, and the funnel moving beside it */
+.field{background:var(--bg);color:var(--text)}
+.field.is-red{background:var(--field-red);color:var(--ink-red);--text:#fff4f2;--text-2:#ffdad5;--muted:#ffc9c2;--card:#9a1f18;--card-2:#871a14;--inset-s:#74150f}
+.hero{padding:56px 0 72px;overflow:hidden}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,min(50%,680px));gap:48px;align-items:center}
+.hero-l{container-type:inline-size;min-width:0}
+.kicker{display:inline-flex;align-items:center;gap:10px;margin:0 0 28px;font:500 var(--s-sm)/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--text-2)}
+.kicker i{width:28px;height:2px;background:currentColor;display:block}
+.poster{--hs:clamp(46px,10vw,150px);font:600 var(--hs)/.92 var(--sans);letter-spacing:-.045em;margin:0 0 32px}
+@supports (width:1cqw){.poster{--hs:min(19cqw,170px)}}
+.poster > span{display:block}
+.poster .p2{font-size:.42em;line-height:1.05;letter-spacing:-.03em;margin-top:.18em;color:var(--text-2)}
+.question{font:400 var(--s-h3)/1.28 var(--serif);margin:0 0 32px;max-width:30ch;text-wrap:balance}
+.actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.byline{margin:24px 0 0;font-size:var(--s-sm);color:var(--muted)}
+.byline a{color:var(--text-2)}
+.funnel{position:relative;margin:0;border-radius:var(--r-lg);background:var(--inset-s);aspect-ratio:1.08;overflow:hidden}
+.funnel canvas{display:block;width:100%;height:100%}
+.funnel figcaption{position:absolute;left:20px;right:20px;bottom:16px;display:flex;justify-content:space-between;gap:12px;font-size:var(--s-sm);color:var(--muted)}
+.stage-chips{position:absolute;left:20px;top:18px;display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:8px;background:rgba(255,244,242,.08);color:var(--muted);font:500 12px/1 var(--sans);transition:background .4s var(--ease),color .4s var(--ease)}
+.chip b{font-weight:600;font-variant-numeric:tabular-nums}
+.chip.on{background:var(--ink-red);color:var(--btn-ink)}
+
+/* headline figures */
+.band{padding:56px 0 24px}
+.tiles{display:grid;grid-template-columns:minmax(0,1.3fr) repeat(3,minmax(0,1fr));gap:12px}
+.fig{display:flex;flex-direction:column;justify-content:flex-end;min-height:220px;border-radius:var(--r-lg);padding:24px 28px;background:var(--panel)}
+.fig b{display:block;font:600 var(--s-fig)/.95 var(--sans);font-variant-numeric:tabular-nums;letter-spacing:-.045em}
+.fig span{margin-top:10px;color:var(--text-2)}
+.fig em{font-style:normal;font-size:var(--s-sm);margin-top:4px;color:var(--muted)}
+.fig.f-a{background:var(--cyan);color:var(--cyan-ink)}
+.fig.f-a b{font-size:var(--s-fig-xl)}
+.fig.f-a span,.fig.f-a em{color:#0b3a3e}
+
+/* sections */
+section.block{padding:72px 0}
+.sec-head{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:56px;margin-bottom:36px;align-items:end}
+.sec-head .eyebrow{display:block;margin:0 0 14px;font:500 var(--s-sm)/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+h2{font:600 var(--s-h2)/1.02 var(--sans);letter-spacing:-.035em;margin:0;text-wrap:balance}
+.sec-head p{margin:0;color:var(--text-2);max-width:58ch;font-size:var(--s-lead);line-height:1.5}
+h3{font:600 var(--s-h3)/1.15 var(--sans);letter-spacing:-.02em;margin:0 0 12px}
+.prose{max-width:var(--read)}
+.prose p{margin:0 0 18px;color:var(--text-2);text-wrap:pretty}
+.prose p b,.prose li b{color:var(--text);font-weight:500}
+.prose ul{margin:0 0 18px;padding-left:20px;color:var(--text-2)}
+.prose li{margin:0 0 8px}
+.fn{font-size:var(--s-sm);color:var(--muted);margin:16px 0 0;max-width:80ch}
+.fn a{color:var(--text-2)}
+
+/* paper moment: the one-sentence thesis */
+.thesis{background:var(--paper);color:var(--paper-ink);border-radius:var(--r-lg);padding:48px 56px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:48px;align-items:center}
+.thesis q{display:block;font:400 clamp(26px,3vw,38px)/1.22 var(--serif);letter-spacing:-.01em;quotes:none;text-wrap:balance}
+.thesis p{margin:0;color:var(--paper-ink-2)}
+.chain{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:18px;font:500 var(--s-sm)/1 var(--sans)}
+.chain span{padding:9px 12px;border-radius:8px;background:var(--paper-2)}
+.chain span.hot{background:var(--paper-ink);color:var(--paper)}
+.chain i{font-style:normal;color:var(--paper-ink-3)}
+
+/* how it works: sticky picture, steps scroll past it */
+.scrolly{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:56px;align-items:start}
+.steps{display:grid;gap:0}
+.stp{min-height:62vh;display:flex;flex-direction:column;justify-content:center;padding:24px 0;opacity:.35;transition:opacity .5s var(--ease)}
+.stp.on{opacity:1}
+.stp .n{display:inline-grid;place-items:center;width:36px;height:36px;border-radius:10px;background:var(--panel-2);font:600 var(--s-body)/1 var(--sans);margin-bottom:18px;transition:background .4s,color .4s}
+.stp.on .n{background:var(--cyan);color:var(--cyan-ink)}
+.stp p{color:var(--text-2);margin:0 0 12px;max-width:52ch}
+.stp p b{color:var(--text);font-weight:500}
+.stage{position:sticky;top:110px;height:min(560px,72vh);border-radius:var(--r-lg);background:var(--panel);overflow:hidden}
+.stage .lbl{position:absolute;left:24px;top:20px;right:24px;display:flex;justify-content:space-between;align-items:baseline;gap:12px;z-index:2}
+.stage .lbl b{font:600 var(--s-h3)/1 var(--sans);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stage .lbl span{font-size:var(--s-sm);color:var(--muted);text-align:right}
+.lib{position:absolute;inset:84px 24px 24px;display:grid;grid-template-columns:repeat(14,1fr);gap:6px;align-content:center;overflow:hidden;transition:opacity .6s var(--ease),transform .8s var(--ease)}
+.lib i{display:block;aspect-ratio:.9;border-radius:3px;background:var(--step);transition:background .5s var(--ease),transform .6s var(--ease),opacity .6s var(--ease)}
+.lib i.lit{background:var(--teal-3)}
+[data-step="2"] .lib i,[data-step="3"] .lib i{opacity:.25}
+[data-step="2"] .lib i.hit{opacity:1;background:var(--cyan);transform:translateY(-4px)}
+[data-step="3"] .lib{opacity:0;transform:scale(.96)}
+.beam{position:absolute;top:84px;bottom:24px;width:90px;left:-120px;background:linear-gradient(90deg,transparent,rgba(87,199,207,.22),transparent);pointer-events:none;z-index:1;opacity:0}
+[data-step="1"] .beam{opacity:1;animation:beam 2.6s var(--ease-soft) infinite}
+@keyframes beam{from{left:-120px}to{left:100%}}
+.cands{position:absolute;inset:84px 24px 24px;display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;align-content:center;opacity:0;transform:translateY(16px);transition:opacity .6s var(--ease),transform .8s var(--ease);pointer-events:none}
+[data-step="3"] .cands{opacity:1;transform:none}
+.cand{position:relative;display:grid;grid-template-columns:22px minmax(0,1fr) 44px;align-items:center;gap:10px;height:34px;padding:0 10px;border-radius:8px;background:var(--panel-2);font-size:12px;color:var(--text-2);overflow:hidden;transition:background .5s var(--ease),color .5s var(--ease)}
+.cand .bar{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--teal-2);transition:width 1.1s var(--ease);z-index:0}
+.cand > *{position:relative;z-index:1}
+.cand .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cand .p{text-align:right;font-variant-numeric:tabular-nums}
+.cand svg{width:14px;height:14px;opacity:0;transition:opacity .4s}
+.cands.picked .cand.top{background:var(--wine-2);color:var(--wine-t)}
+.cands.picked .cand.top .bar{background:var(--wine-3)}
+.cands.picked .cand.top svg{opacity:1;color:var(--wine-hot)}
+.ghost-line{display:block;height:7px;border-radius:4px;background:currentColor;opacity:.35}
+
+/* flash / max switch */
+.presets{margin-top:56px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:12px}
+.preset-l{background:var(--panel);border-radius:var(--r-lg);padding:28px 32px}
+.preset-l p{color:var(--text-2);margin:12px 0 22px}
+.seg{display:inline-flex;padding:4px;border-radius:12px;background:var(--bg);gap:4px}
+.seg button{height:40px;padding:0 18px;border:0;border-radius:9px;background:transparent;color:var(--text-2);font:600 var(--s-sm)/1 var(--sans);cursor:pointer;transition:background .25s var(--ease),color .25s var(--ease)}
+.seg button[aria-pressed="true"]{background:var(--cyan);color:var(--cyan-ink)}
+.pgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.pcell{background:var(--panel);border-radius:var(--r-lg);padding:22px 24px;display:flex;flex-direction:column;justify-content:space-between;min-height:150px}
+.pcell span{font-size:var(--s-sm);color:var(--muted)}
+.pcell b{font:600 44px/1 var(--sans);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.pcell em{font-style:normal;font-size:var(--s-sm);color:var(--text-2)}
+.pcell .meter{height:6px;border-radius:3px;background:var(--bg);overflow:hidden;margin:10px 0 6px}
+.pcell .meter i{display:block;height:100%;background:var(--cyan);border-radius:3px;transition:width .8s var(--ease)}
+
+/* results: metric tabs, sorted bars, and a speed-accuracy map */
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px}
+.tabs button{height:38px;padding:0 14px;border:0;border-radius:var(--r-chip);background:var(--panel-2);color:var(--text);font:500 var(--s-sm)/1 var(--sans);cursor:pointer;transition:background .2s}
+.tabs button:hover{background:var(--step)}
+.tabs button[aria-selected="true"]{background:var(--text);color:var(--bg)}
+.res{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:12px}
+.panel{background:var(--panel);border-radius:var(--r-lg);padding:28px 28px 24px}
+.panel h3{font-size:var(--s-lead);margin-bottom:4px}
+.panel .sub{margin:0 0 20px;font-size:var(--s-sm);color:var(--muted)}
+.bars{position:relative}
+.brow{position:absolute;left:0;right:0;display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr) 56px;gap:14px;align-items:center;height:40px;transition:top .7s var(--ease)}
+.brow .nm{font-size:var(--s-sm);color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brow.ours .nm{color:var(--text);font-weight:600}
+.brow .tr{height:22px;border-radius:6px;background:var(--bg);overflow:hidden}
+.brow .fl{display:block;height:100%;width:0;border-radius:6px;background:var(--step);transition:width .9s var(--ease)}
+.brow.ours .fl{background:var(--cyan)}
+.brow.v1 .fl{background:var(--teal-3)}
+.brow .vl{text-align:right;font:600 var(--s-body)/1 var(--sans);font-variant-numeric:tabular-nums}
+.metric-def{margin:18px 0 0;font-size:var(--s-sm);color:var(--muted);min-height:3em}
+.scatter{position:relative}
+.scatter svg{display:block;width:100%;height:auto;overflow:visible}
+.scatter .ax{stroke:var(--line-2);stroke-width:1}
+.scatter .gl{stroke:var(--panel-2);stroke-width:1}
+.scatter text{fill:var(--muted);font:12px var(--sans)}
+.scatter .dot{transition:r .3s var(--ease)}
+.scatter .pt{cursor:default}
+.scatter .pt:hover .dot{r:11}
+.scatter .pt .lab{fill:var(--text-2);font-size:12px}
+.scatter .pt.ours .lab{fill:var(--text);font-weight:600}
+.sweet{fill:rgba(87,199,207,.06);stroke:rgba(87,199,207,.35);stroke-dasharray:4 5}
+.sweet-t{fill:var(--cyan)!important;font-weight:500}
+
+/* the selector: a progress track with ceiling marks, then spend on a log scale */
+.sel{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px}
+.track{position:relative;height:84px;margin:72px 0 12px;border-radius:14px;background:var(--bg)}
+.track .seg1,.track .seg2{position:absolute;top:0;bottom:0;left:0;border-radius:14px;width:0;transition:width 1.4s var(--ease)}
+.track .seg1{background:var(--teal-3)}
+.track .seg2{background:var(--cyan);transition-delay:.9s}
+.tick{position:absolute;top:-54px;bottom:-8px;width:0;border-left:2px dashed var(--muted);opacity:0;transition:opacity .5s var(--ease) 1.6s}
+.tick span{position:absolute;top:0;white-space:nowrap;font-size:12px;color:var(--text-2)}
+.tick.l span{right:8px;top:20px}
+.tick.r span{right:8px;top:-20px}
+.tick.amber{border-color:var(--wine-hot)}
+.tick.amber span{color:var(--wine-hot)}
+.in .tick{opacity:1}
+.track-axis{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:var(--s-sm);color:var(--text-2);margin-top:22px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.spend{display:grid;gap:14px;margin-top:16px}
+.sp{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr);gap:12px;align-items:center}
+.sp .nm{font-size:var(--s-sm);color:var(--text-2)}
+.sp .tr{position:relative;height:30px;border-radius:7px;background:var(--bg)}
+.sp .fl{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:7px;background:var(--step);transition:width 1.2s var(--ease)}
+.sp.ours .fl{background:var(--cyan)}
+.sp.hot .fl{background:var(--wine-3)}
+.sp .v{position:absolute;left:10px;top:50%;transform:translateY(-50%);font:600 12px/1 var(--sans);font-variant-numeric:tabular-nums;white-space:nowrap}
+.sp.ours .v{color:var(--cyan-ink)}
+.sp .note{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted)}
+
+/* long papers: a document strip with a query window that sweeps */
+.doc-wrap{background:var(--panel);border-radius:var(--r-lg);padding:28px 32px 32px}
+.doc-ctl{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px}
+.doc-ctl p{margin:0;color:var(--text-2);max-width:60ch}
+.docs{display:grid;gap:10px}
+.doc{position:relative;height:34px;border-radius:8px;background:var(--bg);overflow:hidden}
+.doc .blk{position:absolute;top:6px;bottom:6px;border-radius:4px;background:var(--wine-3);transition:background .5s var(--ease),box-shadow .5s var(--ease)}
+.doc .blk.seen{background:var(--wine-hot);box-shadow:0 0 0 2px rgba(255,138,127,.25)}
+.doc .win{position:absolute;top:0;bottom:0;left:0;border-radius:8px;background:rgba(87,199,207,.14);border:1.5px solid var(--cyan);transition:width .9s var(--ease)}
+.doc .lines{position:absolute;inset:13px 10px;background:repeating-linear-gradient(90deg,var(--step) 0 26px,transparent 26px 32px);opacity:.6;border-radius:3px}
+.doc-axis{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:10px}
+.doc-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
+.dstat{background:var(--panel);border-radius:var(--r-lg);padding:22px 24px}
+.dstat b{display:block;font:600 48px/1 var(--sans);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.dstat span{display:block;margin-top:8px;font-size:var(--s-sm);color:var(--text-2)}
+.dstat.wine{background:var(--wine);color:var(--wine-t)}
+.dstat.wine span{color:var(--wine-t2)}
+
+/* lessons: cards that open */
+.lessons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+.lesson{background:var(--panel);border-radius:var(--r-lg);overflow:hidden;transition:background .3s var(--ease)}
+.lesson[open]{background:var(--panel-2)}
+.lesson summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:18px;align-items:start;padding:24px 26px}
+.lesson summary::-webkit-details-marker{display:none}
+.lesson .ix{font:600 var(--s-sm)/1 var(--sans);color:var(--wine-hot);background:var(--wine);border-radius:8px;padding:8px 9px;font-variant-numeric:tabular-nums}
+.lesson h3{font-size:var(--s-lead);margin:4px 0 6px}
+.lesson .hook{margin:0;color:var(--text-2);font-size:var(--s-sm)}
+.lesson .pm{width:28px;height:28px;border-radius:8px;background:var(--step);display:grid;place-items:center;transition:transform .35s var(--ease)}
+.lesson[open] .pm{transform:rotate(45deg)}
+.lesson .body{padding:0 26px 26px 80px;color:var(--text-2)}
+.lesson .body p{margin:0 0 12px}
+.ba{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 14px}
+.ba span{display:inline-flex;gap:8px;align-items:baseline;padding:8px 12px;border-radius:8px;background:var(--bg);font-size:var(--s-sm)}
+.ba b{font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+.ba .dn b{color:var(--wine-hot)}
+.ba .up b{color:var(--cyan)}
+.lesson .moral{margin:0;padding:12px 14px;border-radius:10px;background:var(--bg);color:var(--text);font:italic 400 17px/1.4 var(--serif)}
+
+/* headroom rings */
+.rings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.ring{background:var(--panel);border-radius:var(--r-lg);padding:28px;display:grid;grid-template-columns:132px minmax(0,1fr);gap:22px;align-items:center}
+.ring svg{width:132px;height:132px;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:12}
+.ring .bgc{stroke:var(--bg)}
+.ring .cap{stroke:var(--teal-2);stroke-linecap:round;transition:stroke-dashoffset 1.3s var(--ease)}
+.ring .val{stroke:var(--cyan);stroke-linecap:round;transition:stroke-dashoffset 1.5s var(--ease) .3s}
+.ring.hard .val{stroke:var(--wine-hot)}
+.ring h3{font-size:var(--s-lead);margin:0 0 6px}
+.ring p{margin:0;font-size:var(--s-sm);color:var(--text-2)}
+.ring .big{font:600 34px/1 var(--sans);letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-bottom:8px;display:block}
+
+/* withheld and fine print */
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.box{background:var(--panel);border-radius:var(--r-lg);padding:28px 32px}
+.box h3{font-size:var(--s-lead)}
+.box ul{margin:0;padding-left:18px;color:var(--text-2)}
+.box li{margin:0 0 8px}
+.box.paper{background:var(--paper);color:var(--paper-ink)}
+.box.paper ul{color:var(--paper-ink-2)}
+.box.paper h3{color:var(--paper-ink)}
+
+/* where this post sits in the series: the five steps from Part 0, this one lit */
+.where{padding:12px 0 0}
+.where-in{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:16px 20px;border-radius:var(--r-lg);background:var(--panel)}
+.where-in > span{font-size:var(--s-sm);color:var(--muted)}
+.where-in a{color:var(--text-2)}
+.steps5{display:flex;flex-wrap:wrap;gap:6px;flex:1}
+.steps5 span{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:9px;background:var(--bg);font:500 var(--s-sm)/1 var(--sans);color:var(--muted)}
+.steps5 span b{font-weight:600}
+.steps5 span.on{background:var(--cyan);color:var(--cyan-ink)}
+.pager{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.pager a,.pager div{display:flex;flex-direction:column;gap:6px;padding:22px 24px;border-radius:var(--r-lg);background:var(--panel);text-decoration:none;color:inherit;transition:background .25s var(--ease)}
+.pager a:hover{background:var(--panel-2)}
+.pager span{font-size:var(--s-sm);color:var(--muted)}
+.pager b{font:600 var(--s-lead)/1.25 var(--sans)}
+.pager .nx{text-align:right}
+
+/* footer, as on the homepage */
+footer{background:var(--bg);padding:24px 0 40px;overflow:hidden}
+.foot-mark{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:40px 0 32px}
+.foot-mark .big{font:600 clamp(56px,9vw,var(--s-fig-xl))/1 var(--sans);letter-spacing:-.05em;color:#1f252d}
+.foot-mark .big .w2{display:block}
+.foot-mark .big .r{color:var(--field-red)}
+.credit{display:flex;align-items:center;gap:14px}
+.credit p{margin:0;color:var(--text-2)}
+.credit b{color:var(--text);font-weight:500}
+.credit a{color:var(--cyan);text-decoration:none}
+.org-logo{flex:none;display:block;width:48px;height:48px;border-radius:12px;background:#fff;overflow:hidden;line-height:0}
+.org-logo img{display:block;width:100%;height:100%;object-fit:contain}
+.fine{margin:0;font-size:var(--s-sm);color:var(--muted);max-width:70ch}
+.fine a{color:var(--text-2)}
+
+/* entrances: content is visible without script; .js arms them */
+@media (prefers-reduced-motion:no-preference){
+  .js .poster > span{animation:rise 900ms var(--ease) backwards}
+  .js .poster > .p2{animation-delay:160ms}
+  .js .hero-copy{animation:rise-s 750ms var(--ease) 380ms backwards}
+  .js .funnel{animation:settle 1000ms var(--ease-soft) 200ms backwards}
+  @keyframes rise{from{opacity:0;transform:translateY(32px)}}
+  @keyframes rise-s{from{opacity:0;transform:translateY(18px)}}
+  @keyframes settle{from{opacity:0;transform:scale(.96)}}
+  .js [data-reveal].pre{opacity:0;transform:translateY(24px);transition:opacity .7s var(--ease),transform .9s var(--ease);transition-delay:var(--d,0ms)}
+  .js [data-reveal="head"].pre{transform:translateY(32px)}
+  .js [data-reveal="pic"].pre{transform:translateY(24px) scale(.975)}
+  .js [data-reveal].pre.is-in{opacity:1;transform:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+
+@media (max-width:1100px){
+  .hero-grid{grid-template-columns:1fr}
+  .funnel{max-width:640px;width:100%}
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .res,.sel{grid-template-columns:1fr}
+  .presets{grid-template-columns:1fr}
+  .rings{grid-template-columns:1fr}
+}
+@media (max-width:900px){
+  :root{--s-h2:40px;--s-fig:68px;--s-fig-xl:84px;--s-h3:24px}
+  .sec-head{grid-template-columns:1fr;gap:16px}
+  .thesis{grid-template-columns:1fr;padding:36px 32px;gap:24px}
+  .scrolly{grid-template-columns:1fr;gap:0}
+  .stage{top:68px;height:min(400px,52vh);z-index:2;box-shadow:0 -12px 0 var(--bg)}
+  .stp{min-height:56vh}
+  .lessons,.cols{grid-template-columns:1fr}
+  .nav .nv.wide{display:none}
+}
+@media (max-width:560px){
+  .pager{grid-template-columns:1fr}
+  .pager .nx{text-align:left}
+  :root{--gutter:16px;--s-h2:34px;--s-fig:56px;--s-fig-xl:68px;--s-lead:18px}
+  .hero{padding:36px 0 48px}
+  .crumb,.sep{display:none}
+  .tiles{grid-template-columns:1fr}
+  .fig{min-height:150px}
+  .pgrid,.doc-stats{grid-template-columns:1fr}
+  .brow{grid-template-columns:minmax(0,118px) minmax(0,1fr) 48px;gap:10px}
+  .panel,.box,.preset-l,.doc-wrap{padding:22px 18px}
+  .lesson summary{padding:20px 18px;gap:12px}
+  .lesson .body{padding:0 18px 22px}
+  .ring{grid-template-columns:96px minmax(0,1fr);padding:20px}
+  .ring svg{width:96px;height:96px}
+  .lib{grid-template-columns:repeat(10,1fr);gap:5px}
+  .cands{grid-template-columns:1fr;gap:5px}
+  .cand{height:24px}
+  .cand:nth-child(n+11){display:none}
+  .sp{grid-template-columns:1fr;gap:6px}
+  .foot-mark{flex-direction:column;align-items:flex-start}
+  .topbar > .btn{display:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="flagw" viewBox="0 0 32 32"><path d="M10 5v23" stroke="#fff4f2" stroke-width="2.6" stroke-linecap="round" fill="none"/><path fill="#fff4f2" d="M11 6.5c3.5-1.8 6.5 1.6 10 0s4.5-.8 4.5-.8v10.3s-1.4 1-4.5.8-6.5-2.4-10 0z"/></symbol>
+  <symbol id="mflag" viewBox="0 0 16 16"><path d="M4 2v12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/><path d="M4.6 2.6c1.8-.9 3.3.8 5 0s2.4-.4 2.4-.4v5.2s-.7.5-2.4.4-3.2-1.2-5 0z" fill="currentColor"/></symbol>
+</svg>
+
+<header class="top">
+  <div class="wrap topbar">
+    <div class="lockup">
+      <a class="brand" href="../../" aria-label="Red-flag Research home">
+        <span class="tile"><svg class="mark wave" width="26" height="26" aria-hidden="true"><use href="#flagw"/></svg></span>
+        <span>Red-flag Research</span>
+      </a>
+      <span class="sep" aria-hidden="true"></span>
+      <p class="crumb"><a href="../../">Home</a> / Notes</p>
+    </div>
+    <nav class="nav" aria-label="Sections">
+      <a class="nv wide" href="#how">How it works</a>
+      <a class="nv wide" href="#results">Results</a>
+      <a class="nv wide" href="#lessons">What went wrong</a>
+      <a class="nv wide" href="#next">What is next</a>
+    </nav>
+    <a class="btn btn-primary btn-sm" href="../../live/">Watch live</a>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="hero field is-red" id="top" aria-labelledby="hero-h">
+  <div class="wrap hero-grid">
+    <div class="hero-l">
+      <p class="kicker"><i></i>Red-flag notes · Part 1 · October 30, 2026</p>
+      <h1 class="poster" id="hero-h"><span>Find the source.</span><span class="p2">Red-flag v2 retrieval</span></h1>
+      <div class="hero-copy">
+        <p class="question">Before anyone can judge whether a paper was laundered, something has to find what it was laundered from.</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="#results">See the results</a>
+          <a class="btn btn-ghost" href="#lessons">What went wrong</a>
+        </div>
+        <p class="byline">By <a href="https://leozz04.github.io/" target="_blank" rel="noopener">Ziqian Zhang</a> · <a href="https://openlair.github.io/">OpenLAIR</a> · about 9 minutes</p>
+      </div>
+    </div>
+    <figure class="funnel" aria-label="Animation: a library of papers is searched, 16 candidates are kept, and 3 are selected as likely sources.">
+      <canvas id="funnel"></canvas>
+      <div class="stage-chips" aria-hidden="true">
+        <span class="chip" data-chip="0"><b>2.92M</b> papers</span>
+        <span class="chip" data-chip="1"><b>16</b> candidates</span>
+        <span class="chip" data-chip="2"><b>3</b> likely sources</span>
+      </div>
+      <figcaption><span>One target paper, one pass</span><span class="num" id="fclock">≈ 3.6 s</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="band field" aria-label="Headline figures">
+  <div class="wrap tiles">
+    <div class="fig f-a" data-reveal style="--d:0ms"><b class="num" data-count="0.910" data-dp="3">0.910</b><span>Hit@3 on PAN200</span><em>A true source in the top 3 for 91% of 200 rewritten papers</em></div>
+    <div class="fig" data-reveal style="--d:80ms"><b class="num" data-count="12" data-dp="0" data-suffix="×">12×</b><span>faster retrieval than v1</span><em>44.7 s → ≈ 3.6 s per query</em></div>
+    <div class="fig" data-reveal style="--d:160ms"><b class="num" data-count="2.92" data-dp="2" data-suffix="M">2.92M</b><span>full-text arXiv papers</span><em>searched on every query</em></div>
+    <div class="fig" data-reveal style="--d:240ms"><b class="num" data-count="3" data-dp="0" data-prefix="≈ $">≈ $3</b><span>selector GPU time</span><em>for 43,000 papers (estimate)</em></div>
+  </div>
+</section>
+
+<section class="where field" aria-label="Where this post sits in the series">
+  <div class="wrap">
+    <div class="where-in">
+      <span>Step 3 of 5 in <a href="../overview/">How a paper gets a red flag</a></span>
+      <div class="steps5"><span><b>1</b>Read</span><span><b>2</b>Extract</span><span class="on"><b>3</b>Find sources</span><span><b>4</b>Compare</span><span><b>5</b>Label</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="block field" id="why" aria-labelledby="why-h">
+  <div class="wrap">
+    <div class="thesis" data-reveal="pic">
+      <div>
+        <q id="why-h">If retrieval misses the source, nothing after it can catch the paper.</q>
+        <div class="chain" aria-label="Pipeline order">
+          <span>Read</span><i>→</i><span>Extract</span><i>→</i><span class="hot">Find sources</span><i>→</i><span>Compare</span><i>→</i><span>Label</span>
+        </div>
+      </div>
+      <p>Paper laundering rewrites earlier public work into a submission that looks new. The wording changes, but numbers, method steps and claims stay close to the original. Our checker compares a submission with a few candidate sources in depth. A source that retrieval never surfaces is never compared, so <b>retrieval recall caps the recall of the whole system</b>. v1 put a true source in its top 3 for 74.5% of benchmark papers. v2 was built to close that gap without slowing the screening down.</p>
+    </div>
+  </div>
+</section>
+
+<section class="block field" id="how" aria-labelledby="how-h">
+  <div class="wrap">
+    <div class="sec-head" data-reveal="head">
+      <div><span class="eyebrow">How it works</span><h2 id="how-h">Search wide, then let a small model choose</h2></div>
+      <p>v2 does two things. It runs one cheap search over a big library, then gives a small judgment to a short list.</p>
+    </div>
+
+    <div class="scrolly">
+      <div class="stage" id="stage" data-step="1" aria-hidden="true">
+        <div class="lbl"><b id="stage-n">2.92M</b><span id="stage-t">full-text arXiv papers</span></div>
+        <div class="beam"></div>
+        <div class="lib" id="lib"></div>
+        <div class="cands" id="cands"></div>
+      </div>
+      <div class="steps">
+        <article class="stp on" data-s="1">
+          <span class="n">1</span>
+          <h3>Search the full text, not the abstract</h3>
+          <p>A lexical first stage searches the <b>full text of 2,919,718 arXiv papers</b>. Laundering changes the framing, so a source's title and abstract often look nothing like the target's. The reused material is in the body: setups, numbers, method details.</p>
+          <p>Searching titles and abstracts alone reaches Hit@3 0.660. Searching the full text with the whole paper as one query reaches 0.235, because a long query dilutes the useful terms. How we build queries from a paper is one of the details we keep private (see <a href="#withheld">below</a>).</p>
+        </article>
+        <article class="stp" data-s="2">
+          <span class="n">2</span>
+          <h3>Keep 16 candidates</h3>
+          <p>The first stage keeps the <b>top 16 documents</b>. For 91.5% of PAN200 targets, a true source is already among those 16.</p>
+          <p>That number is the ceiling for everything after this step, and we tested whether a bigger pool raises it in practice. It doesn't (lesson 2).</p>
+        </article>
+        <article class="stp" data-s="3">
+          <span class="n">3</span>
+          <h3>A source selector picks the likely sources</h3>
+          <p>A <b>4B-parameter open-weight model</b> reads the target and, for each candidate, only its title and the opening of its abstract. It gives each candidate a probability of being a source, and the top 3 go on to side-by-side comparison.</p>
+          <p>It needs no candidate full text and costs about <b>$0.00007 per paper</b>. On PAN200 it lifts Hit@1 from 0.640 to 0.825. It was not trained on these benchmarks.</p>
+        </article>
+      </div>
+    </div>
+
+    <div class="presets" id="presets">
+      <div class="preset-l" data-reveal>
+        <h3>Two settings: Flash and Max</h3>
+        <p><b>v2 Flash</b> (redflag-retr-v2-flash) is the default when throughput matters. <b>v2 Max</b> (redflag-retr-v2-max) spends about three times as many searches on long papers, and it is the one we will keep improving. The two differ only in how first-stage queries are drawn from the paper.</p>
+        <div class="seg" role="group" aria-label="Choose a setting">
+          <button type="button" data-preset="flash" aria-pressed="true">v2 Flash</button>
+          <button type="button" data-preset="max" aria-pressed="false">v2 Max</button>
+        </div>
+      </div>
+      <div class="pgrid" data-reveal style="--d:80ms">
+        <div class="pcell"><span>Hit@3, PAN200</span><div><b class="num" data-p="pan">0.910</b><div class="meter"><i data-pm="pan" style="width:91%"></i></div><em>Both settings tie</em></div></div>
+        <div class="pcell"><span>Hit@3, 41 full-length synthetic cases</span><div><b class="num" data-p="s41">0.537</b><div class="meter"><i data-pm="s41" style="width:53.7%"></i></div><em data-p="s41n">Max finds one more case</em></div></div>
+        <div class="pcell"><span>Time per full-length paper (median)</span><div><b class="num" data-p="t">≈ 6.2 s</b><div class="meter"><i data-pm="t" style="width:33.9%"></i></div><em data-p="days">≈ 3.1 days for 43,000 papers</em></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block field" id="results" aria-labelledby="res-h">
+  <div class="wrap">
+    <div class="sec-head" data-reveal="head">
+      <div><span class="eyebrow">Results</span><h2 id="res-h">200 rewritten papers, one library of 2.92M</h2></div>
+      <p>PAN200 is the public test set of the PAN 2026 Generative Plagiarism Detection task. Each query is a full paper produced by heavily rewriting one or more arXiv papers. Every system searches the largest library it can use in practice; none gets a small pool that is known to hold the answers.</p>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Metric" id="tabs">
+      <button role="tab" aria-selected="false" data-m="h1">Hit@1</button>
+      <button role="tab" aria-selected="true" data-m="h3">Hit@3</button>
+      <button role="tab" aria-selected="false" data-m="r3">Recall@3</button>
+      <button role="tab" aria-selected="false" data-m="mrr">MRR</button>
+      <button role="tab" aria-selected="false" data-m="nd">nDCG@10</button>
+    </div>
+    <div class="res">
+      <div class="panel" data-reveal>
+        <h3 id="bars-h">Hit@3</h3>
+        <p class="sub">PAN200, open domain, n = 200. Higher is better.</p>
+        <div class="bars" id="bars" role="img" aria-labelledby="bars-h"></div>
+        <p class="metric-def" id="mdef"></p>
+      </div>
+      <div class="panel" data-reveal style="--d:100ms">
+        <h3>Accuracy against time</h3>
+        <p class="sub">Hit@3 against median seconds per query (log scale). Hover a point for details.</p>
+        <div class="scatter" id="scatter"></div>
+      </div>
+    </div>
+    <p class="fn">Times are medians per query. For v2, each query runs as a fresh process on one 16 GB Mac with 12 workers, and the selector's steady-state time on one RTX A5500 GPU is added (≈ means the sum of two measured parts). redflag-v1 and CMU Paper Reviewer were timed in earlier PAN200 runs; v1's time counts its 187 successful queries. JLP is our adaptation of the PAN 2026 system by Cody, Panzitt and Cox, re-scoring Flash's 16 candidates, so its time includes Flash's search. Paperclip is a commercial full-text search service queried once with title and abstract; its time includes the free plan's rate limit. Per its terms we report only aggregate metrics. With n = 200, differences under about 8–10 points at Hit@3 are inside the confidence intervals.</p>
+  </div>
+</section>
+
+<section class="block field" id="selector" aria-labelledby="sel-h">
+  <div class="wrap">
+    <div class="sec-head" data-reveal="head">
+      <div><span class="eyebrow">Where the gain comes from</span><h2 id="sel-h">A small judgment over a short list</h2></div>
+      <p>The selector adds 10 points of Hit@3 for about $0.00007 per paper. Re-scoring the same 16 candidates with a dense-hybrid reranker adds 1 point at about 34 times the spend.</p>
+    </div>
+    <div class="sel">
+      <div class="panel" id="track-panel" data-reveal>
+        <h3>Hit@3 on PAN200, v2 Flash</h3>
+        <p class="sub">The first stage alone, then with the selector, against the ceiling of the 16-candidate pool.</p>
+        <div class="track" id="track">
+          <div class="seg2" data-w="91.0"></div>
+          <div class="seg1" data-w="81.0"></div>
+          <div class="tick l" style="left:82%"><span>JLP on the same 16: 0.820</span></div>
+          <div class="tick r amber" style="left:91.5%"><span>Ceiling 0.915</span></div>
+        </div>
+        <div class="track-axis"><span>0</span><span>0.5</span><span>1.0</span></div>
+        <div class="legend"><span><i style="background:var(--teal-3)"></i>First stage alone 0.810</span><span><i style="background:var(--cyan)"></i>+ selector 0.910</span></div>
+        <p class="fn">Only one PAN200 query has a source in the pool but outside the top 3, so a better selector on this pool could add half a point at most.</p>
+      </div>
+      <div class="panel" id="spend" data-reveal style="--d:100ms">
+        <h3>Spend per paper</h3>
+        <p class="sub">US dollars, log scale. List prices; GPU at $0.36 per hour.</p>
+        <div class="spend">
+          <div class="sp ours"><span class="nm">v2 selector</span><div class="tr"><div class="fl" data-v="0.00007"></div><span class="v">$0.00007</span></div></div>
+          <div class="sp"><span class="nm">redflag-v1</span><div class="tr"><div class="fl" data-v="0.0013"></div><span class="v">$0.0013</span><span class="note">19×</span></div></div>
+          <div class="sp"><span class="nm">JLP rerank</span><div class="tr"><div class="fl" data-v="0.002"></div><span class="v">$0.002</span><span class="note">34×</span></div></div>
+          <div class="sp hot"><span class="nm">CMU Paper Reviewer</span><div class="tr"><div class="fl" data-v="0.12"></div><span class="v">$0.12</span><span class="note">1,700×</span></div></div>
+        </div>
+        <p class="fn">The web-search row extrapolates to about $5,200 for a 43,000-submission conference. The selector reads 16 short descriptors, so it needs no candidate full text.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block field" id="long" aria-labelledby="long-h">
+  <div class="wrap">
+    <div class="sec-head" data-reveal="head">
+      <div><span class="eyebrow">The hard part</span><h2 id="long-h">Long papers hide the reuse deep inside</h2></div>
+      <p>PAN200 queries are short. Real submissions are long, and a launderer can put reused blocks anywhere. Our own benchmark had hidden a blind spot here.</p>
+    </div>
+    <div class="doc-wrap" data-reveal="pic">
+      <div class="doc-ctl">
+        <p id="doc-say">An earlier version of our first stage only read about the first 15% of a long paper. Every one of our 41 synthetic cases had reuse outside that window.</p>
+        <div class="seg" role="group" aria-label="Query window">
+          <button type="button" data-win="old" aria-pressed="true">Earlier window</button>
+          <button type="button" data-win="max" aria-pressed="false">v2 Max</button>
+        </div>
+      </div>
+      <div class="docs" id="docs" aria-hidden="true"></div>
+      <div class="doc-axis"><span>Start of paper</span><span>End</span></div>
+    </div>
+    <div class="doc-stats">
+      <div class="dstat wine" data-reveal><b class="num">41 / 41</b><span>synthetic cases with at least one reused block outside the old window; 5 with all of it outside</span></div>
+      <div class="dstat" data-reveal style="--d:80ms"><b class="num" data-count="0.561" data-dp="3">0.561</b><span>Hit@3 for v2 Max on the 41 cases (Flash: 0.537). Still our weakest set.</span></div>
+      <div class="dstat" data-reveal style="--d:160ms"><b class="num">≈ 18.3 s</b><span>median per full-length paper for Max, against ≈ 6.2 s for Flash</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="block field" id="lessons" aria-labelledby="les-h">
+  <div class="wrap">
+    <div class="sec-head" data-reveal="head">
+      <div><span class="eyebrow">Negative results</span><h2 id="les-h">What went wrong on the way</h2></div>
+      <p>Most of what we learned came from things that did not work. Each lesson here moved our numbers by more than many of the ideas we tried.</p>
+    </div>
+    <div class="lessons">
+      <details class="lesson" data-reveal open>
+        <summary><span class="ix">01</span><div><h3>An index merge quietly lowered recall</h3><p class="hook">Same code, same settings, fewer sources found.</p></div><span class="pm" aria-hidden="true">+</span></summary>
+        <div class="body">
+          <div class="ba"><span class="dn">Top-16 pool <b>0.920 → 0.900</b></span><span class="dn">Hit@1 <b>0.805 → 0.785</b></span></div>
+          <p>We merged the main index and six supplements into one. Two explanations failed: the settings were identical, and searching deeper made the pool worse (0.880). The cause was BM25 document-length normalisation computed separately in each shard. A library-wide fix lifted the pool to 0.945 and Hit@3 to 0.935, but it lowered Hit@1 and doubled first-stage time, so neither setting uses it yet.</p>
+          <p class="moral">An infrastructure change needs the same before-and-after test as a method change.</p>
+        </div>
+      </details>
+      <details class="lesson" data-reveal style="--d:60ms">
+        <summary><span class="ix">02</span><div><h3>A bigger pool raised the ceiling and lowered accuracy</h3><p class="hook">More candidates gave the selector more ways to be wrong.</p></div><span class="pm" aria-hidden="true">+</span></summary>
+        <div class="body">
+          <div class="ba"><span class="up">64 candidates: ceiling <b>+5.5 pts</b></span><span class="dn">Hit@1 <b>−14 pts</b></span><span class="dn">Recall@3 <b>−16 pts</b></span><span>GPU <b>4.7×</b></span></div>
+          <p>Going the other way did not help either. With 8 candidates, Hit@1 fell 5 points and GPU time dropped only about 20%. The selector was not more accurate with fewer distractors (85.0% correct when a source was in the pool, against 87.2% with 16).</p>
+          <p class="moral">A ceiling tells you how much you could gain, not whether the next stage can use it.</p>
+        </div>
+      </details>
+      <details class="lesson" data-reveal style="--d:120ms">
+        <summary><span class="ix">03</span><div><h3>Reranking a large pool bought almost nothing</h3><p class="hook">14 hours of fetching and 3–4 GPU-hours for one point.</p></div><span class="pm" aria-hidden="true">+</span></summary>
+        <div class="body">
+          <div class="ba"><span class="up">JLP, interleave <b>+0.010</b> Hit@3</span><span class="dn">Dense only <b>−0.060</b></span><span class="dn">Unit-level BM25 <b>−0.215</b> Hit@1</span></div>
+          <p>We reranked the first stage's full pool (median 268 candidates) with four scorers. All four needed the full text of about 40,000 candidate documents. A dense reranker we tried later needed a median of about 100 seconds per paper on a GPU, so we stopped it.</p>
+          <p class="moral">Spend compute on a strong judgment over a small pool, not on reranking a large one.</p>
+        </div>
+      </details>
+      <details class="lesson" data-reveal style="--d:180ms">
+        <summary><span class="ix">04</span><div><h3>Our own benchmark had a blind spot</h3><p class="hook">Short queries hid a window that covered 15% of a long paper.</p></div><span class="pm" aria-hidden="true">+</span></summary>
+        <div class="body">
+          <p>On PAN200 the earlier first stage looked fine. On full-length papers it only saw the opening. We found the problem only after building 41 synthetic full-length cases with reuse placed throughout the text. <a href="#long">See the long-paper section.</a></p>
+          <p class="moral">Test on inputs shaped like the real ones, not just the public benchmark.</p>
+        </div>
+      </details>
+      <details class="lesson" data-reveal style="--d:240ms">
+        <summary><span class="ix">05</span><div><h3>We mislabeled a closed-pool result</h3><p class="hook">An early table called title search the best system at rank 1.</p></div><span class="pm" aria-hidden="true">+</span></summary>
+        <div class="body">
+          <p>That row came from a run whose index had been built from the benchmark's own small source corpus, which contains every answer by construction. Its notes called it open-domain. We caught it by tracing every row back to the manifest of the index it queried, rescored it on the 3.2M-record arXiv metadata index (Hit@3 0.660), and dropped every closed-pool row.</p>
+          <p class="moral">The label on a result is not evidence of its search space.</p>
+        </div>
+      </details>
+      <details class="lesson" data-reveal style="--d:300ms">
+        <summary><span class="ix">06</span><div><h3>Web search was the most expensive and among the weakest</h3><p class="hook">About $0.12 a query for Hit@3 0.395.</p></div><span class="pm" aria-hidden="true">+</span></summary>
+        <div class="body">
+          <p>We extracted the literature-search step of the CMU Paper Reviewer agent: one LLM call writes queries, and a web-search API runs them. Web results often point to pages that cannot be matched to an arXiv source, and a few short queries cannot carry the detail that full-text matching uses. The full agent completed one paper in 1,827 seconds and ranked the true source 17th.</p>
+          <p class="moral">For this task, what you search matters as much as how you search it.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="block field" id="next" aria-labelledby="next-h">
+  <div class="wrap">
+    <div class="sec-head" data-reveal="head">
+      <div><span class="eyebrow">Headroom</span><h2 id="next-h">One problem is solved, two are not</h2></div>
+      <p>For one source per paper, v2 is at its ceiling. Finding every source and handling long papers are where the work goes next.</p>
+    </div>
+    <div class="rings" id="rings">
+      <div class="ring" data-reveal data-v="0.910" data-c="0.915">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="bgc" cx="60" cy="60" r="50"/><circle class="cap" cx="60" cy="60" r="50"/><circle class="val" cx="60" cy="60" r="50"/></svg>
+        <div><span class="big num">0.910 / 0.915</span><h3>At least one source</h3><p>Hit@3 against the ceiling of the 16 candidates. One confirmed source is enough to open a case.</p></div>
+      </div>
+      <div class="ring hard" data-reveal style="--d:80ms" data-v="0.569" data-c="0.651">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="bgc" cx="60" cy="60" r="50"/><circle class="cap" cx="60" cy="60" r="50"/><circle class="val" cx="60" cy="60" r="50"/></svg>
+        <div><span class="big num">0.569 / 0.651</span><h3>Every source</h3><p>Recall@3 against the share of sources that reach the pool. A PAN200 paper has 3.07 sources on average.</p></div>
+      </div>
+      <div class="ring hard" data-reveal style="--d:160ms" data-v="0.561" data-c="0.561">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="bgc" cx="60" cy="60" r="50"/><circle class="cap" cx="60" cy="60" r="50"/><circle class="val" cx="60" cy="60" r="50"/></svg>
+        <div><span class="big num">0.561</span><h3>Long papers</h3><p>Hit@3 for v2 Max on 41 synthetic full-length cases, where reuse sits deep in the text.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block field" id="withheld" aria-labelledby="wh-h">
+  <div class="wrap">
+    <div class="sec-head" data-reveal="head">
+      <div><span class="eyebrow">Fine print</span><h2 id="wh-h">What we publish, and what we keep back</h2></div>
+      <p>A screening system works partly because authors do not know exactly how to evade it. We name and cite every third-party method, and we keep the details of our own pipeline private.</p>
+    </div>
+    <div class="cols">
+      <div class="box" data-reveal>
+        <h3>We keep private</h3>
+        <ul>
+          <li>How first-stage queries are built from a paper: which parts are used, term selection, weighting and how results are merged.</li>
+          <li>Which model the selector is, beyond its size, and its prompt and settings.</li>
+          <li>How the full-text index is built and maintained, beyond the length-normalisation finding above.</li>
+          <li>Thresholds, code and our internal synthetic cases, until after the review period of the conference we screen.</li>
+        </ul>
+      </div>
+      <div class="box paper" data-reveal style="--d:80ms">
+        <h3>Limits of these numbers</h3>
+        <ul>
+          <li>The comparison rests on one public benchmark of machine-generated rewrites. Real laundering may look different.</li>
+          <li>There is no held-out split, and the comparison systems got no comparable tuning, so our numbers are likely optimistic.</li>
+          <li>Every true source here is in the library. In practice a source may be outside arXiv or newer than our snapshot.</li>
+          <li>Retrieval is not detection. A retrieved source is a lead for a person to examine, not a finding about any paper.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block field" aria-label="More in this series" style="padding-top:0">
+  <div class="wrap pager">
+    <a href="../overview/"><span>← Part 0</span><b>How a paper gets a red flag</b></a>
+    <div class="nx"><span>Part 2 · in progress</span><b>Comparing side by side</b></div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-mark">
+      <div class="big" aria-hidden="true"><span class="r">Red</span>-flag <span class="w2">Research</span></div>
+      <div class="credit">
+        <a class="org-logo" href="https://openlair.github.io/" tabindex="-1" aria-hidden="true"><img src="../../icons/openlair-logo.png" alt="" width="48" height="48"></a>
+        <p>By <b><a href="https://leozz04.github.io/" target="_blank" rel="noopener">Ziqian Zhang</a></b><br>a research project of <a href="https://openlair.github.io/">OpenLAIR</a></p>
+      </div>
+    </div>
+    <p class="fine">Labels are leads for human review, not findings of misconduct. <a href="../../">Home</a> · <a href="../overview/">Part 0: How a paper gets a red flag</a> · <a href="../../live/">Live page</a> · <a href="../../feedback.html">Send feedback</a> · <a href="../../privacy.html">Privacy policy</a></p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  document.documentElement.classList.add('js');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const flagSvg = '<svg aria-hidden="true"><use href="#mflag"/></svg>';
+
+  // Every number on the page, from our PAN200 evaluation (2026-10-28).
+  const METHODS = [
+    { n: 'v2 Flash', cls: 'ours', h1: .825, h3: .910, r3: .569, mrr: .867, nd: .675, t: 3.6, tl: '≈ 3.6 s' },
+    { n: 'v2 Max', cls: 'ours', h1: .810, h3: .910, r3: .572, mrr: .857, nd: .674, t: 3.7, tl: '≈ 3.7 s' },
+    { n: 'JLP (re-scores Flash’s 16)', h1: .640, h3: .820, r3: .444, mrr: .733, nd: .574, t: 25.8, tl: '≈ 25.8 s' },
+    { n: 'redflag-v1', cls: 'v1', h1: .695, h3: .745, r3: .387, mrr: .723, nd: .474, t: 44.7, tl: '44.7 s' },
+    { n: 'Paperclip', h1: .600, h3: .715, r3: .301, mrr: .677, nd: .422, t: 2.5, tl: '2.5 s' },
+    { n: 'BM25 (title + abstract)', h1: .505, h3: .660, r3: .298, mrr: .593, nd: .380, t: 9.0, tl: '9.0 s' },
+    { n: 'CMU Paper Reviewer', h1: .305, h3: .395, r3: .131, mrr: .388, nd: .198, t: 41.3, tl: '41.3 s' },
+    { n: 'BM25 (full text)', h1: .160, h3: .235, r3: .093, mrr: .217, nd: .126, t: 0.95, tl: '0.95 s' },
+  ];
+  const DEFS = {
+    h1: ['Hit@1', 'The share of papers whose first-ranked result is a true source.'],
+    h3: ['Hit@3', 'The share of papers with at least one true source in the top 3. This is what screening needs: one confirmed source opens a case.'],
+    r3: ['Recall@3', 'The share of a paper’s true sources that land in the top 3, averaged over papers. PAN200 papers have 3.07 sources on average, so 3 slots cannot hold them all.'],
+    mrr: ['MRR', 'The mean of 1 / rank of the first true source (0 if none is returned).'],
+    nd: ['nDCG@10', 'Ranking quality over the top 10, with every true source counted, including those the system never returned.'],
+  };
+
+  /* ---------- reveals and count-ups ---------- */
+  const fmt = (v, dp, pre = '', suf = '') => pre + v.toFixed(dp) + suf;
+  function countUp(el) {
+    const to = parseFloat(el.dataset.count), dp = +el.dataset.dp || 0;
+    const pre = el.dataset.prefix || '', suf = el.dataset.suffix || '';
+    if (reduce) { el.textContent = fmt(to, dp, pre, suf); return; }
+    const t0 = performance.now(), dur = 1400;
+    const tick = (t) => {
+      const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 4);
+      el.textContent = fmt(to * e, dp, pre, suf);
+      if (k < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+  const onIn = new Map();
+  const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => {
+    for (const e of es) {
+      if (!e.isIntersecting) continue;
+      e.target.classList.add('is-in');
+      $$('[data-count]', e.target).forEach(countUp);
+      if (e.target.matches('[data-count]')) countUp(e.target);
+      const f = onIn.get(e.target); if (f) f();
+      io.unobserve(e.target);
+    }
+  }, { threshold: .18, rootMargin: '0px 0px -6% 0px' }) : null;
+  const watch = (el, f) => { if (f) onIn.set(el, f); io ? io.observe(el) : (el.classList.add('is-in'), f && f()); };
+  $$('[data-reveal]').forEach((el) => { if (!reduce && el.getBoundingClientRect().top > innerHeight) el.classList.add('pre'); watch(el); });
+
+  /* ---------- reading progress ---------- */
+  const bar = $('#progress');
+  const prog = () => {
+    const h = document.documentElement, max = h.scrollHeight - h.clientHeight;
+    bar.style.transform = `scaleX(${max > 0 ? h.scrollTop / max : 0})`;
+  };
+  addEventListener('scroll', prog, { passive: true }); prog();
+
+  /* ---------- hero funnel (canvas) ---------- */
+  (() => {
+    const cv = $('#funnel'), ctx = cv.getContext('2d');
+    const chips = $$('.chip'), clock = $('#fclock');
+    let W, H, dpr, dots = [], picks = [], slots = [];
+    const N = 520, LOOP = 7600;
+    function rnd(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+    function layout() {
+      dpr = Math.min(2, devicePixelRatio || 1);
+      const r = cv.getBoundingClientRect(); W = r.width; H = r.height;
+      cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const R = rnd(7); dots = [];
+      const left = W * .06, right = W * .62, top = H * .17, bot = H * .86;
+      for (let i = 0; i < N; i++) dots.push({ x: left + R() * (right - left), y: top + R() * (bot - top), s: 1.2 + R() * 1.8, ph: R() * 6.28 });
+      picks = []; const used = new Set();
+      while (picks.length < 16) { const i = Math.floor(R() * N); if (!used.has(i)) { used.add(i); picks.push(i); } }
+      const sx = W * .74, sw = W * .2, sy = H * .17, sh = (H * .69) / 16;
+      slots = picks.map((_, k) => ({ x: sx, y: sy + k * sh, w: sw, h: sh - 4 }));
+    }
+    const ease = (k) => 1 - Math.pow(1 - Math.max(0, Math.min(1, k)), 3);
+    const TOP = [2, 9, 13];
+    function frame(now) {
+      const t = reduce ? LOOP * .62 : now % LOOP, k = t / LOOP;
+      ctx.clearRect(0, 0, W, H);
+      const scan = ease((k - .04) / .26);           // beam sweep 4%–30%
+      const fly = ease((k - .30) / .18);            // 16 fly out 30%–48%
+      const pick = ease((k - .52) / .12);           // 3 chosen 52%–64%
+      const fade = ease((k - .9) / .1);             // reset 90%–100%
+      const stage = k < .3 ? 0 : k < .52 ? 1 : 2;
+      chips.forEach((c, i) => c.classList.toggle('on', i === stage && fade < .5));
+      clock.textContent = '≈ ' + (Math.min(1, k / .64) * 3.6).toFixed(1) + ' s';
+      const bx = W * .04 + scan * W * .62;
+      if (scan > 0 && scan < 1) {
+        const g = ctx.createLinearGradient(bx - 40, 0, bx + 6, 0);
+        g.addColorStop(0, 'rgba(255,244,242,0)'); g.addColorStop(1, 'rgba(255,244,242,.22)');
+        ctx.fillStyle = g; ctx.fillRect(bx - 40, H * .14, 46, H * .75);
+        ctx.fillStyle = 'rgba(255,244,242,.9)'; ctx.fillRect(bx, H * .14, 1.5, H * .75);
+      }
+      const pickSet = new Map(picks.map((p, i) => [p, i]));
+      for (let i = 0; i < N; i++) {
+        if (pickSet.has(i) && fly > 0) continue;
+        const d = dots[i], tw = reduce ? .55 : .42 + .25 * Math.sin(now / 900 + d.ph);
+        const lit = scan > 0 && d.x < bx && d.x > bx - 60 ? .5 : 0;
+        ctx.globalAlpha = (tw + lit) * (1 - .55 * fly * (1 - fade));
+        ctx.fillStyle = '#ffdad5'; ctx.fillRect(d.x, d.y, d.s, d.s);
+      }
+      ctx.globalAlpha = 1;
+      // the 16 candidates: dot -> card
+      picks.forEach((p, j) => {
+        const d = dots[p], s = slots[j];
+        const lk = ease((k - .30 - j * .006) / .17) * (1 - fade);
+        if (lk <= 0) {
+          if (scan > 0 && d.x < bx) { ctx.fillStyle = '#fff4f2'; ctx.globalAlpha = .9; ctx.fillRect(d.x - .5, d.y - .5, 3, 3); ctx.globalAlpha = 1; }
+          return;
+        }
+        const x = d.x + (s.x - d.x) * lk, y = d.y + (s.y - d.y) * lk;
+        const w = 3 + (s.w - 3) * lk, h = 3 + (s.h - 3) * lk;
+        const chosen = TOP.includes(j) ? pick * (1 - fade) : 0, dim = pick * (1 - fade) * (TOP.includes(j) ? 0 : 1);
+        ctx.globalAlpha = 1 - .55 * dim;
+        ctx.fillStyle = chosen > .5 ? '#fff4f2' : 'rgba(255,244,242,.18)';
+        roundRect(x, y, w, h, Math.min(4, h / 2)); ctx.fill();
+        if (lk > .9) {
+          // probability bar inside each card
+          const p = TOP.includes(j) ? [.94, .81, .72][TOP.indexOf(j)] : .05 + ((j * 37) % 23) / 100;
+          ctx.fillStyle = chosen > .5 ? '#b3261e' : 'rgba(255,244,242,.35)';
+          roundRect(x + 4, y + h / 2 - 1.5, (w - 8) * p * pick, 3, 1.5); ctx.fill();
+        }
+        if (chosen > .5) {
+          ctx.fillStyle = '#fff4f2'; ctx.globalAlpha = chosen;
+          ctx.font = '600 11px IBM Plex Sans, system-ui'; ctx.textBaseline = 'middle';
+          ctx.fillText('⚑', x - 16, y + h / 2);
+        }
+        ctx.globalAlpha = 1;
+      });
+      if (!reduce) requestAnimationFrame(frame);
+    }
+    function roundRect(x, y, w, h, r) {
+      ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+    }
+    layout(); addEventListener('resize', () => { layout(); if (reduce) frame(0); });
+    requestAnimationFrame(frame);
+  })();
+
+  /* ---------- how it works: sticky stage driven by the steps ---------- */
+  (() => {
+    const stage = $('#stage'), lib = $('#lib'), cands = $('#cands');
+    const cells = 112, hits = new Set([3, 17, 22, 31, 38, 44, 51, 59, 63, 70, 76, 83, 89, 96, 101, 108]);
+    lib.innerHTML = Array.from({ length: cells }, (_, i) => `<i class="${hits.has(i) ? 'hit' : ''}"></i>`).join('');
+    const probs = [.94, .81, .72, .31, .22, .17, .12, .09, .07, .06, .05, .04, .03, .03, .02, .01];
+    cands.innerHTML = probs.map((p, i) =>
+      `<div class="cand${i < 3 ? ' top' : ''}"><span class="bar" data-w="${p * 100}"></span>${flagSvg}<span class="t"><span class="ghost-line" style="width:${55 + ((i * 29) % 40)}%"></span></span><span class="p">${p.toFixed(2)}</span></div>`).join('');
+    const LBL = { 1: ['2.92M', 'full-text arXiv papers'], 2: ['16', 'candidates kept'], 3: ['3', 'likely sources, by probability'] };
+    let cur = 0, pickT;
+    function set(s) {
+      if (s === cur) return; cur = s;
+      stage.dataset.step = s;
+      $('#stage-n').textContent = LBL[s][0]; $('#stage-t').textContent = LBL[s][1];
+      $$('.stp').forEach((el) => el.classList.toggle('on', +el.dataset.s === s));
+      clearTimeout(pickT); cands.classList.remove('picked');
+      $$('.bar', cands).forEach((b) => b.style.width = s === 3 ? b.dataset.w + '%' : '0');
+      if (s === 3) pickT = setTimeout(() => cands.classList.add('picked'), reduce ? 0 : 900);
+    }
+    set(1);
+    if ('IntersectionObserver' in window) {
+      const so = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && set(+e.target.dataset.s)), { rootMargin: '-45% 0px -45% 0px' });
+      $$('.stp').forEach((el) => so.observe(el));
+    }
+  })();
+
+  /* ---------- Flash / Max ---------- */
+  (() => {
+    const P = {
+      flash: { pan: '0.910', s41: '0.537', s41n: '22 of 41 cases', t: '≈ 6.2 s', tw: 6.2, days: '≈ 3.1 days for 43,000 papers' },
+      max: { pan: '0.910', s41: '0.561', s41n: '23 of 41 cases', t: '≈ 18.3 s', tw: 18.3, days: '≈ 9.1 days for 43,000 papers' },
+    };
+    const btns = $$('[data-preset]');
+    function set(k) {
+      const p = P[k];
+      btns.forEach((b) => b.setAttribute('aria-pressed', b.dataset.preset === k));
+      $$('[data-p]').forEach((el) => el.textContent = p[el.dataset.p]);
+      $('[data-pm="pan"]').style.width = parseFloat(p.pan) * 100 + '%';
+      $('[data-pm="s41"]').style.width = parseFloat(p.s41) * 100 + '%';
+      $('[data-pm="t"]').style.width = (p.tw / 18.3) * 100 + '%';
+    }
+    btns.forEach((b) => b.addEventListener('click', () => set(b.dataset.preset)));
+    set('flash');
+  })();
+
+  /* ---------- results: sorted bars ---------- */
+  (() => {
+    const box = $('#bars'), ROW = 46;
+    box.style.height = METHODS.length * ROW + 'px';
+    const rows = METHODS.map((m) => {
+      const el = document.createElement('div');
+      el.className = 'brow ' + (m.cls || '');
+      el.innerHTML = `<span class="nm" title="${m.n}">${m.n}</span><span class="tr"><span class="fl"></span></span><span class="vl num">–</span>`;
+      box.appendChild(el); return { m, el };
+    });
+    let metric = 'h3', shown = false;
+    function draw() {
+      const order = [...rows].sort((a, b) => b.m[metric] - a.m[metric]);
+      order.forEach((r, i) => {
+        r.el.style.top = i * ROW + 'px';
+        $('.fl', r.el).style.width = shown ? r.m[metric] * 100 + '%' : '0';
+        $('.vl', r.el).textContent = r.m[metric].toFixed(3);
+      });
+      $('#bars-h').textContent = DEFS[metric][0];
+      $('#mdef').textContent = DEFS[metric][1];
+    }
+    $$('#tabs button').forEach((b) => b.addEventListener('click', () => {
+      metric = b.dataset.m;
+      $$('#tabs button').forEach((x) => x.setAttribute('aria-selected', x === b));
+      draw();
+    }));
+    draw();
+    watch(box.closest('.panel'), () => { shown = true; requestAnimationFrame(draw); });
+  })();
+
+  /* ---------- results: speed against accuracy ---------- */
+  (() => {
+    const W = 560, H = 400, L = 48, R = 20, T = 20, B = 44;
+    const x = (s) => L + (Math.log10(s) - Math.log10(.5)) / (Math.log10(80) - Math.log10(.5)) * (W - L - R);
+    const y = (v) => T + (1 - (v - .1) / .9) * (H - T - B);
+    const ns = 'http://www.w3.org/2000/svg';
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Scatter plot of Hit@3 against median seconds per query.">`;
+    for (const v of [.2, .4, .6, .8, 1]) svg += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${v.toFixed(1)}</text>`;
+    for (const s of [1, 3, 10, 30]) svg += `<line class="gl" y1="${T}" y2="${H - B}" x1="${x(s)}" x2="${x(s)}"/><text x="${x(s)}" y="${H - B + 18}" text-anchor="middle">${s} s</text>`;
+    svg += `<line class="ax" x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}"/>`;
+    svg += `<rect class="sweet" x="${L + 2}" y="${y(1) + 2}" width="${x(6) - L - 2}" height="${y(.85) - y(1) - 2}" rx="10"/><text class="sweet-t" x="${L + 12}" y="${y(.85) + 18}">fast and accurate</text>`;
+    svg += `<text x="${(L + W - R) / 2}" y="${H - 6}" text-anchor="middle">median seconds per query (log)</text>`;
+    const off = { 'v2 Flash': [-12, -12, 'end'], 'v2 Max': [12, 16, 'start'], 'Paperclip': [12, 4, 'start'], 'BM25 (full text)': [12, 4, 'start'], 'JLP (re-scores Flash’s 16)': [-12, -10, 'end'], 'redflag-v1': [-12, 4, 'end'], 'CMU Paper Reviewer': [-12, 4, 'end'], 'BM25 (title + abstract)': [12, 4, 'start'] };
+    METHODS.forEach((m, i) => {
+      const [dx, dy, a] = off[m.n] || [12, 4, 'start'];
+      const fill = m.cls === 'ours' ? 'var(--cyan)' : m.cls === 'v1' ? 'var(--teal-3)' : 'var(--text-2)';
+      const lab = m.n.startsWith('JLP') ? 'JLP' : m.n;
+      svg += `<g class="pt ${m.cls || ''}" style="opacity:0;transform:translateY(12px);transition:opacity .6s var(--ease) ${i * 90}ms,transform .8s var(--ease) ${i * 90}ms"><title>${m.n}: Hit@3 ${m.h3.toFixed(3)}, ${m.tl} per query</title><circle class="dot" cx="${x(m.t)}" cy="${y(m.h3)}" r="${m.cls === 'ours' ? 8 : 6}" fill="${fill}"/><text class="lab" x="${x(m.t) + dx}" y="${y(m.h3) + dy}" text-anchor="${a}">${lab}</text></g>`;
+    });
+    svg += '</svg>';
+    const host = $('#scatter'); host.innerHTML = svg;
+    watch(host.closest('.panel'), () => $$('.pt', host).forEach((g) => { g.style.opacity = 1; g.style.transform = 'none'; }));
+  })();
+
+  /* ---------- selector track and spend ---------- */
+  (() => {
+    const panel = $('#track-panel');
+    watch(panel, () => { panel.classList.add('in'); $$('[data-w]', $('#track')).forEach((s) => s.style.width = s.dataset.w + '%'); });
+    const sp = $('#spend'), lo = Math.log10(0.00003), hi = Math.log10(0.2);
+    watch(sp, () => $$('.fl', sp).forEach((f, i) => setTimeout(() => {
+      f.style.width = Math.max(26, (Math.log10(+f.dataset.v) - lo) / (hi - lo) * 100) + '%';
+    }, reduce ? 0 : i * 140)));
+  })();
+
+  /* ---------- long papers: query window over five documents ---------- */
+  (() => {
+    // Illustration only: block positions are made up, not taken from any case.
+    const DOCS = [[[.08, .05], [.42, .06], [.77, .05]], [[.31, .07], [.64, .05]], [[.12, .04], [.55, .08], [.88, .05]], [[.47, .06], [.71, .07]], [[.22, .05], [.83, .06]]];
+    const host = $('#docs');
+    host.innerHTML = DOCS.map((d) => `<div class="doc"><span class="lines"></span>${d.map(([a, w]) => `<span class="blk" style="left:${a * 100}%;width:${w * 100}%" data-a="${a}" data-w="${w}"></span>`).join('')}<span class="win"></span></div>`).join('');
+    const SAY = {
+      old: 'An earlier version of our first stage only read about the first 15% of a long paper. Every one of our 41 synthetic cases had reuse outside that window.',
+      max: 'v2 Max spends about three times as many searches as Flash on a long paper, so reused blocks deep in the text can still be found. It is slower: about 18.3 s per paper.',
+    };
+    let mode = 'old', sweepT;
+    function apply() {
+      $$('[data-win]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.win === mode));
+      $('#doc-say').textContent = SAY[mode];
+      clearInterval(sweepT);
+      $$('.doc', host).forEach((doc) => {
+        const win = $('.win', doc);
+        if (mode === 'old') {
+          win.style.width = '15%';
+          $$('.blk', doc).forEach((b) => b.classList.toggle('seen', +b.dataset.a < .15));
+        } else {
+          win.style.width = '100%';
+          $$('.blk', doc).forEach((b, i) => setTimeout(() => b.classList.add('seen'), reduce ? 0 : 500 + i * 180));
+        }
+      });
+    }
+    $$('[data-win]').forEach((b) => b.addEventListener('click', () => { mode = b.dataset.win; apply(); }));
+    $$('.win', host).forEach((w) => w.style.width = '0');
+    watch(host.closest('.doc-wrap'), () => setTimeout(apply, reduce ? 0 : 200));
+  })();
+
+  /* ---------- headroom rings ---------- */
+  (() => {
+    const C = 2 * Math.PI * 50;
+    $$('.ring').forEach((r) => {
+      const cap = $('.cap', r), val = $('.val', r);
+      [cap, val].forEach((c) => { c.style.strokeDasharray = C; c.style.strokeDashoffset = C; });
+      watch(r, () => { cap.style.strokeDashoffset = C * (1 - +r.dataset.c); val.style.strokeDashoffset = C * (1 - +r.dataset.v); });
+    });
+  })();
+})();
+</script>
+</body>
+</html>

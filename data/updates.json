@@ -2,6 +2,56 @@
   "_comment": "Newest first is computed from date. kind: announcement | stage-report | note. Entries with template: true are layout previews and must be removed before publishing. Numbers must come from the run's own records.",
   "updates": [
     {
+      "date": "2026-10-30",
+      "kind": "note",
+      "meta": "Red-flag notes · Part 0",
+      "title": "How a paper gets a red flag",
+      "summary": "The first post in a series on how the screening works: what paper laundering is, what each label means and does not mean, and the five steps from submission to a request for human review.",
+      "stats": [
+        {
+          "value": "5",
+          "label": "steps"
+        },
+        {
+          "value": "4",
+          "label": "labels"
+        },
+        {
+          "value": "$0.047",
+          "label": "model fees per paper"
+        }
+      ],
+      "link": {
+        "label": "Read Part 0",
+        "href": "blog/overview/"
+      }
+    },
+    {
+      "date": "2026-10-30",
+      "kind": "note",
+      "meta": "Red-flag notes · Part 1",
+      "title": "Finding the source",
+      "summary": "We rebuilt the step that finds candidate sources: a full-text search over 2.92M arXiv papers and a small source selector. On the public PAN200 benchmark, a true source reaches the top 3 for 91% of papers, against 74.5% before.",
+      "stats": [
+        {
+          "value": "0.910",
+          "label": "Hit@3 on PAN200"
+        },
+        {
+          "value": "12×",
+          "label": "faster retrieval"
+        },
+        {
+          "value": "2.92M",
+          "label": "full-text papers"
+        }
+      ],
+      "link": {
+        "label": "Read Part 1",
+        "href": "blog/retrieval-v2/"
+      }
+    },
+    {
       "date": "2026-10-16",
       "kind": "announcement",
       "meta": "Before Stage 1",

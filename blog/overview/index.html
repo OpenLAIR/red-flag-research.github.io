@@ -1,0 +1,1069 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How a paper gets a red flag · Red-flag Research</title>
+<meta name="description" content="What Red-flag Research looks for, what a red flag means and does not mean, and the five steps a submission goes through before a person is asked to compare it with an earlier paper.">
+<link rel="canonical" href="https://red-flag-research.org/blog/overview/">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://red-flag-research.org/blog/overview/">
+<meta property="og:site_name" content="Red-flag Research">
+<meta property="og:title" content="How a paper gets a red flag">
+<meta property="og:description" content="The five steps from submission to a request for human review, what each one costs, and where each can go wrong.">
+<meta property="og:image" content="https://red-flag-research.org/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="../../icons/favicon-48.png">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<style>
+/* Palette and type follow the homepage (index.html) and Part 1: ground and panels, teal for actions and the step in focus,
+   wine for anything that is a flag or a source, paper for the white moments, red only for the hero field. */
+:root{
+  --bg:#0b0d10; --panel:#13161b; --panel-2:#1a1e24; --step:#20252c; --line-2:#2b313a;
+  --text:#e8eaed; --text-2:#b3b9c2; --muted:#8a919c;
+  --flag:#ff5d4f;
+  --cyan:#57c7cf; --cyan-ink:#062528; --cyan-hover:#7bd6dc;
+  --teal:#0e2a2d; --teal-2:#133a3e; --teal-3:#19474c; --teal-t:#eef4f4; --teal-t2:#c9d9db;
+  --wine:#2a1113; --wine-2:#3a171a; --wine-3:#481d21; --wine-hot:#ff8a7f; --wine-t:#f6eeed; --wine-t2:#e0cfcd;
+  --paper:#ece8df; --paper-2:#e2ddd0; --paper-3:#d8d2c3; --paper-ink:#14171c; --paper-ink-2:#2c3138; --paper-ink-3:#474d56; --paper-acc:#0b5f65;
+  --hl-word:#d8d2c3; --hl-fact:#f3c9c3; --hl-fact-ink:#5a1612;
+  --field-red:#b3261e; --ink-red:#fff4f2; --btn-ink:#7a130d;
+  --card:var(--panel); --card-2:var(--panel-2); --inset-s:var(--bg);
+  --r-lg:18px; --r-md:12px; --r-sm:8px; --r-chip:10px;
+  --sans:'IBM Plex Sans',system-ui,sans-serif; --serif:'Newsreader',Georgia,serif;
+  --s-sm:13px; --s-body:16px; --s-lead:20px; --s-h3:28px; --s-h2:52px; --s-fig:88px; --s-fig-xl:112px;
+  --wrap:1360px; --gutter:32px;
+  --ease:cubic-bezier(.22,1,.36,1); --ease-soft:cubic-bezier(.33,1,.68,1);
+  --t-press:140ms; --t-hover:180ms;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{margin:0;background:var(--bg);color:var(--text);font:400 var(--s-body)/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+.num{font-variant-numeric:tabular-nums}
+.wrap{max-width:calc(var(--wrap) + 2*var(--gutter));margin:0 auto;padding:0 var(--gutter)}
+.skip{position:absolute;left:-999px;top:8px;background:var(--ink-red);color:var(--btn-ink);padding:8px 12px;border-radius:var(--r-sm);z-index:20}
+.skip:focus{left:8px}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:4px}
+.progress{position:fixed;left:0;top:0;height:3px;width:100%;transform-origin:0 50%;transform:scaleX(0);background:var(--flag);z-index:30}
+.mark{flex:none;display:block}
+.wave{transform-origin:31% 88%;transform-box:fill-box;animation:sway 4.2s ease-in-out infinite}
+@keyframes sway{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-5deg)}}
+
+.btn{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 22px;border-radius:var(--r-chip);font:600 var(--s-body)/1 var(--sans);text-decoration:none;white-space:nowrap;border:0;cursor:pointer;transition:background-color var(--t-hover) ease,transform var(--t-press) var(--ease)}
+@media (hover:hover) and (pointer:fine){.btn:hover{transform:translateY(-2px)}}
+.btn:active{transform:translateY(1px) scale(.97)}
+.btn-primary{background:var(--cyan);color:var(--cyan-ink)}
+.btn-primary:hover{background:var(--cyan-hover)}
+.is-red .btn-primary{background:var(--ink-red);color:var(--btn-ink)}
+.is-red .btn-primary:hover{background:#fff}
+.btn-ghost{background:var(--card-2);color:var(--text)}
+.btn-ghost:hover{background:var(--step)}
+.is-red .btn-ghost:hover{background:#74150f}
+.btn-sm{height:38px;padding:0 16px;font-size:var(--s-sm)}
+
+.top{position:sticky;top:0;z-index:10;background:var(--bg)}
+.topbar{display:flex;align-items:center;gap:20px;min-height:68px}
+.lockup{display:flex;align-items:center;gap:16px;min-width:0}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font:500 var(--s-lead)/1 var(--serif);letter-spacing:-.01em;white-space:nowrap}
+.tile{flex:none;width:36px;height:36px;border-radius:8px;background:var(--field-red);display:grid;place-items:center}
+.sep{flex:none;width:1px;height:28px;background:var(--line-2)}
+.crumb{margin:0;font-size:var(--s-sm);color:var(--muted);white-space:nowrap}
+.crumb a{color:var(--text-2);text-underline-offset:3px}
+.nav{display:flex;align-items:center;gap:6px;margin-left:auto}
+.nv{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 12px;border-radius:var(--r-chip);background:var(--panel-2);color:var(--text);font:500 var(--s-sm)/1 var(--sans);text-decoration:none;white-space:nowrap;transition:background-color var(--t-hover) ease}
+.nv:hover{background:var(--step)}
+
+/* hero */
+.field{background:var(--bg);color:var(--text)}
+.field.is-red{background:var(--field-red);color:var(--ink-red);--text:#fff4f2;--text-2:#ffdad5;--muted:#ffc9c2;--card:#9a1f18;--card-2:#871a14;--inset-s:#74150f}
+.hero{padding:56px 0 72px;overflow:hidden}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,min(50%,680px));gap:48px;align-items:center}
+.hero-l{container-type:inline-size;min-width:0}
+.kicker{display:inline-flex;align-items:center;gap:10px;margin:0 0 28px;font:500 var(--s-sm)/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--text-2)}
+.kicker i{width:28px;height:2px;background:currentColor;display:block}
+.poster{--hs:clamp(46px,9vw,132px);font:600 var(--hs)/.94 var(--sans);letter-spacing:-.045em;margin:0 0 32px;text-wrap:balance}
+@supports (width:1cqw){.poster{--hs:min(15cqw,132px)}}
+.question{font:400 var(--s-h3)/1.28 var(--serif);margin:0 0 32px;max-width:30ch;text-wrap:balance}
+.actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.byline{margin:24px 0 0;font-size:var(--s-sm);color:var(--muted)}
+.byline a{color:var(--text-2)}
+.journey{position:relative;margin:0;border-radius:var(--r-lg);background:var(--inset-s);aspect-ratio:1.08;max-width:100%;overflow:hidden}
+.journey canvas{display:block;width:100%;height:100%}
+.journey figcaption{position:absolute;left:20px;right:20px;bottom:16px;display:flex;justify-content:space-between;gap:12px;font-size:var(--s-sm);color:var(--muted)}
+.stage-chips{position:absolute;left:20px;top:18px;right:20px;display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:8px;background:rgba(255,244,242,.08);color:var(--muted);font:500 12px/1 var(--sans);transition:background .4s var(--ease),color .4s var(--ease)}
+.chip b{font-weight:600;font-variant-numeric:tabular-nums}
+.chip.on{background:var(--ink-red);color:var(--btn-ink)}
+
+/* sections */
+section.block{padding:72px 0}
+.sec-head{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:56px;margin-bottom:36px;align-items:end}
+.eyebrow{display:block;margin:0 0 14px;font:500 var(--s-sm)/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+h2{font:600 var(--s-h2)/1.02 var(--sans);letter-spacing:-.035em;margin:0;text-wrap:balance}
+.sec-head p{margin:0;color:var(--text-2);max-width:58ch;font-size:var(--s-lead);line-height:1.5}
+h3{font:600 var(--s-h3)/1.15 var(--sans);letter-spacing:-.02em;margin:0 0 12px;text-wrap:balance}
+.fn{font-size:var(--s-sm);color:var(--muted);margin:16px 0 0;max-width:80ch}
+.fn a{color:var(--text-2)}
+.panel{background:var(--panel);border-radius:var(--r-lg);padding:28px 28px 24px;min-width:0}
+.panel h3{font-size:var(--s-lead);margin-bottom:4px}
+.panel .sub{margin:0 0 20px;font-size:var(--s-sm);color:var(--muted)}
+.seg{display:inline-flex;padding:4px;border-radius:12px;background:var(--bg);gap:4px}
+.seg button{height:40px;padding:0 18px;border:0;border-radius:9px;background:transparent;color:var(--text-2);font:600 var(--s-sm)/1 var(--sans);cursor:pointer;transition:background .25s var(--ease),color .25s var(--ease)}
+.seg button[aria-pressed="true"]{background:var(--cyan);color:var(--cyan-ink)}
+
+/* the problem: one passage, rewritten, read two ways */
+.cmp{background:var(--paper);color:var(--paper-ink);border-radius:var(--r-lg);padding:32px 36px 28px}
+.cmp-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px}
+.cmp-top .seg{background:var(--paper-2)}
+.cmp-top .seg button{color:var(--paper-ink-2)}
+.cmp-top .seg button[aria-pressed="true"]{background:var(--paper-ink);color:var(--paper)}
+.tag{display:inline-block;padding:6px 10px;border-radius:8px;background:var(--paper-2);font:500 12px/1 var(--sans);color:var(--paper-ink-3);letter-spacing:.04em;text-transform:uppercase}
+.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.pg{background:#fff;border-radius:12px;padding:22px 24px;min-width:0;box-shadow:0 1px 0 var(--paper-3)}
+.pg h4{margin:0 0 12px;font:600 var(--s-sm)/1.3 var(--sans);color:var(--paper-ink-3)}
+.pg p{margin:0;font:400 19px/1.6 var(--serif);color:var(--paper-ink)}
+.pg .w,.pg .f{border-radius:4px;padding:1px 2px;margin:0 -2px;transition:background .35s var(--ease),color .35s var(--ease),box-shadow .35s var(--ease)}
+.m-words .pg .w{background:var(--hl-word)}
+.m-facts .pg .f{background:var(--hl-fact);color:var(--hl-fact-ink)}
+.m-facts .pg .f::after{content:attr(data-k);font:600 10px/1 var(--sans);vertical-align:super;margin-left:2px;color:var(--hl-fact-ink)}
+.m-facts .pg .f.hot{box-shadow:0 0 0 2px var(--hl-fact-ink)}
+.meters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:18px}
+.meter{display:grid;gap:8px}
+.meter span{font-size:var(--s-sm);color:var(--paper-ink-2)}
+.meter b{font-weight:600;color:var(--paper-ink)}
+.meter .tr{height:8px;border-radius:4px;background:var(--paper-2);overflow:hidden}
+.meter .fl{display:block;height:100%;border-radius:4px;background:var(--paper-ink-3);transition:width .9s var(--ease)}
+.meter.mfacts .fl{background:var(--hl-fact-ink)}
+.cmp .fn{color:var(--paper-ink-3)}
+
+/* labels: cards that turn over */
+.labels{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.lab{position:relative;min-height:250px;border:0;padding:0;background:none;color:inherit;text-align:left;cursor:pointer;perspective:1200px;font:inherit}
+.lab .in{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .8s var(--ease)}
+.lab[aria-pressed="true"] .in{transform:rotateY(180deg)}
+.lab .fc{position:absolute;inset:0;border-radius:var(--r-lg);padding:24px;display:flex;flex-direction:column;justify-content:space-between;backface-visibility:hidden;background:var(--panel)}
+.lab .bk{transform:rotateY(180deg);background:var(--panel-2)}
+.lab .fc b{font:600 24px/1.15 var(--sans);letter-spacing:-.02em}
+.lab .fc p{margin:0;color:var(--text-2);font-size:15px}
+.lab .hint{font-size:12px;color:var(--muted)}
+.lab.flag .fr{background:var(--wine);color:var(--wine-t)}
+.lab.flag .fr .hint{color:var(--wine-t2)}
+.lab.flag .bk{background:var(--wine-2)}
+.lab.flag .bk p{color:var(--wine-t2)}
+.lab svg{width:28px;height:28px}
+.lab.flag svg{color:var(--wine-hot)}
+.lab:not(.flag) svg{color:var(--muted)}
+.notflag{margin-top:12px;background:var(--panel);border-radius:var(--r-lg);padding:24px 28px;display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:24px;align-items:center}
+.notflag h3{font-size:var(--s-lead);margin:0}
+.nf{display:flex;flex-wrap:wrap;gap:8px}
+.nf span{padding:9px 12px;border-radius:8px;background:var(--bg);font-size:var(--s-sm);color:var(--text-2);text-decoration:line-through;text-decoration-color:var(--wine-hot);text-decoration-thickness:1.5px}
+
+/* pipeline: five stations on a running line; the stage below plays what the lit station does */
+.pl{background:var(--panel);border-radius:var(--r-lg);padding:32px 32px 28px}
+.pl-track{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:28px}
+.pl-rail{position:absolute;left:10%;right:10%;top:27px;height:4px;border-radius:2px;background:var(--step);overflow:hidden}
+.pl-rail::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 14px,rgba(232,234,237,.07) 14px 22px);animation:conv .9s linear infinite}
+@keyframes conv{to{background-position:22px 0}}
+.pl-rail i{position:relative;z-index:1;display:block;height:100%;width:0;border-radius:2px;background:linear-gradient(90deg,var(--teal-3),var(--cyan));transition:width .8s var(--ease)}
+.pkt{position:absolute;top:23px;left:10%;width:12px;height:12px;border-radius:3px;background:var(--cyan);box-shadow:0 0 12px rgba(87,199,207,.55);opacity:0;animation:pkt 6.5s linear infinite;pointer-events:none}
+.pkt:nth-of-type(2){animation-delay:-1.3s}
+.pkt:nth-of-type(3){animation-delay:-2.6s}
+.pkt:nth-of-type(4){animation-delay:-3.9s}
+.pkt:nth-of-type(5){animation-delay:-5.2s}
+@keyframes pkt{0%{left:10%;opacity:0;transform:scale(.6)}6%{opacity:1;transform:none}62%{background:var(--cyan);box-shadow:0 0 12px rgba(87,199,207,.55)}78%{background:var(--wine-hot);box-shadow:0 0 14px rgba(255,138,127,.6)}94%{opacity:1}100%{left:calc(90% - 12px);opacity:0;background:var(--wine-hot)}}
+.st{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:10px;padding:0;border:0;background:none;color:var(--text-2);font:inherit;cursor:pointer}
+.st .d{position:relative;width:58px;height:58px;border-radius:16px;display:grid;place-items:center;background:var(--panel-2);color:var(--text);font:600 18px/1 var(--sans);box-shadow:0 0 0 6px var(--panel);transition:background .4s var(--ease),color .4s var(--ease),transform .5s var(--ease)}
+.st .d::after{content:'';position:absolute;inset:-6px;border-radius:20px;border:2px solid var(--cyan);opacity:0}
+.st.on .d{background:var(--cyan);color:var(--cyan-ink);transform:scale(1.1)}
+.st.on .d::after{animation:ping 1.8s var(--ease-soft) infinite}
+@keyframes ping{0%{opacity:.7;transform:scale(1)}100%{opacity:0;transform:scale(1.45)}}
+.st.done .d{background:var(--teal-2);color:var(--teal-t)}
+.st b{font:600 15px/1.2 var(--sans);color:var(--text-2);transition:color .3s}
+.st.on b{color:var(--text)}
+.st .bar{width:56%;height:3px;border-radius:2px;background:var(--step);overflow:hidden}
+.st .bar i{display:block;height:100%;width:0;background:var(--cyan)}
+.st:hover .d{background:var(--step)}
+.st.on:hover .d{background:var(--cyan-hover)}
+.pl-body{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:32px;align-items:center}
+.pl-cv{position:relative;aspect-ratio:16/10;max-width:100%;border-radius:14px;background:var(--bg);overflow:hidden}
+.pl-cv canvas{display:block;width:100%;height:100%}
+.pl-cnt{position:absolute;left:16px;top:14px;display:flex;align-items:baseline;gap:10px;padding:8px 12px;border-radius:10px;background:rgba(19,22,27,.85)}
+.pl-cnt b{font:600 24px/1 var(--sans);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.pl-cnt span{font-size:12px;color:var(--text-2)}
+.pl-side{display:flex;flex-direction:column;min-height:400px;min-width:0}
+.pl-txt .n{display:block;font:600 var(--s-sm)/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--cyan);margin-bottom:12px}
+.pl-txt p{color:var(--text-2);margin:0 0 12px;max-width:54ch}
+.pl-txt p b{color:var(--text);font-weight:500}
+.js .pl-txt{display:none}
+.js .pl-txt.cur{display:block;animation:txt-in .55s var(--ease) both}
+@keyframes txt-in{from{opacity:0;transform:translateX(14px)}}
+.pl-ctl{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:18px}
+.pl-ctl button{height:38px;min-width:38px;padding:0 12px;border:0;border-radius:var(--r-chip);background:var(--panel-2);color:var(--text);font:600 var(--s-sm)/1 var(--sans);cursor:pointer;transition:background .2s}
+.pl-ctl button:hover{background:var(--step)}
+.pl-ctl span{margin-left:8px;font-size:var(--s-sm);color:var(--muted);font-variant-numeric:tabular-nums}
+.no-js-hide{display:none}
+.js .pl-ctl.no-js-hide{display:flex}
+.io{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:10px;align-items:center;margin:6px 0 16px;max-width:54ch}
+.io span{padding:10px 12px;border-radius:10px;background:var(--panel);font-size:var(--s-sm);color:var(--text-2)}
+.io i{font-style:normal;color:var(--muted)}
+.risk{display:flex;gap:10px;align-items:flex-start;margin:0 0 14px;max-width:54ch;padding:12px 14px;border-radius:10px;background:var(--wine);color:var(--wine-t2);font-size:var(--s-sm)}
+.risk b{color:var(--wine-t);font-weight:600;white-space:nowrap}
+.part{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;height:34px;padding:0 12px;border-radius:9px;background:var(--panel-2);font:500 var(--s-sm)/1 var(--sans);color:var(--text-2);text-decoration:none}
+a.part{background:var(--teal);color:var(--teal-t)}
+a.part:hover{background:var(--teal-2)}
+
+/* cost */
+.cost{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:12px}
+.anchor{background:var(--cyan);color:var(--cyan-ink);border-radius:var(--r-lg);padding:28px 32px;display:flex;flex-direction:column;justify-content:space-between;gap:20px}
+.anchor b{display:block;font:600 var(--s-fig-xl)/.95 var(--sans);letter-spacing:-.045em;font-variant-numeric:tabular-nums}
+.anchor p{margin:0;color:#0b3a3e}
+.anchor .est{font-size:var(--s-sm)}
+.cgrid{display:grid;gap:18px}
+.crow{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr);gap:16px;align-items:center}
+.crow .nm{font-size:var(--s-sm);color:var(--text-2)}
+.crow .nm b{display:block;color:var(--text);font-weight:600;font-size:15px}
+.cbars{display:grid;gap:6px}
+.cb{position:relative;height:26px;border-radius:7px;background:var(--bg)}
+.cb .fl{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:7px;background:var(--wine-3);transition:width 1.2s var(--ease)}
+.cb.batched .fl{background:var(--wine-2)}
+.cb .v{position:absolute;left:10px;top:50%;transform:translateY(-50%);font:600 12px/1 var(--sans);font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--text-2);transition:left 1.2s var(--ease)}
+.cb .v.inside{color:var(--wine-t)}
+.caxis{position:relative;height:18px;margin-left:186px;font-size:12px;color:var(--muted)}
+.caxis span{position:absolute;transform:translateX(-50%)}
+.funnel{margin-top:12px;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px}
+.dots{display:grid;grid-template-columns:repeat(23,minmax(0,1fr));gap:5px}
+.dots i{display:block;aspect-ratio:1;border-radius:3px;background:var(--teal-3);transition:background .6s var(--ease),opacity .6s var(--ease),transform .6s var(--ease)}
+.dots.cut i{opacity:.18}
+.dots.cut i.keep{opacity:1;background:var(--wine-hot);transform:scale(1.25)}
+.fsteps{display:grid;gap:10px;align-content:center}
+.fs{display:grid;grid-template-columns:104px minmax(0,1fr);gap:14px;align-items:baseline;padding:14px 16px;border-radius:12px;background:var(--bg);transition:background .4s var(--ease)}
+.fs b{white-space:nowrap;font:600 30px/1 var(--sans);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.fs span{font-size:var(--s-sm);color:var(--text-2)}
+.fs.on{background:var(--teal)}
+
+/* measurement */
+.meas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.meas .panel p{margin:0 0 14px;color:var(--text-2)}
+.facts{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.facts span{padding:8px 12px;border-radius:8px;background:var(--bg);font-size:var(--s-sm);color:var(--text-2)}
+.facts b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
+.stack{display:flex;height:40px;border-radius:10px;overflow:hidden;background:var(--bg);margin:6px 0 10px}
+.stack i{display:block;height:100%;width:0;transition:width 1.1s var(--ease)}
+.stack .s1{background:var(--step)}
+.stack .s2{background:var(--teal-3)}
+.stack .s3{background:var(--wine-hot)}
+.skey{display:flex;flex-wrap:wrap;gap:14px;font-size:var(--s-sm);color:var(--text-2)}
+.skey i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* series map */
+.series{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.sc{position:relative;display:flex;flex-direction:column;gap:12px;min-height:230px;padding:24px;border-radius:var(--r-lg);background:var(--panel);text-decoration:none;color:inherit;transition:background .25s var(--ease),transform .25s var(--ease)}
+a.sc:hover{background:var(--panel-2);transform:translateY(-3px)}
+.sc .pn{font:600 var(--s-sm)/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sc b{font:600 22px/1.2 var(--sans);letter-spacing:-.015em}
+.sc p{margin:0;font-size:var(--s-sm);color:var(--text-2)}
+.sc .st{margin-top:auto;align-self:flex-start;display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 10px;border-radius:8px;font:600 12px/1 var(--sans)}
+.st.here{background:var(--text);color:var(--bg)}
+.st.pub{background:var(--cyan);color:var(--cyan-ink)}
+.st.wip{background:var(--teal-2);color:var(--teal-t)}
+.st.plan{background:var(--step);color:var(--text-2)}
+.st .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+.st.wip .dot{animation:blink 1.6s ease-in-out infinite}
+@keyframes blink{50%{opacity:.3}}
+.sc .steps-hit{display:flex;gap:4px}
+.sc .steps-hit i{width:18px;height:6px;border-radius:3px;background:var(--step)}
+.sc .steps-hit i.y{background:var(--cyan)}
+
+/* fine print */
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.box{background:var(--panel);border-radius:var(--r-lg);padding:28px 32px;min-width:0}
+.box h3{font-size:var(--s-lead)}
+.box ul{margin:0;padding-left:18px;color:var(--text-2)}
+.box li{margin:0 0 8px}
+.box p{margin:0 0 10px;color:var(--text-2)}
+.box a{color:var(--cyan)}
+.box code{font:500 var(--s-sm)/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text);background:var(--bg);padding:4px 8px;border-radius:6px;user-select:all;word-break:break-all}
+
+footer{background:var(--bg);padding:24px 0 40px;overflow:hidden}
+.foot-mark{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:40px 0 32px}
+.foot-mark .big{font:600 clamp(56px,9vw,var(--s-fig-xl))/1 var(--sans);letter-spacing:-.05em;color:#1f252d}
+.foot-mark .big .w2{display:block}
+.foot-mark .big .r{color:var(--field-red)}
+.credit{display:flex;align-items:center;gap:14px}
+.credit p{margin:0;color:var(--text-2)}
+.credit b{color:var(--text);font-weight:500}
+.credit a{color:var(--cyan);text-decoration:none}
+.org-logo{flex:none;display:block;width:48px;height:48px;border-radius:12px;background:#fff;overflow:hidden;line-height:0}
+.org-logo img{display:block;width:100%;height:100%;object-fit:contain}
+.fine{margin:0;font-size:var(--s-sm);color:var(--muted);max-width:70ch}
+.fine a{color:var(--text-2)}
+
+/* entrances: everything is visible without script; only content below the first screen waits for its reveal */
+@media (prefers-reduced-motion:no-preference){
+  .js .poster{animation:rise 900ms var(--ease) backwards}
+  .js .hero-copy{animation:rise-s 750ms var(--ease) 380ms backwards}
+  .js .journey{animation:settle 1000ms var(--ease-soft) 200ms backwards}
+  @keyframes rise{from{opacity:0;transform:translateY(32px)}}
+  @keyframes rise-s{from{opacity:0;transform:translateY(18px)}}
+  @keyframes settle{from{opacity:0;transform:scale(.96)}}
+  .js [data-reveal].pre{opacity:0;transform:translateY(24px);transition:opacity .7s var(--ease),transform .9s var(--ease);transition-delay:var(--d,0ms)}
+  .js [data-reveal].pre.is-in{opacity:1;transform:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}.lab .bk{transform:none}.lab .in{transform:none!important}.lab[aria-pressed="true"] .fr{visibility:hidden}.lab[aria-pressed="false"] .bk{visibility:hidden}}
+
+@media (max-width:1100px){
+  .hero-grid{grid-template-columns:1fr}
+  .journey{width:100%;max-width:640px}
+  .labels,.series{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cost,.funnel,.meas{grid-template-columns:1fr}
+  .cols{grid-template-columns:1fr}
+}
+@media (max-width:900px){
+  :root{--s-h2:40px;--s-fig:68px;--s-fig-xl:84px;--s-h3:24px}
+  .sec-head{grid-template-columns:1fr;gap:16px}
+  .pair{grid-template-columns:1fr}
+  .pl{padding:22px 18px}
+  .pl-body{grid-template-columns:1fr;gap:20px}
+  .pl-side{min-height:0}
+  .pl-cnt{display:none}
+  .pl-rail{top:20px}
+  .pkt{top:16px}
+  .st .d{width:42px;height:42px;border-radius:12px;font-size:15px;box-shadow:0 0 0 4px var(--panel)}
+  .st b{font-size:12px;text-align:center}
+  .notflag{grid-template-columns:1fr;gap:14px}
+  .nav .nv{display:none}
+}
+@media (max-width:560px){
+  :root{--gutter:16px;--s-h2:34px;--s-fig:56px;--s-fig-xl:68px;--s-lead:18px}
+  .hero{padding:36px 0 48px}
+  .crumb,.sep{display:none}
+  .labels,.series{grid-template-columns:1fr}
+  .lab{min-height:200px}
+  .panel,.box,.cmp,.anchor{padding:22px 18px}
+  .pg{padding:18px}
+  .pg p{font-size:17px}
+  .meters{grid-template-columns:1fr}
+  .crow{grid-template-columns:1fr;gap:8px}
+  .caxis{margin-left:0}
+  .dots{grid-template-columns:repeat(14,minmax(0,1fr));gap:4px}
+  .io{grid-template-columns:1fr;gap:6px}
+  .io i{display:none}
+  .foot-mark{flex-direction:column;align-items:flex-start}
+  .topbar > .btn{display:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="flagw" viewBox="0 0 32 32"><path d="M10 5v23" stroke="#fff4f2" stroke-width="2.6" stroke-linecap="round" fill="none"/><path fill="#fff4f2" d="M11 6.5c3.5-1.8 6.5 1.6 10 0s4.5-.8 4.5-.8v10.3s-1.4 1-4.5.8-6.5-2.4-10 0z"/></symbol>
+  <symbol id="mflag" viewBox="0 0 16 16"><path d="M4 2v12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/><path d="M4.6 2.6c1.8-.9 3.3.8 5 0s2.4-.4 2.4-.4v5.2s-.7.5-2.4.4-3.2-1.2-5 0z" fill="currentColor"/></symbol>
+  <symbol id="ring" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4" fill="none"/></symbol>
+  <symbol id="half" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M8 2.5a5.5 5.5 0 0 1 0 11z" fill="currentColor"/></symbol>
+  <symbol id="twin" viewBox="0 0 16 16"><rect x="2" y="3" width="7" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/><rect x="7" y="5" width="7" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/></symbol>
+</svg>
+
+<header class="top">
+  <div class="wrap topbar">
+    <div class="lockup">
+      <a class="brand" href="../../" aria-label="Red-flag Research home">
+        <span class="tile"><svg class="mark wave" width="26" height="26" aria-hidden="true"><use href="#flagw"/></svg></span>
+        <span>Red-flag Research</span>
+      </a>
+      <span class="sep" aria-hidden="true"></span>
+      <p class="crumb"><a href="../../">Home</a> / Notes</p>
+    </div>
+    <nav class="nav" aria-label="Sections">
+      <a class="nv" href="#problem">The problem</a>
+      <a class="nv" href="#labels">Labels</a>
+      <a class="nv" href="#pipeline">The five steps</a>
+      <a class="nv" href="#series">The series</a>
+    </nav>
+    <a class="btn btn-primary btn-sm" href="../../live/">Live page</a>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="hero field is-red" id="top" aria-labelledby="hero-h">
+  <div class="wrap hero-grid">
+    <div class="hero-l">
+      <p class="kicker"><i></i>Red-flag notes · Part 0 · October 30, 2026</p>
+      <h1 class="poster" id="hero-h">How a paper gets a red flag</h1>
+      <div class="hero-copy">
+        <p class="question">A red flag is a request for a person to compare two papers. This is everything that happens before we make that request.</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="#pipeline">Walk the five steps</a>
+          <a class="btn btn-ghost" href="#labels">What a flag means</a>
+        </div>
+        <p class="byline">By <a href="https://leozz04.github.io/" target="_blank" rel="noopener">Ziqian Zhang</a> · <a href="https://openlair.github.io/">OpenLAIR</a> · about 7 minutes</p>
+      </div>
+    </div>
+    <figure class="journey" aria-label="Animation: one submission is checked against about 138 candidate sources, 3 are compared in full, and the paper gets one label.">
+      <canvas id="journey"></canvas>
+      <div class="stage-chips" aria-hidden="true">
+        <span class="chip" data-chip="0"><b>1</b> submission</span>
+        <span class="chip" data-chip="1"><b>≈ 138</b> candidates</span>
+        <span class="chip" data-chip="2"><b>3</b> read in full</span>
+        <span class="chip" data-chip="3"><b>1</b> label</span>
+      </div>
+      <figcaption><span>One paper through the screen</span><span>Illustration</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="block field" id="problem" aria-labelledby="prob-h">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <div><span class="eyebrow">The problem</span><h2 id="prob-h">New words, same results</h2></div>
+      <p>Paper laundering rewrites earlier public work so it reads as new: the same results, tables or contributions in different words, without a clear citation of the source. Language models make that rewriting cheap.</p>
+    </div>
+    <div class="cmp" id="cmp" data-reveal>
+      <div class="cmp-top">
+        <span class="tag">Illustration, not a real case</span>
+        <div class="seg" role="group" aria-label="Compare by">
+          <button type="button" data-mode="words" aria-pressed="true">Compare wording</button>
+          <button type="button" data-mode="facts" aria-pressed="false">Compare substance</button>
+        </div>
+      </div>
+      <div class="pair m-words" id="pair">
+        <div class="pg">
+          <h4>Earlier paper, 2024</h4>
+          <p>We train a <span class="f" data-k="1">12-layer <span class="w">encoder</span></span> with a <span class="f" data-k="2">masked-span objective</span> on <span class="f" data-k="3">3.1M sentence pairs</span>. On the held-out split it reaches <span class="f" data-k="4"><span class="w">84.7</span> <span class="w">F1</span></span>, <span class="f" data-k="5"><span class="w">2.3</span> points above the strongest baseline</span>.</p>
+        </div>
+        <div class="pg">
+          <h4>Submission</h4>
+          <p>Our approach pre-trains a <span class="f" data-k="1">twelve-block transformer <span class="w">encoder</span></span> by <span class="f" data-k="2">reconstructing hidden spans</span> across <span class="f" data-k="3">3.1 million paired sentences</span>. Evaluated on unseen data, it attains <span class="f" data-k="4">an <span class="w">F1</span> of <span class="w">84.7</span></span>, <span class="f" data-k="5">surpassing the best prior method by <span class="w">2.3</span></span>.</p>
+        </div>
+      </div>
+      <div class="meters">
+        <div class="meter"><span>Shared content words: <b>4</b>, and no shared phrase</span><span class="tr"><i class="fl" style="width:12%"></i></span></div>
+        <div class="meter mfacts"><span>Same claims and numbers: <b>5 of 5</b></span><span class="tr"><i class="fl" id="facts-fl" style="width:0"></i></span></div>
+      </div>
+      <p class="fn">Similarity checkers such as iThenticate look for copied wording, and here there is almost none to find. What carries over is the substance: the method, the data and every number. That is what our checks compare.</p>
+    </div>
+  </div>
+</section>
+
+<section class="block field" id="labels" aria-labelledby="lab-h">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <div><span class="eyebrow">What a flag means</span><h2 id="lab-h">Four labels, one of them a flag</h2></div>
+      <p>Every screened paper ends with one label. Only one of them asks a person to act, and none of them is a finding of misconduct. Turn a card to read what it means.</p>
+    </div>
+    <div class="labels" data-reveal>
+      <button class="lab flag" type="button" aria-pressed="false">
+        <span class="in">
+          <span class="fc fr"><svg aria-hidden="true"><use href="#mflag"/></svg><b>Source review recommended</b><span class="hint">The red flag · turn over</span></span>
+          <span class="fc bk"><b>Look at these two papers</b><p>Passages, numbers or tables closely match an earlier public paper without clear attribution. A person should compare the two side by side.</p></span>
+        </span>
+      </button>
+      <button class="lab" type="button" aria-pressed="false">
+        <span class="in">
+          <span class="fc fr"><svg aria-hidden="true"><use href="#ring"/></svg><b>No source finding</b><span class="hint">Turn over</span></span>
+          <span class="fc bk"><b>Nothing found where we looked</b><p>No close match in the sources we checked. This does not clear the paper: the source may be somewhere we did not search.</p></span>
+        </span>
+      </button>
+      <button class="lab" type="button" aria-pressed="false">
+        <span class="in">
+          <span class="fc fr"><svg aria-hidden="true"><use href="#half"/></svg><b>Inconclusive</b><span class="hint">Turn over</span></span>
+          <span class="fc bk"><b>Not enough evidence either way</b><p>Something looked close, but the evidence does not support a request for review, or rule one out.</p></span>
+        </span>
+      </button>
+      <button class="lab" type="button" aria-pressed="false">
+        <span class="in">
+          <span class="fc fr"><svg aria-hidden="true"><use href="#twin"/></svg><b>Same paper (preprint)</b><span class="hint">Turn over</span></span>
+          <span class="fc bk"><b>The closest match is the paper itself</b><p>The best match is the submission's own earlier preprint. That is expected and is not a red flag.</p></span>
+        </span>
+      </button>
+    </div>
+    <div class="notflag" data-reveal>
+      <h3>Never a red flag on its own</h3>
+      <div class="nf"><span>the paper's own preprint</span><span>shared authors</span><span>a cited dataset or baseline</span><span>reuse that is clearly attributed</span></div>
+    </div>
+    <p class="fn">The system can miss these cases, which is why every flag goes to a person before anything else happens.</p>
+  </div>
+</section>
+
+<section class="block field" id="pipeline" aria-labelledby="pipe-h">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <div><span class="eyebrow">The five steps</span><h2 id="pipe-h">From submission to a request for review</h2></div>
+      <p>Each step has one job, one kind of output, and one typical way to fail. The line runs on its own; pick a station to stop on it. Later posts take one step each.</p>
+    </div>
+    <div class="pl" id="pl" data-reveal>
+      <div class="pl-track" role="tablist" aria-label="The five steps">
+        <div class="pl-rail" aria-hidden="true"><i id="pl-rail"></i></div>
+        <span class="pkt" aria-hidden="true"></span><span class="pkt" aria-hidden="true"></span><span class="pkt" aria-hidden="true"></span><span class="pkt" aria-hidden="true"></span><span class="pkt" aria-hidden="true"></span>
+        <button class="st on" type="button" role="tab" id="pl-t1" data-i="1" aria-selected="true" aria-controls="pl-p1"><span class="d">1</span><b>Read</b><span class="bar"><i></i></span></button>
+        <button class="st" type="button" role="tab" id="pl-t2" data-i="2" aria-selected="false" aria-controls="pl-p2" tabindex="-1"><span class="d">2</span><b>Extract</b><span class="bar"><i></i></span></button>
+        <button class="st" type="button" role="tab" id="pl-t3" data-i="3" aria-selected="false" aria-controls="pl-p3" tabindex="-1"><span class="d">3</span><b>Find sources</b><span class="bar"><i></i></span></button>
+        <button class="st" type="button" role="tab" id="pl-t4" data-i="4" aria-selected="false" aria-controls="pl-p4" tabindex="-1"><span class="d">4</span><b>Compare</b><span class="bar"><i></i></span></button>
+        <button class="st" type="button" role="tab" id="pl-t5" data-i="5" aria-selected="false" aria-controls="pl-p5" tabindex="-1"><span class="d">5</span><b>Label</b><span class="bar"><i></i></span></button>
+      </div>
+      <div class="pl-body">
+        <div class="pl-cv">
+          <canvas id="pl-cv" aria-hidden="true"></canvas>
+          <div class="pl-cnt" aria-live="polite"><b id="pl-n">1</b><span id="pl-c">submission PDF</span></div>
+        </div>
+        <div class="pl-side">
+          <div class="pl-txt cur" data-s="1" role="tabpanel" id="pl-p1" aria-labelledby="pl-t1">
+            <span class="n">Step 1</span>
+            <h3>Read the paper</h3>
+            <div class="io"><span>Submission PDF</span><i>→</i><span>Text, tables and numbers, each with its page and position</span></div>
+            <p>Every later step points back to a place in the paper, so the text keeps its page positions. Tables matter most: a laundered paper often keeps its numbers even when every sentence is new.</p>
+            <p class="risk"><b>Can go wrong</b>A misread table cell shifts a number, and a real match stops matching.</p>
+            <span class="part">Not covered by its own post yet</span>
+          </div>
+          <div class="pl-txt" data-s="2" role="tabpanel" id="pl-p2" aria-labelledby="pl-t2">
+            <span class="n">Step 2</span>
+            <h3>Pull out what can be checked</h3>
+            <div class="io"><span>Full text</span><i>→</i><span>Claims, method steps, results and table rows</span></div>
+            <p>A paper's contribution lives in a small number of claims and results. These are what we compare with earlier work, and they are what the live page shows as <b>extracted claims</b>.</p>
+            <p class="risk"><b>Can go wrong</b>A claim that is never extracted is never checked.</p>
+            <span class="part">Planned</span>
+          </div>
+          <div class="pl-txt" data-s="3" role="tabpanel" id="pl-p3" aria-labelledby="pl-t3">
+            <span class="n">Step 3</span>
+            <h3>Find candidate sources</h3>
+            <div class="io"><span>The paper</span><i>→</i><span>A short list of earlier public papers that might be its source</span></div>
+            <p>Our first live version gathered <b>about 138 candidates</b> per paper, screened their abstracts with a small, cheap model, and sent <b>3</b> on to full-text comparison. Papers dated after the submission do not count as sources.</p>
+            <p>In Part 1 we rebuilt this step around a full-text library of 2.92M arXiv papers. On the public PAN200 benchmark, a true source reaches the top 3 for 91% of papers, against 74.5% before.</p>
+            <p class="risk"><b>Can go wrong</b>A source that is not found here cannot be recovered by any later step.</p>
+            <a class="part" href="../retrieval-v2/">Part 1: Finding the source →</a>
+          </div>
+          <div class="pl-txt" data-s="4" role="tabpanel" id="pl-p4" aria-labelledby="pl-t4">
+            <span class="n">Step 4</span>
+            <h3>Compare side by side</h3>
+            <div class="io"><span>The paper and one candidate</span><i>→</i><span>Matching passages, numbers and tables, located on both sides</span></div>
+            <p>Each of the 3 candidates is read in full next to the submission. The output is evidence a person can check: this passage here matches that passage there. A comparison costs us about <b>$0.005 per pair</b>.</p>
+            <p class="risk"><b>Can go wrong</b>A cited baseline or a shared author's earlier work can look like reuse.</p>
+            <span class="part">Part 2 · in progress</span>
+          </div>
+          <div class="pl-txt" data-s="5" role="tabpanel" id="pl-p5" aria-labelledby="pl-t5">
+            <span class="n">Step 5</span>
+            <h3>Label it, then hand it to a person</h3>
+            <div class="io"><span>Evidence from every pair</span><i>→</i><span>One label for the paper</span></div>
+            <p>The evidence from all pairs becomes one of the four labels. When the closest match is the paper's own preprint, the label says so. A flag is where the system stops and a person starts.</p>
+            <p class="risk"><b>Can go wrong</b>Turning many small matches into one label is a judgment, and judgments can be wrong. Anyone can ask for a correction.</p>
+            <span class="part">Part 3 · planned</span>
+          </div>
+          <div class="pl-ctl no-js-hide">
+            <button type="button" id="pl-prev" aria-label="Previous step">←</button>
+            <button type="button" id="pl-play" aria-pressed="true">Pause</button>
+            <button type="button" id="pl-next" aria-label="Next step">→</button>
+            <span id="pl-of">Step 1 of 5</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block field" id="cost" aria-labelledby="cost-h">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <div><span class="eyebrow">Why a funnel</span><h2 id="cost-h">Read most candidates briefly, and only 3 in full</h2></div>
+      <p>Screening a whole conference has to be cheap per paper. Most candidates only need their abstract read by a small model. Only the few that survive get a full-text comparison.</p>
+    </div>
+    <div class="cost">
+      <div class="anchor" data-reveal>
+        <div><b class="num">$0.047</b><p>model API fees per paper with our pipeline, the mean over 19 benchmark papers. It does not include OCR or search.</p></div>
+        <p class="est">At that rate, all 43,013 ICLR 2027 submissions come to about $2,000 (est.).</p>
+      </div>
+      <div class="panel" id="cbars" data-reveal>
+        <h3>The same pipeline with a large model at every step</h3>
+        <p class="sub">Per paper, as a multiple of ours. Upper bar: one candidate per call. Lower bar: 8 candidates per call. Log scale; every bar starts at our cost (1×).</p>
+        <div class="cgrid">
+          <div class="crow"><span class="nm"><b>Qwen3.8-flash</b>low effort</span><div class="cbars"><div class="cb"><span class="fl" data-x="5.6"></span><span class="v">$0.26 · 5.6×</span></div><div class="cb batched"><span class="fl" data-x="1.5"></span><span class="v">$0.071 · 1.5×</span></div></div></div>
+          <div class="crow"><span class="nm"><b>Qwen3.8-flash</b>xhigh effort</span><div class="cbars"><div class="cb"><span class="fl" data-x="13"></span><span class="v">$0.61 · 13×</span></div><div class="cb batched"><span class="fl" data-x="2.6"></span><span class="v">$0.12 · 2.6×</span></div></div></div>
+          <div class="crow"><span class="nm"><b>GPT-6 luna</b>max effort</span><div class="cbars"><div class="cb"><span class="fl" data-x="18.5"></span><span class="v">$0.86 · 18.5×</span></div><div class="cb batched"><span class="fl" data-x="3.3"></span><span class="v">$0.15 · 3.3×</span></div></div></div>
+        </div>
+        <div class="caxis" id="caxis"></div>
+      </div>
+    </div>
+    <div class="funnel">
+      <div class="panel" id="fpanel" data-reveal>
+        <h3>One paper's candidates, to scale</h3>
+        <p class="sub">Each square is one candidate source. All 138 have their abstract read; 3 go on to a full read.</p>
+        <div class="dots" id="dots"></div>
+      </div>
+      <div class="panel fsteps" data-reveal style="--d:80ms">
+        <div class="fs" data-f="0"><b class="num">≈ 138</b><span>candidates, abstract only, small model</span></div>
+        <div class="fs" data-f="1"><b class="num">3</b><span>full-text comparisons, about $0.005 each with our models ($0.010–0.013 with the large ones)</span></div>
+        <div class="fs" data-f="2"><b class="num">1</b><span>label for the paper</span></div>
+      </div>
+    </div>
+    <p class="fn">The large-model rows run our own pipeline, step for step, with the large model in place of ours, and have it read every candidate. Costs were paid in CNY and are shown in US dollars at ¥7.0 = $1. The candidate count is from our first live version.</p>
+  </div>
+</section>
+
+<section class="block field" id="measure" aria-labelledby="mea-h">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <div><span class="eyebrow">How we measure it</span><h2 id="mea-h">One step at a time, and end to end</h2></div>
+      <p>A step can be good while the whole pipeline is not, and the other way round. We test both, and each post says which kind of number it reports.</p>
+    </div>
+    <div class="meas">
+      <div class="panel" data-reveal>
+        <h3>One step: does it do its job?</h3>
+        <p>For finding sources we use PAN200, the public test set of the PAN 2026 Generative Plagiarism Detection task. It is large and public, so other groups can run the same test.</p>
+        <div class="facts"><span><b>200</b> heavily rewritten papers</span><span><b>593</b> known sources</span><span><b>2.92M</b> papers to search</span></div>
+        <p class="fn">It answers one question: is the true source put in front of the next step? It cannot say whether the final label is right.</p>
+      </div>
+      <div class="panel" id="stackp" data-reveal style="--d:80ms">
+        <h3>End to end: is the label right?</h3>
+        <p>Our diagnostic benchmark holds 20 anonymized ICLR 2027 papers with 34 target–source pairs and a human label for every paper, with the evidence locations.</p>
+        <div class="stack" aria-label="16 No source finding, 2 Same paper (preprint), 2 Source review recommended"><i class="s1" data-w="80"></i><i class="s2" data-w="10"></i><i class="s3" data-w="10"></i></div>
+        <div class="skey"><span><i style="background:var(--step)"></i>16 No source finding</span><span><i style="background:var(--teal-3)"></i>2 Same paper (preprint)</span><span><i style="background:var(--wine-hot)"></i>2 Source review recommended</span></div>
+        <p class="fn">One annotator, two positives, and selection influenced by models. It does not measure how common source reuse is or how accurate a detector is in general. <a href="../../#code">About the benchmark</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block field" id="series" aria-labelledby="ser-h">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <div><span class="eyebrow">The series</span><h2 id="ser-h">One post per step</h2></div>
+      <p>We are rebuilding the pipeline one step at a time. Each post shows how the first live version handled its step, what we changed and why, what failed on the way, and how much room is left.</p>
+    </div>
+    <div class="series" data-reveal>
+      <div class="sc"><span class="pn">Part 0</span><b>How a paper gets a red flag</b><p>The problem, the labels and the five steps.</p><span class="steps-hit" aria-hidden="true"><i class="y"></i><i class="y"></i><i class="y"></i><i class="y"></i><i class="y"></i></span><span class="st here">You are here</span></div>
+      <a class="sc" href="../retrieval-v2/"><span class="pn">Part 1 · step 3</span><b>Finding the source</b><p>Full-text search over 2.92M papers and a small source selector. Hit@3 0.910 on PAN200.</p><span class="steps-hit" aria-hidden="true"><i></i><i></i><i class="y"></i><i></i><i></i></span><span class="st pub">Read Part 1 →</span></a>
+      <div class="sc"><span class="pn">Part 2 · step 4</span><b>Comparing side by side</b><p>Turning a target and a source into evidence a person can check.</p><span class="steps-hit" aria-hidden="true"><i></i><i></i><i></i><i class="y"></i><i></i></span><span class="st wip"><span class="dot"></span>In progress</span></div>
+      <div class="sc"><span class="pn">Part 3 · end to end</span><b>From evidence to a label</b><p>The whole pipeline, measured on papers with human labels.</p><span class="steps-hit" aria-hidden="true"><i class="y"></i><i class="y"></i><i class="y"></i><i class="y"></i><i class="y"></i></span><span class="st plan">Planned</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="block field" id="fine" aria-labelledby="fine-h">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <div><span class="eyebrow">Fine print</span><h2 id="fine-h">What we share, and how to correct us</h2></div>
+      <p>A screening system works partly because authors do not know exactly how to evade it, so some details stay private. Everything a reader needs to judge a result does not.</p>
+    </div>
+    <div class="cols">
+      <div class="box" data-reveal>
+        <h3>We share</h3>
+        <ul>
+          <li>What each step does, what it costs and how we measure it.</li>
+          <li>Every third-party method we compare with, named and cited.</li>
+          <li>Our failures, in the posts on each step.</li>
+        </ul>
+      </div>
+      <div class="box" data-reveal style="--d:60ms">
+        <h3>We keep private</h3>
+        <ul>
+          <li>Prompts, model choices beyond their size, and thresholds.</li>
+          <li>How queries are built from a paper.</li>
+          <li>Code and our internal test cases, until after the review period of the conference we screen.</li>
+        </ul>
+      </div>
+      <div class="box" data-reveal style="--d:120ms">
+        <h3>Get a result corrected</h3>
+        <p>Use the <a href="../../feedback.html?type=correction">feedback form</a> or write to:</p>
+        <p><code>red.flag.autoresearch@gmail.com</code></p>
+        <p>Red-flag Research is not affiliated with ICLR. It uses submission metadata that is public on OpenReview and does not host papers.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-mark">
+      <div class="big" aria-hidden="true"><span class="r">Red</span>-flag <span class="w2">Research</span></div>
+      <div class="credit">
+        <a class="org-logo" href="https://openlair.github.io/" tabindex="-1" aria-hidden="true"><img src="../../icons/openlair-logo.png" alt="" width="48" height="48"></a>
+        <p>By <b><a href="https://leozz04.github.io/" target="_blank" rel="noopener">Ziqian Zhang</a></b><br>a research project of <a href="https://openlair.github.io/">OpenLAIR</a></p>
+      </div>
+    </div>
+    <p class="fine">Labels are leads for human review, not findings of misconduct. <a href="../../">Home</a> · <a href="../retrieval-v2/">Part 1: Finding the source</a> · <a href="../../feedback.html">Send feedback</a> · <a href="../../privacy.html">Privacy policy</a></p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  document.documentElement.classList.add('js');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+  /* ---------- reveals: only what starts below the first screen waits for one ---------- */
+  const onIn = new Map();
+  const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => {
+    for (const e of es) {
+      if (!e.isIntersecting) continue;
+      e.target.classList.add('is-in');
+      const f = onIn.get(e.target); if (f) f();
+      io.unobserve(e.target);
+    }
+  }, { threshold: .18, rootMargin: '0px 0px -6% 0px' }) : null;
+  const watch = (el, f) => { if (f) onIn.set(el, f); io ? io.observe(el) : (el.classList.add('is-in'), f && f()); };
+  $$('[data-reveal]').forEach((el) => { if (!reduce && el.getBoundingClientRect().top > innerHeight) el.classList.add('pre'); watch(el); });
+
+  const bar = $('#progress');
+  const prog = () => { const h = document.documentElement, max = h.scrollHeight - h.clientHeight; bar.style.transform = `scaleX(${max > 0 ? h.scrollTop / max : 0})`; };
+  addEventListener('scroll', prog, { passive: true }); prog();
+
+  /* ---------- hero: one paper through the screen (canvas) ---------- */
+  (() => {
+    const cv = $('#journey'), ctx = cv.getContext('2d'), chips = $$('.chip');
+    const LOOP = 9000, N = 138, KEEP = [17, 64, 109];
+    let W, H, dots = [];
+    function rnd(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+    function layout() {
+      const dpr = Math.min(2, devicePixelRatio || 1), r = cv.getBoundingClientRect();
+      W = r.width; H = r.height; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const R = rnd(11); dots = [];
+      for (let i = 0; i < N; i++) {
+        const a = R() * Math.PI * 2, d = Math.sqrt(R());
+        dots.push({ x: W * .66 + Math.cos(a) * d * W * .25, y: H * .46 + Math.sin(a) * d * H * .26, s: 3 + R() * 2.5, del: R() * .08 });
+      }
+    }
+    const cl = (k) => Math.max(0, Math.min(1, k)), ease = (k) => 1 - Math.pow(1 - cl(k), 3);
+    function rr(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+    function page(x, y, w, h, alpha, hot) {
+      ctx.globalAlpha = alpha; ctx.fillStyle = '#fff4f2'; rr(x, y, w, h, 6); ctx.fill();
+      for (let l = 0; l < 9; l++) {
+        const ly = y + 14 + l * (h - 28) / 9, lw = (w - 24) * (l % 3 === 2 ? .62 : .92);
+        ctx.fillStyle = hot && (l === 2 || l === 6) ? '#b3261e' : 'rgba(116,21,15,.28)';
+        rr(x + 12, ly, lw, 4, 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+    function frame(now) {
+      const t = reduce ? LOOP * .78 : now % LOOP, k = t / LOOP;
+      ctx.clearRect(0, 0, W, H);
+      const inP = ease(k / .1), burst = ease((k - .14) / .2), cut = ease((k - .42) / .14), cmp = ease((k - .58) / .14), lab = ease((k - .74) / .08), out = ease((k - .93) / .07);
+      const stage = k < .14 ? 0 : k < .42 ? 1 : k < .74 ? 2 : 3;
+      chips.forEach((c, i) => c.classList.toggle('on', i === stage && out < .5));
+      const pw = W * .2, ph = pw * 1.3;
+      const px = W * .08 + (W * .1) * cmp, py = H * .46 - ph / 2;
+      page(px, py, pw, ph, inP * (1 - out), cmp > .5);
+      // candidates burst out of the paper, all but 3 fade
+      dots.forEach((d, i) => {
+        const b = ease((k - .14 - d.del) / .2) * (1 - out);
+        if (b <= 0) return;
+        const keep = KEEP.includes(i);
+        const sx = px + pw, sy = py + ph / 2;
+        let x = sx + (d.x - sx) * b, y = sy + (d.y - sy) * b, s = d.s, a = .75 * b;
+        if (!keep) a *= 1 - .9 * cut;
+        if (keep) {
+          const ji = KEEP.indexOf(i), tx = W * .56, ty = H * .22 + ji * H * .2;
+          x = x + (tx - x) * cmp; y = y + (ty - y) * cmp; a = Math.min(1, a + cut);
+          s = s + (pw * .62 - s) * cmp;
+        }
+        if (keep && cmp > .05) {
+          const h = s * 1.25; page(x, y, s, h, a, cmp > .5 && j(i) === 0);
+          if (cmp > .5 && j(i) === 0) {
+            ctx.strokeStyle = 'rgba(255,244,242,.75)'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]);
+            [2, 6].forEach((l) => { const ly1 = py + 14 + l * (ph - 28) / 9 + 2, ly2 = y + 14 + l * (h - 28) / 9 + 2; ctx.globalAlpha = (cmp - .5) * 2 * (1 - out); ctx.beginPath(); ctx.moveTo(px + pw, ly1); ctx.lineTo(x, ly2); ctx.stroke(); });
+            ctx.setLineDash([]); ctx.globalAlpha = 1;
+          }
+        } else {
+          ctx.globalAlpha = a; ctx.fillStyle = keep && cut > .3 ? '#fff4f2' : '#ffdad5';
+          rr(x - s / 2, y - s / 2, s, s, 1.5); ctx.fill(); ctx.globalAlpha = 1;
+        }
+      });
+      // the label
+      if (lab > 0) {
+        const a = lab * (1 - out), lw = Math.min(W * .62, 300), lh = 40, lx = W * .5 - lw / 2 + (1 - lab) * 20, ly = H * .82;
+        ctx.globalAlpha = a; ctx.fillStyle = '#fff4f2'; rr(lx, ly, lw, lh, 10); ctx.fill();
+        ctx.fillStyle = '#7a130d'; ctx.font = '600 14px "IBM Plex Sans", system-ui, sans-serif'; ctx.textBaseline = 'middle';
+        ctx.fillText('⚑  Source review recommended', lx + 16, ly + lh / 2 + 1); ctx.globalAlpha = 1;
+      }
+      if (!reduce) requestAnimationFrame(frame);
+    }
+    const j = (i) => KEEP.indexOf(i);
+    layout(); addEventListener('resize', () => { layout(); if (reduce) frame(0); });
+    requestAnimationFrame(frame);
+  })();
+
+  /* ---------- the problem: wording against substance ---------- */
+  (() => {
+    const pair = $('#pair'), fl = $('#facts-fl');
+    function set(m) {
+      pair.className = 'pair m-' + m;
+      $$('[data-mode]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.mode === m));
+      fl.style.width = m === 'facts' ? '100%' : '0';
+    }
+    $$('[data-mode]').forEach((b) => b.addEventListener('click', () => set(b.dataset.mode)));
+    $$('.f', pair).forEach((f) => {
+      const on = (v) => $$(`.f[data-k="${f.dataset.k}"]`, pair).forEach((x) => x.classList.toggle('hot', v));
+      f.addEventListener('mouseenter', () => on(true)); f.addEventListener('mouseleave', () => on(false));
+    });
+    // show the switch once, when the reader reaches it
+    watch($('#cmp'), () => { if (!reduce) setTimeout(() => set('facts'), 1400); });
+  })();
+
+  /* ---------- labels turn over ---------- */
+  $$('.lab').forEach((b) => b.addEventListener('click', () => b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true')));
+
+  /* ---------- pipeline: five stations, each with its own little scene ---------- */
+  (() => {
+    const root = $('#pl'), cv = $('#pl-cv'), ctx = cv.getContext('2d');
+    const sts = $$('.st', root), txts = $$('.pl-txt', root), rail = $('#pl-rail'), playBtn = $('#pl-play');
+    const DUR = 5600;
+    const css = getComputedStyle(document.documentElement), v = (n) => css.getPropertyValue(n).trim();
+    const C = { paper: v('--paper'), step: v('--step'), panel2: v('--panel-2'), cyan: v('--cyan'), teal: v('--teal-3'), teal2: v('--teal-2'), wine: v('--wine-2'), hot: v('--wine-hot'), text: v('--text'), text2: v('--text-2'), muted: v('--muted') };
+    const INK = 'rgba(20,23,28,.72)', FAINT = 'rgba(20,23,28,.16)';
+    const COUNT = { 1: ['1', 'submission PDF'], 2: ['4', 'checkable pieces, in this sketch'], 3: ['≈ 138 → 3', 'candidate sources'], 4: ['3', 'side-by-side comparisons'], 5: ['1', 'label, then a person'] };
+    const FONT = '"IBM Plex Sans", system-ui, sans-serif';
+    let W = 0, H = 0, A = 1, cur = 1, prev = 0, swapT = 0, sceneT = 0, elapsed = 0, last = 0, playing = !reduce, visible = false, raf = 0, dots = [];
+
+    const cl = (x) => Math.max(0, Math.min(1, x)), E = (x) => 1 - Math.pow(1 - cl(x), 3);
+    const seg = (p, a, b) => E((p - a) / (b - a));
+    const back = (x) => { x = cl(x); const c = 1.9; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+    const alpha = (a) => { ctx.globalAlpha = Math.max(0, Math.min(1, A * a)); };
+    function rr(x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+    function label(s, x, y, size, color, align = 'left', weight = 500) { ctx.font = `${weight} ${size}px ${FONT}`; ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = 'middle'; ctx.fillText(s, x, y); ctx.textAlign = 'left'; }
+    // a page of n text lines; color(i, line) picks each line's ink; cells lists lines drawn as table rows
+    function page(x, y, w, h, n, color, cells = []) {
+      ctx.fillStyle = C.paper; rr(x, y, w, h, 8); ctx.fill();
+      const lines = [];
+      for (let i = 0; i < n; i++) {
+        const lh = Math.max(3, h * .03), ly = y + h * .1 + i * (h * .8) / n;
+        lines.push({ x: x + w * .1, y: ly, w: (w * .8) * (i % 4 === 3 ? .62 : 1), h: lh, cell: cells.includes(i) });
+      }
+      const a0 = ctx.globalAlpha;
+      lines.forEach((l, i) => {
+        ctx.fillStyle = color ? color(i, l) : INK;
+        if (l.cell) for (let c = 0; c < 3; c++) { rr(l.x + c * l.w / 3, l.y - l.h * .6, l.w / 3 - 3, l.h * 2.2, 2); ctx.fill(); }
+        else { rr(l.x, l.y, l.w, l.h, l.h / 2); ctx.fill(); }
+      });
+      ctx.globalAlpha = a0;
+      return lines;
+    }
+    function chip(x, y, w, h, s, bg, fg) {
+      ctx.fillStyle = bg; rr(x, y, w, h, h / 2.4); ctx.fill();
+      label(s, x + h * .5, y + h / 2 + 1, Math.max(10, Math.round(h * .42)), fg, 'left', 600);
+    }
+    const P = () => { const ph = H * .76, pw = Math.min(ph * .76, W * .34); return { pw, ph, px: W * .07, py: H * .14 }; };
+
+    // 1. Read: a scan line turns the PDF into text and table rows, each with its place
+    function s1(p) {
+      const { pw, ph, px, py } = P(), sy = py + ph * seg(p, .04, .72), n = 11, cells = [6, 7, 8];
+      alpha(1);
+      const lines = page(px, py, pw, ph, n, (i, l) => (l.y < sy ? INK : FAINT), cells);
+      // scan line with a soft trail
+      const g = ctx.createLinearGradient(0, sy - 34, 0, sy); g.addColorStop(0, 'rgba(87,199,207,0)'); g.addColorStop(1, 'rgba(87,199,207,.28)');
+      alpha(p < .76 ? 1 : 1 - seg(p, .76, .86)); ctx.fillStyle = g; ctx.fillRect(px - 6, sy - 34, pw + 12, 34); ctx.fillStyle = C.cyan; ctx.fillRect(px - 8, sy - 1, pw + 16, 2);
+      // what comes out: text and table rows, tagged with their page position
+      const ox = px + pw + W * .1, ow = W - ox - W * .07;
+      alpha(.9); label('text + tables, with positions', ox, py - H * .05, Math.max(11, H * .042), C.muted);
+      lines.forEach((l, i) => {
+        if (l.y >= sy) return;
+        const k = cl((sy - l.y) / (ph * .12)), oy = py + i * (ph / n) + ph * .04;
+        alpha(k);
+        if (l.cell) { ctx.fillStyle = C.teal; for (let c = 0; c < 3; c++) { rr(ox + c * ow * .27, oy, ow * .25, ph / n * .55, 3); ctx.fill(); } }
+        else { ctx.fillStyle = C.step; rr(ox, oy, ow * .8 * (l.w / (pw * .8)), ph / n * .45, 3); ctx.fill(); }
+        label('p.1', ox + ow * .86, oy + ph / n * .25, Math.max(9, H * .034), C.muted);
+      });
+      alpha(1);
+    }
+    // 2. Extract: four lines light up and leave the page as checkable pieces
+    const HOT = [1, 4, 7, 9], NAMES = ['claim', 'method step', 'table row', 'result'];
+    function s2(p) {
+      const { pw, ph, px, py } = P();
+      const when = (k) => .1 + k * .17;
+      alpha(1);
+      const lines = page(px, py, pw, ph, 11, (i) => { const k = HOT.indexOf(i); return k >= 0 && p > when(k) ? C.hot : INK; }, [7]);
+      const tx = px + pw + W * .12, cw = W - tx - W * .07, ch = Math.min(H * .13, 42);
+      HOT.forEach((li, k) => {
+        const m = seg(p, when(k), when(k) + .2); if (m <= 0) return;
+        const l = lines[li], ty = py + H * .04 + k * (ch + H * .06), sx = l.x + l.w, sy = l.y;
+        const x = sx + (tx - sx) * m, y = sy + (ty - sy) * m, w = cw * (.35 + .65 * m);
+        alpha(m); chip(x, y, w, ch, NAMES[k], C.wine, C.hot);
+        alpha(.35 * (1 - m)); ctx.strokeStyle = C.hot; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(x, y + ch / 2); ctx.stroke();
+      });
+      alpha(1);
+    }
+    // 3. Find sources: the pieces go out to a library, about 138 come back, 3 are kept
+    function s3(p) {
+      const ch = Math.min(H * .1, 32), cw = W * .2, cx = W * .52, cy = H * .54;
+      NAMES.forEach((s, k) => { alpha(1); chip(W * .05, H * .2 + k * (ch + H * .05), cw, ch, s, C.wine, C.hot); });
+      const beam = seg(p, .02, .2) * (1 - seg(p, .3, .42));
+      if (beam > 0) NAMES.forEach((_, k) => {
+        alpha(.4 * beam); ctx.strokeStyle = C.cyan; ctx.lineWidth = 1.2; ctx.setLineDash([3, 5]);
+        ctx.beginPath(); ctx.moveTo(W * .05 + cw, H * .2 + k * (ch + H * .05) + ch / 2); ctx.lineTo(cx, cy); ctx.stroke(); ctx.setLineDash([]);
+      });
+      const fade = seg(p, .4, .56), move = seg(p, .58, .82);
+      dots.forEach((d) => {
+        const app = seg(p, .08 + d.del, .3 + d.del); if (app <= 0) return;
+        if (d.keep) {
+          const tx = W * .82, ty = H * .2 + d.k * H * .22, x = d.x + (tx - d.x) * move, y = d.y + (ty - d.y) * move;
+          const w = 5 + (W * .1 - 5) * move, h = 5 + (H * .17 - 5) * move;
+          alpha(app);
+          if (move > .15) { page(x - w / 2, y - h / 2, w, h, 5, () => (d.k === 0 ? 'rgba(179,38,30,.55)' : INK)); }
+          else { ctx.fillStyle = fade > .2 ? C.hot : C.cyan; rr(x - 3.5, y - 3.5, 7 + 3 * fade, 7 + 3 * fade, 2); ctx.fill(); }
+        } else {
+          alpha(app * (1 - .88 * fade)); ctx.fillStyle = C.cyan; rr(d.x - 2.5, d.y - 2.5, 5, 5, 1.5); ctx.fill();
+        }
+      });
+      alpha(1); label(p < .5 ? '≈ 138 candidates' : '3 kept for a full read', cx, H * .93, Math.max(11, H * .045), C.text2, 'center');
+    }
+    // 4. Compare: the submission and one source, matched passage by passage
+    const PAIRS = [[1, 5], [4, 2], [7, 8]];
+    function s4(p) {
+      const ph = H * .72, pw = Math.min(ph * .72, W * .3), py = H * .12, lx = W * .08, rx = W - W * .08 - pw;
+      const when = (k) => .1 + k * .24;
+      const on = (side, i) => PAIRS.some((pr, k) => pr[side] === i && p > when(k) + .12);
+      alpha(1);
+      label('submission', lx + pw / 2, py + ph + H * .05, Math.max(11, H * .042), C.muted, 'center');
+      label('candidate source', rx + pw / 2, py + ph + H * .05, Math.max(11, H * .042), C.muted, 'center');
+      const L = page(lx, py, pw, ph, 10, (i) => (on(0, i) ? C.hot : INK));
+      const R = page(rx, py, pw, ph, 10, (i) => (on(1, i) ? C.hot : INK));
+      PAIRS.forEach(([a, b], k) => {
+        const m = seg(p, when(k), when(k) + .16); if (m <= 0) return;
+        const x1 = L[a].x + L[a].w + 6, y1 = L[a].y + 2, x2 = R[b].x - 6, y2 = R[b].y + 2, mx = (x1 + x2) / 2;
+        alpha(.9); ctx.strokeStyle = C.hot; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x1, y1);
+        for (let t = 0; t <= m + 1e-6; t += .02) { const u = 1 - t; ctx.lineTo(u * u * u * x1 + 3 * u * u * t * mx + 3 * u * t * t * mx + t * t * t * x2, u * u * u * y1 + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t * t * t * y2); }
+        ctx.stroke();
+        if (m >= 1) { alpha(1); ctx.fillStyle = C.hot; ctx.beginPath(); ctx.arc(x2, y2, 3.5, 0, 7); ctx.fill(); }
+      });
+      alpha(1);
+    }
+    // 5. Label: the evidence becomes one label, and a person takes over
+    function s5(p) {
+      const gather = seg(p, .06, .32), pop = cl((p - .34) / .16), person = seg(p, .58, .74);
+      const cx = W * .4, cy = H * .5;
+      for (let k = 0; k < 3; k++) {
+        const sx = W * .07, sy = H * .16 + k * H * .24, w = W * .17, h = H * .17;
+        const x = sx + (cx - w / 2 - sx) * gather, y = sy + (cy - h / 2 - sy) * gather;
+        alpha(1 - seg(p, .3, .38)); page(x, y, w, h, 4, (i) => (i === 1 ? C.hot : INK));
+      }
+      if (pop > 0) {
+        let f = 16; ctx.font = `600 ${f}px ${FONT}`;
+        while (ctx.measureText('⚑  Source review recommended').width > W * .5 && f > 9) { f--; ctx.font = `600 ${f}px ${FONT}`; }
+        const tw = ctx.measureText('⚑  Source review recommended').width, w = tw + f * 2.2, h = f * 2.8, s = back(pop);
+        ctx.save(); ctx.translate(cx, cy); ctx.scale(s, s); alpha(cl(pop * 2));
+        ctx.fillStyle = C.wine; rr(-w / 2, -h / 2, w, h, h / 2.6); ctx.fill();
+        ctx.strokeStyle = C.hot; ctx.lineWidth = 1.5; rr(-w / 2, -h / 2, w, h, h / 2.6); ctx.stroke();
+        label('⚑  Source review recommended', 0, 1, f, C.hot, 'center', 600); ctx.restore();
+        if (person > 0) {
+          const px = W * .86, x0 = cx + w / 2 + 10;
+          alpha(person * .8); ctx.strokeStyle = C.text2; ctx.lineWidth = 1.5; ctx.setLineDash([4, 5]);
+          ctx.beginPath(); ctx.moveTo(x0, cy); ctx.lineTo(x0 + (px - H * .1 - x0) * person, cy); ctx.stroke(); ctx.setLineDash([]);
+          alpha(person); ctx.fillStyle = C.text;
+          ctx.beginPath(); ctx.arc(px, cy - H * .11, H * .065, 0, 7); ctx.fill();
+          rr(px - H * .11, cy - H * .02, H * .22, H * .16, H * .08); ctx.fill();
+          const fs = Math.max(10, H * .042); ctx.font = `500 ${fs}px ${FONT}`;
+          const half = ctx.measureText('a person compares').width / 2;
+          label('a person compares', Math.min(px, W - half - 8), cy + H * .23, fs, C.text2, 'center');
+        }
+      }
+      alpha(1);
+    }
+    const SCENES = [null, s1, s2, s3, s4, s5];
+
+    function layout() {
+      const dpr = Math.min(2, devicePixelRatio || 1), r = cv.getBoundingClientRect();
+      W = r.width; H = r.height; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      let seed = 23; const R = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      dots = [];
+      for (let i = 0; i < 138; i++) {
+        const a = R() * 6.283, d = Math.sqrt(R());
+        dots.push({ x: W * .52 + Math.cos(a) * d * W * .17, y: H * .5 + Math.sin(a) * d * H * .3, del: R() * .1, keep: false });
+      }
+      [12, 57, 101].forEach((i, k) => Object.assign(dots[i], { keep: true, k }));
+      draw(performance.now());
+    }
+    function draw(now) {
+      if (!W) return;
+      ctx.setTransform(Math.min(2, devicePixelRatio || 1), 0, 0, Math.min(2, devicePixelRatio || 1), 0, 0);
+      ctx.clearRect(0, 0, W, H);
+      const k = reduce ? 1 : cl((now - swapT) / 480), p = reduce ? .995 : ((now - sceneT) % DUR) / DUR;
+      if (k < 1 && prev) { ctx.save(); ctx.translate(-26 * E(k), 0); A = 1 - E(k); SCENES[prev](.995); ctx.restore(); }
+      ctx.save(); ctx.translate(26 * (1 - E(k)), 0); A = E(k); SCENES[cur](p); ctx.restore();
+      A = 1; ctx.globalAlpha = 1;
+    }
+    function go(s, keepClock) {
+      s = ((s - 1 + 5) % 5) + 1;
+      if (s !== cur) { prev = cur; cur = s; swapT = performance.now(); }
+      sceneT = performance.now(); if (!keepClock) elapsed = 0;
+      sts.forEach((b) => {
+        const i = +b.dataset.i, on = i === s;
+        b.classList.toggle('on', on); b.classList.toggle('done', i < s);
+        b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1;
+        $('.bar i', b).style.width = i < s ? '100%' : '0';
+      });
+      txts.forEach((t) => t.classList.toggle('cur', +t.dataset.s === s));
+      rail.style.width = ((s - 1) / 4) * 100 + '%';
+      $('#pl-n').textContent = COUNT[s][0]; $('#pl-c').textContent = COUNT[s][1];
+      $('#pl-of').textContent = `Step ${s} of 5`;
+      if (reduce) draw(performance.now());
+    }
+    function setPlay(on) { playing = on && !reduce; playBtn.textContent = playing ? 'Pause' : 'Play'; playBtn.setAttribute('aria-pressed', playing); last = 0; }
+    function frame(now) {
+      raf = 0;
+      const dt = last ? Math.min(100, now - last) : 0; last = now;
+      if (playing) { elapsed += dt; if (elapsed >= DUR) go(cur + 1); }
+      const bar = $('.st.on .bar i', root); if (bar) bar.style.width = (playing ? Math.min(100, (elapsed / DUR) * 100) : 100) + '%';
+      draw(now);
+      if (visible && !reduce) raf = requestAnimationFrame(frame);
+    }
+    function wake() { if (!raf && visible && !reduce) { last = 0; raf = requestAnimationFrame(frame); } }
+
+    sts.forEach((b) => b.addEventListener('click', () => { setPlay(false); go(+b.dataset.i); wake(); }));
+    $('.pl-track', root).addEventListener('keydown', (e) => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!d) return;
+      e.preventDefault(); setPlay(false); go(cur + d); sts[cur - 1].focus(); wake();
+    });
+    $('#pl-prev').addEventListener('click', () => { go(cur - 1); wake(); });
+    $('#pl-next').addEventListener('click', () => { go(cur + 1); wake(); });
+    playBtn.addEventListener('click', () => { setPlay(!playing); wake(); });
+    if (reduce) setPlay(false);
+
+    go(1); layout();
+    addEventListener('resize', layout);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => draw(performance.now()));
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver((es) => es.forEach((e) => { visible = e.isIntersecting; if (visible) { sceneT = performance.now() - (elapsed % DUR); wake(); } }), { threshold: .25 }).observe(root);
+    } else { visible = true; wake(); }
+  })();
+
+  /* ---------- cost bars on a log axis from 1x to 20x ---------- */
+  (() => {
+    const pos = (x) => Math.log10(x) / Math.log10(20) * 100;
+    $('#caxis').innerHTML = [1, 2, 5, 10, 20].map((x) => `<span style="left:${pos(x)}%">${x}×</span>`).join('');
+    const p = $('#cbars');
+    watch(p, () => $$('.cb .fl', p).forEach((f, i) => setTimeout(() => {
+      const w = pos(+f.dataset.x), v = f.parentNode.querySelector('.v');
+      f.style.width = w + '%';
+      // the value sits just past the bar end, or inside the bar when the bar is long
+      if (w > 62) { v.classList.add('inside'); v.style.left = '10px'; } else v.style.left = `calc(${w}% + 8px)`;
+    }, reduce ? 0 : i * 110)));
+  })();
+
+  /* ---------- the funnel, to scale ---------- */
+  (() => {
+    const dots = $('#dots'), KEEP = new Set([17, 64, 109]);
+    dots.innerHTML = Array.from({ length: 138 }, (_, i) => `<i class="${KEEP.has(i) ? 'keep' : ''}"></i>`).join('');
+    const fs = $$('.fs');
+    let k = 0, t;
+    function tick() {
+      fs.forEach((f, i) => f.classList.toggle('on', i === k));
+      dots.classList.toggle('cut', k >= 1);
+      k = (k + 1) % 3;
+    }
+    watch($('#fpanel'), () => { tick(); if (!reduce) t = setInterval(tick, 2200); else { k = 1; tick(); } });
+  })();
+
+  /* ---------- benchmark label mix ---------- */
+  watch($('#stackp'), () => $$('.stack i').forEach((s) => s.style.width = s.dataset.w + '%'));
+})();
+</script>
+</body>
+</html>

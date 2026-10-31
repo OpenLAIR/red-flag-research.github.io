@@ -8,6 +8,8 @@ Red-flag Research is by Ziqian Zhang at OpenLAIR (Lehigh AI Research Lab). Its f
 
 - [Homepage](https://red-flag-research.org/): what the project is, the nine-stage schedule, label meanings, how to get a result corrected
 - [Feedback form](https://red-flag-research.org/feedback.html): report a wrong result, a bug or a benchmark problem by e-mail
+- [How a paper gets a red flag](https://red-flag-research.org/blog/overview/): Red-flag notes, Part 0: what paper laundering is, what each label means, and the five steps from submission to a request for human review (read, extract, find sources, compare, label)
+- [Finding the source](https://red-flag-research.org/blog/retrieval-v2/): Red-flag notes, Part 1: the rebuilt source-retrieval step, a full-text search over 2.92M arXiv papers plus a small source selector; Hit@3 0.910 on the public PAN200 benchmark, against 0.745 for the first live version
 - [Live screening](https://red-flag-research.org/live/): coming soon: the per-submission screening view (extracted claims, candidate sources, side-by-side passages, label) is not public yet
 - [Benchmark on GitHub](https://github.com/OpenLAIR/red-flag-research): 20 anonymized ICLR 2027 cases, 34 target–source pairs, human labels, evaluation tools and saved baseline outputs
 - [Benchmark on Hugging Face](https://huggingface.co/datasets/red-flag-research/iclr2027-source-review-benchmark): the same benchmark as a dataset (CC BY 4.0)
