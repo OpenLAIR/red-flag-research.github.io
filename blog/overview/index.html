@@ -536,7 +536,7 @@ footer{background:var(--bg);padding:24px 0 40px;overflow:hidden}
             <h3>Find candidate sources</h3>
             <div class="io"><span>The paper</span><i>→</i><span>A short list of earlier public papers that might be its source</span></div>
             <p>Our first live version gathered <b>about 138 candidates</b> per paper, screened their abstracts with a small, cheap model, and sent <b>3</b> on to full-text comparison. Papers dated after the submission do not count as sources.</p>
-            <p>In Part 1 we rebuilt this step around a full-text library of 2.92M arXiv papers. On the public PAN200 benchmark, a true source reaches the top 3 for 91% of papers, against 74.5% before.</p>
+            <p>In Part 1 we rebuilt this step around a full-text library of 2.92M arXiv papers. On the public PAN200 benchmark, a true source reaches the top 3 for 93.5% of papers, against 74.5% before.</p>
             <p class="risk"><b>Can go wrong</b>A source that is not found here cannot be recovered by any later step.</p>
             <a class="part" href="../retrieval-v2/">Part 1: Finding the source →</a>
           </div>
@@ -638,7 +638,7 @@ footer{background:var(--bg);padding:24px 0 40px;overflow:hidden}
     </div>
     <div class="series" data-reveal>
       <div class="sc"><span class="pn">Part 0</span><b>How a paper gets a red flag</b><p>The problem, the labels and the five steps.</p><span class="steps-hit" aria-hidden="true"><i class="y"></i><i class="y"></i><i class="y"></i><i class="y"></i><i class="y"></i></span><span class="st here">You are here</span></div>
-      <a class="sc" href="../retrieval-v2/"><span class="pn">Part 1 · step 3</span><b>Finding the source</b><p>Full-text search over 2.92M papers and a small source selector. Hit@3 0.910 on PAN200.</p><span class="steps-hit" aria-hidden="true"><i></i><i></i><i class="y"></i><i></i><i></i></span><span class="st pub">Read Part 1 →</span></a>
+      <a class="sc" href="../retrieval-v2/"><span class="pn">Part 1 · step 3</span><b>Finding the source</b><p>Full-text search over 2.92M papers and a small source selector. Hit@3 0.935 on PAN200.</p><span class="steps-hit" aria-hidden="true"><i></i><i></i><i class="y"></i><i></i><i></i></span><span class="st pub">Read Part 1 →</span></a>
       <div class="sc"><span class="pn">Part 2 · step 4</span><b>Comparing side by side</b><p>Turning a target and a source into evidence a person can check.</p><span class="steps-hit" aria-hidden="true"><i></i><i></i><i></i><i class="y"></i><i></i></span><span class="st wip"><span class="dot"></span>In progress</span></div>
       <div class="sc"><span class="pn">Part 3 · end to end</span><b>From evidence to a label</b><p>The whole pipeline, measured on papers with human labels.</p><span class="steps-hit" aria-hidden="true"><i class="y"></i><i class="y"></i><i class="y"></i><i class="y"></i><i class="y"></i></span><span class="st plan">Planned</span></div>
     </div>

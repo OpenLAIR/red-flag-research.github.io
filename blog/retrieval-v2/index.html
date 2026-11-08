@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Finding the source · Red-flag notes, Part 1</title>
-<meta name="description" content="How Red-flag v2 finds the earlier papers a submission may have been laundered from: a full-text search over 2.92M arXiv papers and a small source selector. Hit@3 0.910 on PAN200, about 12 times faster than our first live retriever, and the failures we hit on the way.">
+<meta name="description" content="How Red-flag v2 finds the earlier papers a submission may have been laundered from: a full-text search over 2.92M arXiv papers and a small source selector. Hit@3 0.935 on PAN200, about 7 times faster than our first live retriever, and the failures we hit on the way.">
 <link rel="canonical" href="https://red-flag-research.org/blog/retrieval-v2/">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://red-flag-research.org/blog/retrieval-v2/">
 <meta property="og:site_name" content="Red-flag Research">
 <meta property="og:title" content="Finding the source: inside Red-flag v2 retrieval">
-<meta property="og:description" content="Hit@3 0.910 on PAN200 over 2.92M full-text arXiv papers, in about 3.6 s per query. What worked, what did not, and what is still hard.">
+<meta property="og:description" content="Hit@3 0.935 on PAN200 over 2.92M full-text arXiv papers, in about 6 s per query. What worked, what did not, and what is still hard.">
 <meta property="og:image" content="https://red-flag-research.org/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
@@ -456,17 +456,17 @@ footer{background:var(--bg);padding:24px 0 40px;overflow:hidden}
         <span class="chip" data-chip="1"><b>16</b> candidates</span>
         <span class="chip" data-chip="2"><b>3</b> likely sources</span>
       </div>
-      <figcaption><span>One target paper, one pass</span><span class="num" id="fclock">≈ 3.6 s</span></figcaption>
+      <figcaption><span>One target paper, one pass</span><span class="num" id="fclock">≈ 6.0 s</span></figcaption>
     </figure>
   </div>
 </section>
 
 <section class="band field" aria-label="Headline figures">
   <div class="wrap tiles">
-    <div class="fig f-a" data-reveal style="--d:0ms"><b class="num" data-count="0.910" data-dp="3">0.910</b><span>Hit@3 on PAN200</span><em>A true source in the top 3 for 91% of 200 rewritten papers</em></div>
-    <div class="fig" data-reveal style="--d:80ms"><b class="num" data-count="12" data-dp="0" data-suffix="×">12×</b><span>faster retrieval than v1</span><em>44.7 s → ≈ 3.6 s per query</em></div>
+    <div class="fig f-a" data-reveal style="--d:0ms"><b class="num" data-count="0.935" data-dp="3">0.935</b><span>Hit@3 on PAN200</span><em>A true source in the top 3 for 93.5% of 200 rewritten papers</em></div>
+    <div class="fig" data-reveal style="--d:80ms"><b class="num" data-count="7" data-dp="0" data-suffix="×">7×</b><span>faster retrieval than v1</span><em>44.7 s → 6.0 s per query</em></div>
     <div class="fig" data-reveal style="--d:160ms"><b class="num" data-count="2.92" data-dp="2" data-suffix="M">2.92M</b><span>full-text arXiv papers</span><em>searched on every query</em></div>
-    <div class="fig" data-reveal style="--d:240ms"><b class="num" data-count="3" data-dp="0" data-prefix="≈ $">≈ $3</b><span>selector GPU time</span><em>for 43,000 papers (estimate)</em></div>
+    <div class="fig" data-reveal style="--d:240ms"><b class="num" data-count="5" data-dp="0" data-prefix="≈ $">≈ $5</b><span>selector GPU time</span><em>for 43,000 papers (estimate)</em></div>
   </div>
 </section>
 
@@ -517,14 +517,14 @@ footer{background:var(--bg);padding:24px 0 40px;overflow:hidden}
         <article class="stp" data-s="2">
           <span class="n">2</span>
           <h3>Keep 16 candidates</h3>
-          <p>The first stage keeps the <b>top 16 documents</b>. For 91.5% of PAN200 targets, a true source is already among those 16.</p>
-          <p>That number is the ceiling for everything after this step, and we tested whether a bigger pool raises it in practice. It doesn't (lesson 2).</p>
+          <p>The first stage keeps the <b>top 16 documents</b>. For at least 93.5% of PAN200 targets, a true source is already among those 16.</p>
+          <p>The pool is the ceiling for everything after this step, and we tested whether a bigger pool raises it in practice. It doesn't (lesson 2).</p>
         </article>
         <article class="stp" data-s="3">
           <span class="n">3</span>
           <h3>A source selector picks the likely sources</h3>
           <p>A <b>4B-parameter open-weight model</b> reads the target and, for each candidate, only its title and the opening of its abstract. It gives each candidate a probability of being a source, and the top 3 go on to side-by-side comparison.</p>
-          <p>It needs no candidate full text and costs about <b>$0.00007 per paper</b>. On PAN200 it lifts Hit@1 from 0.640 to 0.825. It was not trained on these benchmarks.</p>
+          <p>It needs no candidate full text and costs about <b>$0.00011 per paper</b>. On PAN200 it lifts Hit@1 from 0.645 to 0.900. It was not trained on these benchmarks.</p>
         </article>
       </div>
     </div>
@@ -539,7 +539,7 @@ footer{background:var(--bg);padding:24px 0 40px;overflow:hidden}
         </div>
       </div>
       <div class="pgrid" data-reveal style="--d:80ms">
-        <div class="pcell"><span>Hit@3, PAN200</span><div><b class="num" data-p="pan">0.910</b><div class="meter"><i data-pm="pan" style="width:91%"></i></div><em>Both settings tie</em></div></div>
+        <div class="pcell"><span>Hit@3, PAN200</span><div><b class="num" data-p="pan">0.935</b><div class="meter"><i data-pm="pan" style="width:93.5%"></i></div><em>Both settings tie</em></div></div>
         <div class="pcell"><span>Hit@3, 41 full-length synthetic cases</span><div><b class="num" data-p="s41">0.537</b><div class="meter"><i data-pm="s41" style="width:53.7%"></i></div><em data-p="s41n">Max finds one more case</em></div></div>
         <div class="pcell"><span>Time per full-length paper (median)</span><div><b class="num" data-p="t">≈ 6.2 s</b><div class="meter"><i data-pm="t" style="width:33.9%"></i></div><em data-p="days">≈ 3.1 days for 43,000 papers</em></div></div>
       </div>
@@ -570,11 +570,11 @@ footer{background:var(--bg);padding:24px 0 40px;overflow:hidden}
       </div>
       <div class="panel" data-reveal style="--d:100ms">
         <h3>Accuracy against time</h3>
-        <p class="sub">Hit@3 against median seconds per query (log scale). Hover a point for details.</p>
+        <p class="sub">Hit@3 against mean seconds per query (log scale). Hover a point for details.</p>
         <div class="scatter" id="scatter"></div>
       </div>
     </div>
-    <p class="fn">Times are medians per query. For v2, each query runs as a fresh process on one 16 GB Mac with 12 workers, and the selector's steady-state time on one RTX A5500 GPU is added (≈ means the sum of two measured parts). redflag-v1 and CMU Paper Reviewer were timed in earlier PAN200 runs; v1's time counts its 187 successful queries. JLP is our adaptation of the PAN 2026 system by Cody, Panzitt and Cox, re-scoring Flash's 16 candidates, so its time includes Flash's search. Paperclip is a commercial full-text search service queried once with title and abstract; its time includes the free plan's rate limit. Per its terms we report only aggregate metrics. With n = 200, differences under about 8–10 points at Hit@3 are inside the confidence intervals.</p>
+    <p class="fn">Times are means per paper. For v2, the search runs on one 16 GB Mac with 12 workers and the selector on one GPU. redflag-v1 was timed in an earlier PAN200 run, and its time counts its 187 successful queries. JLP is our adaptation of the PAN 2026 system by Cody, Panzitt and Cox, re-scoring Flash's 16 candidates, and it ran on 198 of the 200 targets. Paperclip is a commercial full-text search service queried once with title and abstract; its time includes the free plan's rate limit. Per its terms we report only aggregate metrics. With n = 200, differences under about 8–10 points at Hit@3 are inside the confidence intervals.</p>
   </div>
 </section>
 
@@ -582,32 +582,31 @@ footer{background:var(--bg);padding:24px 0 40px;overflow:hidden}
   <div class="wrap">
     <div class="sec-head" data-reveal="head">
       <div><span class="eyebrow">Where the gain comes from</span><h2 id="sel-h">A small judgment over a short list</h2></div>
-      <p>The selector adds 10 points of Hit@3 for about $0.00007 per paper. Re-scoring the same 16 candidates with a dense-hybrid reranker adds 1 point at about 34 times the spend.</p>
+      <p>The selector adds 12.5 points of Hit@3 for about $0.00011 per paper. Re-scoring the same 16 candidates with JLP adds 7.4 points at about 15 times the spend.</p>
     </div>
     <div class="sel">
       <div class="panel" id="track-panel" data-reveal>
         <h3>Hit@3 on PAN200, v2 Flash</h3>
-        <p class="sub">The first stage alone, then with the selector, against the ceiling of the 16-candidate pool.</p>
+        <p class="sub">The first stage alone, then with the selector, against JLP re-scoring the same 16 candidates.</p>
         <div class="track" id="track">
-          <div class="seg2" data-w="91.0"></div>
+          <div class="seg2" data-w="93.5"></div>
           <div class="seg1" data-w="81.0"></div>
-          <div class="tick l" style="left:82%"><span>JLP on the same 16: 0.820</span></div>
-          <div class="tick r amber" style="left:91.5%"><span>Ceiling 0.915</span></div>
+          <div class="tick l" style="left:88.4%"><span>JLP on the same 16: 0.884</span></div>
         </div>
         <div class="track-axis"><span>0</span><span>0.5</span><span>1.0</span></div>
-        <div class="legend"><span><i style="background:var(--teal-3)"></i>First stage alone 0.810</span><span><i style="background:var(--cyan)"></i>+ selector 0.910</span></div>
-        <p class="fn">Only one PAN200 query has a source in the pool but outside the top 3, so a better selector on this pool could add half a point at most.</p>
+        <div class="legend"><span><i style="background:var(--teal-3)"></i>First stage alone 0.810</span><span><i style="background:var(--cyan)"></i>+ selector 0.935</span></div>
+        <p class="fn">JLP ran on 198 of the 200 targets.</p>
       </div>
       <div class="panel" id="spend" data-reveal style="--d:100ms">
         <h3>Spend per paper</h3>
-        <p class="sub">US dollars, log scale. List prices; GPU at $0.36 per hour.</p>
+        <p class="sub">US dollars, log scale. List prices; GPU at $0.2033 per hour.</p>
         <div class="spend">
-          <div class="sp ours"><span class="nm">v2 selector</span><div class="tr"><div class="fl" data-v="0.00007"></div><span class="v">$0.00007</span></div></div>
-          <div class="sp"><span class="nm">redflag-v1</span><div class="tr"><div class="fl" data-v="0.0013"></div><span class="v">$0.0013</span><span class="note">19×</span></div></div>
-          <div class="sp"><span class="nm">JLP rerank</span><div class="tr"><div class="fl" data-v="0.002"></div><span class="v">$0.002</span><span class="note">34×</span></div></div>
-          <div class="sp hot"><span class="nm">CMU Paper Reviewer</span><div class="tr"><div class="fl" data-v="0.12"></div><span class="v">$0.12</span><span class="note">1,700×</span></div></div>
+          <div class="sp ours"><span class="nm">v2 selector</span><div class="tr"><div class="fl" data-v="0.00011"></div><span class="v">$0.00011</span></div></div>
+          <div class="sp"><span class="nm">redflag-v1</span><div class="tr"><div class="fl" data-v="0.0013"></div><span class="v">$0.0013</span><span class="note">12×</span></div></div>
+          <div class="sp"><span class="nm">JLP rerank</span><div class="tr"><div class="fl" data-v="0.0017"></div><span class="v">$0.0017</span><span class="note">15×</span></div></div>
+          <div class="sp hot"><span class="nm">CMU Paper Reviewer</span><div class="tr"><div class="fl" data-v="0.13"></div><span class="v">$0.13</span><span class="note">1,200×</span></div></div>
         </div>
-        <p class="fn">The web-search row extrapolates to about $5,200 for a 43,000-submission conference. The selector reads 16 short descriptors, so it needs no candidate full text.</p>
+        <p class="fn">The web-search row extrapolates to about $5,600 for a 43,000-submission conference. The selector reads 16 short descriptors, so it needs no candidate full text.</p>
       </div>
     </div>
   </div>
@@ -684,7 +683,7 @@ footer{background:var(--bg);padding:24px 0 40px;overflow:hidden}
         </div>
       </details>
       <details class="lesson" data-reveal style="--d:300ms">
-        <summary><span class="ix">06</span><div><h3>Web search was the most expensive and among the weakest</h3><p class="hook">About $0.12 a query for Hit@3 0.395.</p></div><span class="pm" aria-hidden="true">+</span></summary>
+        <summary><span class="ix">06</span><div><h3>Web search was the most expensive and among the weakest</h3><p class="hook">About $0.13 a query for Hit@3 0.395.</p></div><span class="pm" aria-hidden="true">+</span></summary>
         <div class="body">
           <p>We extracted the literature-search step of the CMU Paper Reviewer agent: one LLM call writes queries, and a web-search API runs them. Web results often point to pages that cannot be matched to an arXiv source, and a few short queries cannot carry the detail that full-text matching uses. The full agent completed one paper in 1,827 seconds and ranked the true source 17th.</p>
           <p class="moral">For this task, what you search matters as much as how you search it.</p>
@@ -698,16 +697,16 @@ footer{background:var(--bg);padding:24px 0 40px;overflow:hidden}
   <div class="wrap">
     <div class="sec-head" data-reveal="head">
       <div><span class="eyebrow">Headroom</span><h2 id="next-h">One problem is solved, two are not</h2></div>
-      <p>For one source per paper, v2 is at its ceiling. Finding every source and handling long papers are where the work goes next.</p>
+      <p>For one source per paper, v2 is strong on PAN200. Finding every source and handling long papers are where the work goes next.</p>
     </div>
     <div class="rings" id="rings">
-      <div class="ring" data-reveal data-v="0.910" data-c="0.915">
+      <div class="ring" data-reveal data-v="0.935" data-c="0.935">
         <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="bgc" cx="60" cy="60" r="50"/><circle class="cap" cx="60" cy="60" r="50"/><circle class="val" cx="60" cy="60" r="50"/></svg>
-        <div><span class="big num">0.910 / 0.915</span><h3>At least one source</h3><p>Hit@3 against the ceiling of the 16 candidates. One confirmed source is enough to open a case.</p></div>
+        <div><span class="big num">0.935</span><h3>At least one source</h3><p>Hit@3 on PAN200. One confirmed source is enough to open a case.</p></div>
       </div>
-      <div class="ring hard" data-reveal style="--d:80ms" data-v="0.569" data-c="0.651">
+      <div class="ring hard" data-reveal style="--d:80ms" data-v="0.602" data-c="0.666">
         <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="bgc" cx="60" cy="60" r="50"/><circle class="cap" cx="60" cy="60" r="50"/><circle class="val" cx="60" cy="60" r="50"/></svg>
-        <div><span class="big num">0.569 / 0.651</span><h3>Every source</h3><p>Recall@3 against the share of sources that reach the pool. A PAN200 paper has 3.07 sources on average.</p></div>
+        <div><span class="big num">0.602 / 0.666</span><h3>Every source</h3><p>Recall@3 against the share of sources that reach the pool. A PAN200 paper has 3.07 sources on average.</p></div>
       </div>
       <div class="ring hard" data-reveal style="--d:160ms" data-v="0.561" data-c="0.561">
         <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="bgc" cx="60" cy="60" r="50"/><circle class="cap" cx="60" cy="60" r="50"/><circle class="val" cx="60" cy="60" r="50"/></svg>
@@ -778,14 +777,14 @@ footer{background:var(--bg);padding:24px 0 40px;overflow:hidden}
 
   // Every number on the page, from our PAN200 evaluation (2026-10-28).
   const METHODS = [
-    { n: 'v2 Flash', cls: 'ours', h1: .825, h3: .910, r3: .569, mrr: .867, nd: .675, t: 3.6, tl: '≈ 3.6 s' },
-    { n: 'v2 Max', cls: 'ours', h1: .810, h3: .910, r3: .572, mrr: .857, nd: .674, t: 3.7, tl: '≈ 3.7 s' },
-    { n: 'JLP (re-scores Flash’s 16)', h1: .640, h3: .820, r3: .444, mrr: .733, nd: .574, t: 25.8, tl: '≈ 25.8 s' },
+    { n: 'v2 Flash', cls: 'ours', h1: .900, h3: .935, r3: .602, mrr: .919, nd: .712, t: 6.0, tl: '6.0 s' },
+    { n: 'v2 Max', cls: 'ours', h1: .900, h3: .935, r3: .605, mrr: .919, nd: .716, t: 6.7, tl: '6.7 s' },
+    { n: 'JLP (re-scores Flash’s 16)', h1: .722, h3: .884, r3: .449, mrr: .807, nd: .605, t: 29.6, tl: '29.6 s' },
     { n: 'redflag-v1', cls: 'v1', h1: .695, h3: .745, r3: .387, mrr: .723, nd: .474, t: 44.7, tl: '44.7 s' },
-    { n: 'Paperclip', h1: .600, h3: .715, r3: .301, mrr: .677, nd: .422, t: 2.5, tl: '2.5 s' },
-    { n: 'BM25 (title + abstract)', h1: .505, h3: .660, r3: .298, mrr: .593, nd: .380, t: 9.0, tl: '9.0 s' },
-    { n: 'CMU Paper Reviewer', h1: .305, h3: .395, r3: .131, mrr: .388, nd: .198, t: 41.3, tl: '41.3 s' },
-    { n: 'BM25 (full text)', h1: .160, h3: .235, r3: .093, mrr: .217, nd: .126, t: 0.95, tl: '0.95 s' },
+    { n: 'Paperclip', h1: .600, h3: .715, r3: .301, mrr: .677, nd: .422, t: 1.8, tl: '1.8 s' },
+    { n: 'BM25 (title + abstract)', h1: .505, h3: .660, r3: .298, mrr: .593, nd: .380, t: 14.0, tl: '14.0 s' },
+    { n: 'CMU Paper Reviewer', h1: .305, h3: .395, r3: .131, mrr: .388, nd: .198, t: 42.8, tl: '42.8 s' },
+    { n: 'BM25 (full text)', h1: .160, h3: .235, r3: .093, mrr: .215, nd: .126, t: 10.7, tl: '10.7 s' },
   ];
   const DEFS = {
     h1: ['Hit@1', 'The share of papers whose first-ranked result is a true source.'],
@@ -861,7 +860,7 @@ footer{background:var(--bg);padding:24px 0 40px;overflow:hidden}
       const fade = ease((k - .9) / .1);             // reset 90%–100%
       const stage = k < .3 ? 0 : k < .52 ? 1 : 2;
       chips.forEach((c, i) => c.classList.toggle('on', i === stage && fade < .5));
-      clock.textContent = '≈ ' + (Math.min(1, k / .64) * 3.6).toFixed(1) + ' s';
+      clock.textContent = '≈ ' + (Math.min(1, k / .64) * 6.0).toFixed(1) + ' s';
       const bx = W * .04 + scan * W * .62;
       if (scan > 0 && scan < 1) {
         const g = ctx.createLinearGradient(bx - 40, 0, bx + 6, 0);
@@ -944,8 +943,8 @@ footer{background:var(--bg);padding:24px 0 40px;overflow:hidden}
   /* ---------- Flash / Max ---------- */
   (() => {
     const P = {
-      flash: { pan: '0.910', s41: '0.537', s41n: '22 of 41 cases', t: '≈ 6.2 s', tw: 6.2, days: '≈ 3.1 days for 43,000 papers' },
-      max: { pan: '0.910', s41: '0.561', s41n: '23 of 41 cases', t: '≈ 18.3 s', tw: 18.3, days: '≈ 9.1 days for 43,000 papers' },
+      flash: { pan: '0.935', s41: '0.537', s41n: '22 of 41 cases', t: '≈ 6.2 s', tw: 6.2, days: '≈ 3.1 days for 43,000 papers' },
+      max: { pan: '0.935', s41: '0.561', s41n: '23 of 41 cases', t: '≈ 18.3 s', tw: 18.3, days: '≈ 9.1 days for 43,000 papers' },
     };
     const btns = $$('[data-preset]');
     function set(k) {
@@ -996,12 +995,12 @@ footer{background:var(--bg);padding:24px 0 40px;overflow:hidden}
     const x = (s) => L + (Math.log10(s) - Math.log10(.5)) / (Math.log10(80) - Math.log10(.5)) * (W - L - R);
     const y = (v) => T + (1 - (v - .1) / .9) * (H - T - B);
     const ns = 'http://www.w3.org/2000/svg';
-    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Scatter plot of Hit@3 against median seconds per query.">`;
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Scatter plot of Hit@3 against mean seconds per query.">`;
     for (const v of [.2, .4, .6, .8, 1]) svg += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${v.toFixed(1)}</text>`;
     for (const s of [1, 3, 10, 30]) svg += `<line class="gl" y1="${T}" y2="${H - B}" x1="${x(s)}" x2="${x(s)}"/><text x="${x(s)}" y="${H - B + 18}" text-anchor="middle">${s} s</text>`;
     svg += `<line class="ax" x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}"/>`;
     svg += `<rect class="sweet" x="${L + 2}" y="${y(1) + 2}" width="${x(6) - L - 2}" height="${y(.85) - y(1) - 2}" rx="10"/><text class="sweet-t" x="${L + 12}" y="${y(.85) + 18}">fast and accurate</text>`;
-    svg += `<text x="${(L + W - R) / 2}" y="${H - 6}" text-anchor="middle">median seconds per query (log)</text>`;
+    svg += `<text x="${(L + W - R) / 2}" y="${H - 6}" text-anchor="middle">mean seconds per query (log)</text>`;
     const off = { 'v2 Flash': [-12, -12, 'end'], 'v2 Max': [12, 16, 'start'], 'Paperclip': [12, 4, 'start'], 'BM25 (full text)': [12, 4, 'start'], 'JLP (re-scores Flash’s 16)': [-12, -10, 'end'], 'redflag-v1': [-12, 4, 'end'], 'CMU Paper Reviewer': [-12, 4, 'end'], 'BM25 (title + abstract)': [12, 4, 'start'] };
     METHODS.forEach((m, i) => {
       const [dx, dy, a] = off[m.n] || [12, 4, 'start'];

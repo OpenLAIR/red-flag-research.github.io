@@ -31,14 +31,14 @@
       "kind": "note",
       "meta": "Red-flag notes · Part 1",
       "title": "Finding the source",
-      "summary": "We rebuilt the step that finds candidate sources: a full-text search over 2.92M arXiv papers and a small source selector. On the public PAN200 benchmark, a true source reaches the top 3 for 91% of papers, against 74.5% before.",
+      "summary": "We rebuilt the step that finds candidate sources: a full-text search over 2.92M arXiv papers and a small source selector. On the public PAN200 benchmark, a true source reaches the top 3 for 93.5% of papers, against 74.5% before.",
       "stats": [
         {
-          "value": "0.910",
+          "value": "0.935",
           "label": "Hit@3 on PAN200"
         },
         {
-          "value": "12×",
+          "value": "7×",
           "label": "faster retrieval"
         },
         {
